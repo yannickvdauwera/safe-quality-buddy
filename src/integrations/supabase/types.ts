@@ -238,6 +238,231 @@ export type Database = {
         }
         Relationships: []
       }
+      toolbox_session_participants: {
+        Row: {
+          added_at: string
+          employee_id: string
+          session_id: string
+        }
+        Insert: {
+          added_at?: string
+          employee_id: string
+          session_id: string
+        }
+        Update: {
+          added_at?: string
+          employee_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "toolbox_session_participants_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "toolbox_session_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "toolbox_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      toolbox_sessions: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          given_at: string | null
+          given_by_employee_id: string | null
+          id: string
+          location: string | null
+          notes: string | null
+          scheduled_at: string | null
+          signing_token: string
+          status: Database["public"]["Enums"]["toolbox_session_status"]
+          toolbox_id: string
+          updated_at: string
+          version_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          given_at?: string | null
+          given_by_employee_id?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          scheduled_at?: string | null
+          signing_token?: string
+          status?: Database["public"]["Enums"]["toolbox_session_status"]
+          toolbox_id: string
+          updated_at?: string
+          version_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          given_at?: string | null
+          given_by_employee_id?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          scheduled_at?: string | null
+          signing_token?: string
+          status?: Database["public"]["Enums"]["toolbox_session_status"]
+          toolbox_id?: string
+          updated_at?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "toolbox_sessions_given_by_employee_id_fkey"
+            columns: ["given_by_employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "toolbox_sessions_toolbox_id_fkey"
+            columns: ["toolbox_id"]
+            isOneToOne: false
+            referencedRelation: "toolboxes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "toolbox_sessions_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "toolbox_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      toolbox_signatures: {
+        Row: {
+          employee_id: string
+          id: string
+          session_id: string
+          sign_method: Database["public"]["Enums"]["toolbox_sign_method"]
+          signature_data: string
+          signed_at: string
+          signed_by_user_id: string | null
+        }
+        Insert: {
+          employee_id: string
+          id?: string
+          session_id: string
+          sign_method: Database["public"]["Enums"]["toolbox_sign_method"]
+          signature_data: string
+          signed_at?: string
+          signed_by_user_id?: string | null
+        }
+        Update: {
+          employee_id?: string
+          id?: string
+          session_id?: string
+          sign_method?: Database["public"]["Enums"]["toolbox_sign_method"]
+          signature_data?: string
+          signed_at?: string
+          signed_by_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "toolbox_signatures_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "toolbox_signatures_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "toolbox_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      toolbox_versions: {
+        Row: {
+          change_notes: string | null
+          content: Json
+          created_at: string
+          created_by: string | null
+          id: string
+          published_at: string | null
+          toolbox_id: string
+          version_number: number
+        }
+        Insert: {
+          change_notes?: string | null
+          content?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published_at?: string | null
+          toolbox_id: string
+          version_number: number
+        }
+        Update: {
+          change_notes?: string | null
+          content?: Json
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published_at?: string | null
+          toolbox_id?: string
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "toolbox_versions_toolbox_id_fkey"
+            columns: ["toolbox_id"]
+            isOneToOne: false
+            referencedRelation: "toolboxes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      toolboxes: {
+        Row: {
+          category: string | null
+          created_at: string
+          created_by: string | null
+          current_version: number
+          description: string | null
+          id: string
+          status: Database["public"]["Enums"]["toolbox_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_version?: number
+          description?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["toolbox_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          current_version?: number
+          description?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["toolbox_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -285,6 +510,13 @@ export type Database = {
         | "klacht"
         | "andere"
       safety_observation_type: "mos" | "stop"
+      toolbox_session_status:
+        | "planned"
+        | "in_progress"
+        | "completed"
+        | "cancelled"
+      toolbox_sign_method: "kiosk" | "qr" | "login"
+      toolbox_status: "draft" | "published" | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -425,6 +657,14 @@ export const Constants = {
         "andere",
       ],
       safety_observation_type: ["mos", "stop"],
+      toolbox_session_status: [
+        "planned",
+        "in_progress",
+        "completed",
+        "cancelled",
+      ],
+      toolbox_sign_method: ["kiosk", "qr", "login"],
+      toolbox_status: ["draft", "published", "archived"],
     },
   },
 } as const

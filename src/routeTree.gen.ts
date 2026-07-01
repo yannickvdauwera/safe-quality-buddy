@@ -18,6 +18,7 @@ import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedStopRouteImport } from './routes/_authenticated/stop'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedMosRouteImport } from './routes/_authenticated/mos'
+import { Route as AuthenticatedMeldingenRouteImport } from './routes/_authenticated/meldingen'
 import { Route as AuthenticatedEmployeesRouteImport } from './routes/_authenticated/employees'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedToolboxesIndexRouteImport } from './routes/_authenticated/toolboxes.index'
@@ -70,6 +71,11 @@ const AuthenticatedMosRoute = AuthenticatedMosRouteImport.update({
   path: '/mos',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMeldingenRoute = AuthenticatedMeldingenRouteImport.update({
+  id: '/meldingen',
+  path: '/meldingen',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedEmployeesRoute = AuthenticatedEmployeesRouteImport.update({
   id: '/employees',
   path: '/employees',
@@ -115,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/employees': typeof AuthenticatedEmployeesRoute
+  '/meldingen': typeof AuthenticatedMeldingenRoute
   '/mos': typeof AuthenticatedMosRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/stop': typeof AuthenticatedStopRoute
@@ -132,6 +139,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/employees': typeof AuthenticatedEmployeesRoute
+  '/meldingen': typeof AuthenticatedMeldingenRoute
   '/mos': typeof AuthenticatedMosRoute
   '/reports': typeof AuthenticatedReportsRoute
   '/stop': typeof AuthenticatedStopRoute
@@ -151,6 +159,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/employees': typeof AuthenticatedEmployeesRoute
+  '/_authenticated/meldingen': typeof AuthenticatedMeldingenRoute
   '/_authenticated/mos': typeof AuthenticatedMosRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/stop': typeof AuthenticatedStopRoute
@@ -170,6 +179,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/employees'
+    | '/meldingen'
     | '/mos'
     | '/reports'
     | '/stop'
@@ -187,6 +197,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/employees'
+    | '/meldingen'
     | '/mos'
     | '/reports'
     | '/stop'
@@ -205,6 +216,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/dashboard'
     | '/_authenticated/employees'
+    | '/_authenticated/meldingen'
     | '/_authenticated/mos'
     | '/_authenticated/reports'
     | '/_authenticated/stop'
@@ -292,6 +304,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMosRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/meldingen': {
+      id: '/_authenticated/meldingen'
+      path: '/meldingen'
+      fullPath: '/meldingen'
+      preLoaderRoute: typeof AuthenticatedMeldingenRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/employees': {
       id: '/_authenticated/employees'
       path: '/employees'
@@ -347,6 +366,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEmployeesRoute: typeof AuthenticatedEmployeesRoute
+  AuthenticatedMeldingenRoute: typeof AuthenticatedMeldingenRoute
   AuthenticatedMosRoute: typeof AuthenticatedMosRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedStopRoute: typeof AuthenticatedStopRoute
@@ -360,6 +380,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEmployeesRoute: AuthenticatedEmployeesRoute,
+  AuthenticatedMeldingenRoute: AuthenticatedMeldingenRoute,
   AuthenticatedMosRoute: AuthenticatedMosRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedStopRoute: AuthenticatedStopRoute,

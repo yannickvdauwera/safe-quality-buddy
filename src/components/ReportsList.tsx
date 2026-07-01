@@ -79,6 +79,7 @@ export function ReportsList({
   const { user, hasAnyRole } = useAuth();
   const canManage = hasAnyRole(["admin", "hse_manager", "manager"]);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState<"all" | "mine" | "assigned">("all");

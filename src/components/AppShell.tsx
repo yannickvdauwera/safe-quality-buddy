@@ -31,8 +31,8 @@ interface NavItem {
 const baseNav: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/employees", label: "Personeelsfiches", icon: Users },
+  { to: "/reports", label: "Meldingen & inspecties", icon: AlertTriangle },
   { to: "/documents", label: "Documenten", icon: FileText, disabled: true },
-  { to: "/reports", label: "Meldingen & inspecties", icon: AlertTriangle, disabled: true },
   { to: "/toolboxes", label: "Toolboxen", icon: ClipboardCheck, disabled: true },
   { to: "/risk-analyses", label: "Risicoanalyses", icon: ShieldAlert, disabled: true },
 ];

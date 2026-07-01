@@ -53,6 +53,13 @@ export interface ReportsListProps {
   defaultType: string;
   showInvolvedFirm?: boolean;
   locationLabel?: string;
+  /** Optional custom form component rendered inside the "New" dialog. */
+  CreateFormComponent?: React.ComponentType<{
+    onClose: () => void;
+    onCreated: () => void;
+    typeOptions: { value: string; label: string }[];
+    defaultType: string;
+  }>;
 }
 
 export function ReportsList({
@@ -66,6 +73,7 @@ export function ReportsList({
   defaultType,
   showInvolvedFirm = true,
   locationLabel = "Locatie",
+  CreateFormComponent,
 }: ReportsListProps) {
   const { user, hasAnyRole } = useAuth();
   const canManage = hasAnyRole(["admin", "hse_manager", "manager"]);
@@ -73,6 +81,7 @@ export function ReportsList({
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState<"all" | "mine" | "assigned">("all");
+
 
   const allowedTypes = typeOptions.map((t) => t.value);
 

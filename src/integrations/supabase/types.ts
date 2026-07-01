@@ -108,6 +108,7 @@ export type Database = {
           created_at: string
           deadline: string | null
           description: string | null
+          details: Json
           follow_up_notes: string | null
           id: string
           involved_firm: string | null
@@ -127,6 +128,7 @@ export type Database = {
           created_at?: string
           deadline?: string | null
           description?: string | null
+          details?: Json
           follow_up_notes?: string | null
           id?: string
           involved_firm?: string | null
@@ -146,6 +148,7 @@ export type Database = {
           created_at?: string
           deadline?: string | null
           description?: string | null
+          details?: Json
           follow_up_notes?: string | null
           id?: string
           involved_firm?: string | null

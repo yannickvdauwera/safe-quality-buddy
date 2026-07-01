@@ -182,13 +182,19 @@ export type Database = {
           location: string | null
           observed_date: string
           observed_time: string | null
+          photos: Json
           plant: string | null
+          public_token: string
           reporter_function: string | null
           reporter_id: string | null
           reporter_name: string
           risks: string[]
+          signature_data_url: string | null
+          signer_function: string | null
+          signer_name: string | null
           situation_description: string | null
           status: Database["public"]["Enums"]["report_status"]
+          submitted_via: string
           type: Database["public"]["Enums"]["safety_observation_type"]
           updated_at: string
         }
@@ -204,13 +210,19 @@ export type Database = {
           location?: string | null
           observed_date?: string
           observed_time?: string | null
+          photos?: Json
           plant?: string | null
+          public_token?: string
           reporter_function?: string | null
           reporter_id?: string | null
           reporter_name: string
           risks?: string[]
+          signature_data_url?: string | null
+          signer_function?: string | null
+          signer_name?: string | null
           situation_description?: string | null
           status?: Database["public"]["Enums"]["report_status"]
+          submitted_via?: string
           type: Database["public"]["Enums"]["safety_observation_type"]
           updated_at?: string
         }
@@ -226,13 +238,19 @@ export type Database = {
           location?: string | null
           observed_date?: string
           observed_time?: string | null
+          photos?: Json
           plant?: string | null
+          public_token?: string
           reporter_function?: string | null
           reporter_id?: string | null
           reporter_name?: string
           risks?: string[]
+          signature_data_url?: string | null
+          signer_function?: string | null
+          signer_name?: string | null
           situation_description?: string | null
           status?: Database["public"]["Enums"]["report_status"]
+          submitted_via?: string
           type?: Database["public"]["Enums"]["safety_observation_type"]
           updated_at?: string
         }

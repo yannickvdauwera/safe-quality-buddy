@@ -7,6 +7,7 @@ import {
 } from "docx";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { supabase } from "@/integrations/supabase/client";
 import { TYPE_LABELS, type SafetyObservationType } from "./safety-observations";
 import tsaLogoUrl from "@/assets/tsa-logo.png";
 
@@ -28,6 +29,40 @@ export interface ObservationExport {
   improvement_proposal: string | null;
   company_action: string | null;
   status: string;
+  photos?: string[] | null;
+  signature_data_url?: string | null;
+  signer_name?: string | null;
+  signer_function?: string | null;
+}
+
+async function loadPhotoBytes(paths: string[]): Promise<{ dataUrl: string; bytes: Uint8Array }[]> {
+  const out: { dataUrl: string; bytes: Uint8Array }[] = [];
+  for (const p of paths) {
+    const { data } = await supabase.storage.from("safety-observations").createSignedUrl(p, 300);
+    if (!data?.signedUrl) continue;
+    try {
+      const res = await fetch(data.signedUrl);
+      const blob = await res.blob();
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      const dataUrl: string = await new Promise((r) => {
+        const fr = new FileReader();
+        fr.onload = () => r(fr.result as string);
+        fr.readAsDataURL(blob);
+      });
+      out.push({ dataUrl, bytes });
+    } catch {
+      /* skip */
+    }
+  }
+  return out;
+}
+
+function dataUrlToBytes(dataUrl: string): Uint8Array {
+  const b64 = dataUrl.split(",")[1] ?? "";
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
 }
 
 // TSA brand palette
@@ -73,6 +108,15 @@ const sections = (o: ObservationExport): Array<{ title: string; rows: Array<[str
       ["Voorstel tot verbetering", o.improvement_proposal ?? "—"],
       ["Actie van het bedrijf", o.company_action ?? "—"],
       ["Status", o.status],
+    ],
+  },
+  {
+    title: "Bijlagen",
+    rows: [
+      ["Foto's", o.photos?.length ? `${o.photos.length} bijgevoegd` : "—"],
+      ["Handtekening", o.signature_data_url ? "Ja" : "—"],
+      ["Ondertekenaar", o.signer_name ?? "—"],
+      ["Functie ondertekenaar", o.signer_function ?? "—"],
     ],
   },
 ];
@@ -189,6 +233,57 @@ export async function exportToPdf(o: ObservationExport) {
     y = (doc.lastAutoTable?.finalY ?? y) + 6;
   }
 
+  // Signature block
+  if (o.signature_data_url) {
+    if (y > pageH - 60) { doc.addPage(); drawHeader(); y = 32; }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(...TSA_DARK);
+    doc.text("ONDERTEKENING", 12, y);
+    y += 4;
+    doc.setDrawColor(...TSA_RED);
+    doc.setLineWidth(0.4);
+    doc.line(12, y, pageW - 12, y);
+    y += 4;
+    try {
+      doc.addImage(o.signature_data_url, "PNG", 12, y, 70, 26);
+    } catch { /* ignore */ }
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...TSA_DARK);
+    doc.text(o.signer_name ?? o.reporter_name, 90, y + 10);
+    doc.setTextColor(120, 120, 120);
+    doc.text(o.signer_function ?? o.reporter_function ?? "", 90, y + 15);
+    y += 32;
+  }
+
+  // Photos
+  const photoBytes = o.photos?.length ? await loadPhotoBytes(o.photos) : [];
+  if (photoBytes.length) {
+    if (y > pageH - 70) { doc.addPage(); drawHeader(); y = 32; }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(...TSA_DARK);
+    doc.text("FOTO'S", 12, y);
+    y += 4;
+    doc.setDrawColor(...TSA_RED);
+    doc.line(12, y, pageW - 12, y);
+    y += 4;
+    const colW = (pageW - 24 - 6) / 2;
+    const rowH = 55;
+    let col = 0;
+    for (const p of photoBytes) {
+      if (y + rowH > pageH - 20) { doc.addPage(); drawHeader(); y = 32; col = 0; }
+      const x = 12 + col * (colW + 6);
+      try {
+        doc.addImage(p.dataUrl, "JPEG", x, y, colW, rowH);
+      } catch { /* skip broken image */ }
+      col++;
+      if (col === 2) { col = 0; y += rowH + 4; }
+    }
+    if (col !== 0) y += rowH + 4;
+  }
+
   const total = doc.getNumberOfPages();
   for (let i = 1; i <= total; i++) {
     doc.setPage(i);
@@ -294,6 +389,50 @@ export async function exportToDocx(o: ObservationExport) {
     rows: bodyRows,
   });
 
+  // Extra blocks (signature + photos)
+  const extras: Paragraph[] = [];
+  if (o.signature_data_url) {
+    extras.push(new Paragraph({
+      spacing: { before: 300, after: 100 },
+      children: [new TextRun({ text: "ONDERTEKENING", bold: true, color: TSA_DARK_HEX, size: 22 })],
+    }));
+    try {
+      extras.push(new Paragraph({
+        children: [new ImageRun({
+          type: "png",
+          data: dataUrlToBytes(o.signature_data_url),
+          transformation: { width: 200, height: 80 },
+        } as never)],
+      }));
+    } catch { /* ignore */ }
+    extras.push(new Paragraph({
+      children: [new TextRun({
+        text: `${o.signer_name ?? o.reporter_name}${o.signer_function ? " — " + o.signer_function : ""}`,
+        color: "555555",
+      })],
+    }));
+  }
+
+  const photoBytes = o.photos?.length ? await loadPhotoBytes(o.photos) : [];
+  if (photoBytes.length) {
+    extras.push(new Paragraph({
+      spacing: { before: 300, after: 100 },
+      children: [new TextRun({ text: "FOTO'S", bold: true, color: TSA_DARK_HEX, size: 22 })],
+    }));
+    for (const p of photoBytes) {
+      try {
+        extras.push(new Paragraph({
+          spacing: { after: 120 },
+          children: [new ImageRun({
+            type: "jpg",
+            data: p.bytes,
+            transformation: { width: 380, height: 250 },
+          } as never)],
+        }));
+      } catch { /* skip */ }
+    }
+  }
+
   const doc = new Document({
     styles: {
       default: { document: { run: { font: "Calibri", size: 20 } } },
@@ -337,6 +476,7 @@ export async function exportToDocx(o: ObservationExport) {
           children: [new TextRun({ text: label.title, color: "666666", italics: true })],
         }),
         dataTable,
+        ...extras,
       ],
     }],
   });

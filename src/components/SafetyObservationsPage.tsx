@@ -11,8 +11,9 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Plus, FileText, FileSpreadsheet, FileType } from "lucide-react";
-import { SafetyObservationForm } from "./SafetyObservationForm";
+import { Download, Plus, FileText, FileSpreadsheet, FileType, Link as LinkIcon, Camera, PenLine } from "lucide-react";
+import { toast } from "sonner";
+import { SafetyObservationWizard } from "./SafetyObservationWizard";
 import { TYPE_LABELS, type SafetyObservationType } from "@/lib/safety-observations";
 import {
   exportToPdf, exportToDocx, exportToXlsx, type ObservationExport,
@@ -35,9 +36,17 @@ export function SafetyObservationsPage({ type }: { type: SafetyObservationType }
     },
   });
 
+  const copyPublicLink = async () => {
+    const url = `${window.location.origin}/report/${type}`;
+    await navigator.clipboard.writeText(url);
+    toast.success("Publieke link gekopieerd", {
+      description: "Deel deze via QR of e-mail. Werkt zonder login.",
+    });
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-semibold">{label.title}en</h1>
           <p className="text-sm text-muted-foreground">
@@ -46,17 +55,22 @@ export function SafetyObservationsPage({ type }: { type: SafetyObservationType }
               : "STOP-reflex meldingen — direct ingrijpen bij onveilig gedrag of situatie."}
           </p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button><Plus className="w-4 h-4" /> Nieuwe {label.short}</Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Nieuwe {label.title}</DialogTitle>
-            </DialogHeader>
-            <SafetyObservationForm type={type} onDone={() => setOpen(false)} />
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={copyPublicLink}>
+            <LinkIcon className="w-4 h-4" /> Publieke link
+          </Button>
+          <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+              <Button><Plus className="w-4 h-4" /> Nieuwe {label.short}</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-3xl max-h-[92vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Nieuwe {label.title}</DialogTitle>
+              </DialogHeader>
+              <SafetyObservationWizard type={type} onDone={() => setOpen(false)} />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card className="p-0 overflow-hidden">
@@ -67,15 +81,16 @@ export function SafetyObservationsPage({ type }: { type: SafetyObservationType }
               <TableHead>Melder</TableHead>
               <TableHead>Plant / Locatie</TableHead>
               <TableHead>Gevaren</TableHead>
+              <TableHead className="w-24">Extra</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Export</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Laden…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Laden…</TableCell></TableRow>
             ) : data.length === 0 ? (
-              <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">Nog geen meldingen.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nog geen meldingen.</TableCell></TableRow>
             ) : (
               data.map((o) => (
                 <TableRow key={o.id}>
@@ -88,6 +103,16 @@ export function SafetyObservationsPage({ type }: { type: SafetyObservationType }
                   </TableCell>
                   <TableCell className="text-sm max-w-xs truncate">
                     {o.hazards.length ? o.hazards.join(", ") : "—"}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1 text-muted-foreground">
+                      {o.photos?.length ? (
+                        <span className="inline-flex items-center gap-0.5 text-xs">
+                          <Camera className="w-3.5 h-3.5" /> {o.photos.length}
+                        </span>
+                      ) : null}
+                      {o.signature_data_url ? <PenLine className="w-3.5 h-3.5" /> : null}
+                    </div>
                   </TableCell>
                   <TableCell><Badge variant="secondary">{o.status}</Badge></TableCell>
                   <TableCell className="text-right">
@@ -117,3 +142,4 @@ export function SafetyObservationsPage({ type }: { type: SafetyObservationType }
     </div>
   );
 }
+

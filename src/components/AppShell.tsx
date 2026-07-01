@@ -18,6 +18,7 @@ import {
   Hand,
   ChevronDown,
   ChevronRight,
+  Plug,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -84,7 +85,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   const nav: NavItem[] = hasRole("admin")
-    ? [...baseNav, { to: "/users", label: "Gebruikers & rollen", icon: Shield }, { to: "/settings", label: "Instellingen", icon: Wrench, disabled: true }]
+    ? [
+        ...baseNav,
+        { to: "/integraties/monday", label: "Monday-integratie", icon: Plug },
+        { to: "/users", label: "Gebruikers & rollen", icon: Shield },
+        { to: "/settings", label: "Instellingen", icon: Wrench, disabled: true },
+      ]
     : [...baseNav, { to: "/settings", label: "Instellingen", icon: Wrench, disabled: true }];
 
   const handleSignOut = async () => {

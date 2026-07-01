@@ -53,7 +53,8 @@ const norm = (s: string | undefined | null) =>
 // Column-title → employees field mapping (fuzzy on normalised title)
 const FIELD_MAP: Array<{ match: (title: string) => boolean; field: string }> = [
   { match: (t) => ["voornaam", "firstname"].includes(t), field: "first_name" },
-  { match: (t) => ["naam", "achternaam", "familienaam", "lastname", "surname"].includes(t), field: "last_name" },
+  { match: (t) => ["naam", "achternaam", "familienaam", "lastname", "surname", "employee"].includes(t), field: "_employee_name" },
+  { match: (t) => ["roepnaam", "nickname"].includes(t), field: "nickname" },
   { match: (t) => ["email", "emailadres", "mail", "mailadres", "epost"].includes(t), field: "email" },
   { match: (t) => ["telefoon", "telefoonnummer", "gsm", "phone", "mobile"].includes(t), field: "phone" },
   { match: (t) => ["functie", "functies", "function", "role", "rol", "jobtitle"].includes(t), field: "function_title" },

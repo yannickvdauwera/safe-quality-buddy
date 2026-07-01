@@ -380,6 +380,50 @@ export async function exportToDocx(o: ObservationExport) {
     rows: bodyRows,
   });
 
+  // Extra blocks (signature + photos)
+  const extras: Paragraph[] = [];
+  if (o.signature_data_url) {
+    extras.push(new Paragraph({
+      spacing: { before: 300, after: 100 },
+      children: [new TextRun({ text: "ONDERTEKENING", bold: true, color: TSA_DARK_HEX, size: 22 })],
+    }));
+    try {
+      extras.push(new Paragraph({
+        children: [new ImageRun({
+          type: "png",
+          data: dataUrlToBytes(o.signature_data_url),
+          transformation: { width: 200, height: 80 },
+        } as never)],
+      }));
+    } catch { /* ignore */ }
+    extras.push(new Paragraph({
+      children: [new TextRun({
+        text: `${o.signer_name ?? o.reporter_name}${o.signer_function ? " — " + o.signer_function : ""}`,
+        color: "555555",
+      })],
+    }));
+  }
+
+  const photoBytes = o.photos?.length ? await loadPhotoBytes(o.photos) : [];
+  if (photoBytes.length) {
+    extras.push(new Paragraph({
+      spacing: { before: 300, after: 100 },
+      children: [new TextRun({ text: "FOTO'S", bold: true, color: TSA_DARK_HEX, size: 22 })],
+    }));
+    for (const p of photoBytes) {
+      try {
+        extras.push(new Paragraph({
+          spacing: { after: 120 },
+          children: [new ImageRun({
+            type: "jpg",
+            data: p.bytes,
+            transformation: { width: 380, height: 250 },
+          } as never)],
+        }));
+      } catch { /* skip */ }
+    }
+  }
+
   const doc = new Document({
     styles: {
       default: { document: { run: { font: "Calibri", size: 20 } } },
@@ -423,6 +467,7 @@ export async function exportToDocx(o: ObservationExport) {
           children: [new TextRun({ text: label.title, color: "666666", italics: true })],
         }),
         dataTable,
+        ...extras,
       ],
     }],
   });

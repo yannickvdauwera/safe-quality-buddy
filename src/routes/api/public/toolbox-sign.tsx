@@ -29,16 +29,16 @@ export const Route = createFileRoute("/api/public/toolbox-sign")({
         const [{ data: toolbox }, { data: version }, { data: parts }, { data: sigs }] = await Promise.all([
           supabaseAdmin.from("toolboxes").select("id, title, description, category").eq("id", session.toolbox_id).maybeSingle(),
           supabaseAdmin.from("toolbox_versions").select("id, version_number, content").eq("id", session.version_id).maybeSingle(),
-          supabaseAdmin.from("toolbox_session_participants").select("employee_id, employees(id, full_name, function_title)").eq("session_id", session.id),
+          supabaseAdmin.from("toolbox_session_participants").select("employee_id, employees(id, first_name, last_name, function_title)").eq("session_id", session.id),
           supabaseAdmin.from("toolbox_signatures").select("employee_id, signed_at").eq("session_id", session.id),
         ]);
 
         const signed = new Set((sigs ?? []).map((s) => s.employee_id));
         const participants = (parts ?? []).map((p) => {
-          const emp = p.employees as unknown as { id: string; full_name: string; function_title: string | null } | null;
+          const emp = p.employees as unknown as { id: string; first_name: string; last_name: string; function_title: string | null } | null;
           return {
             employee_id: p.employee_id,
-            full_name: emp?.full_name ?? "—",
+            full_name: emp ? `${emp.first_name} ${emp.last_name}` : "—",
             function_title: emp?.function_title ?? null,
             signed: signed.has(p.employee_id),
           };

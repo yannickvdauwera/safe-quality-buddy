@@ -91,8 +91,20 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
     if (type === "ao_ehbo") {
       if (!aoIncidentType) return toast.error("Kies een type incident");
       if (!aoVictimName.trim()) return toast.error("Slachtoffernaam is verplicht");
+      if (!aoFirstAider.trim()) return toast.error("Hulpverlener is verplicht");
+      if (!location.trim()) return toast.error("Locatie is verplicht");
+      if (!aoContractType) return toast.error("Type contract is verplicht");
+      if (!aoBodyPart) return toast.error("Lichaamsdeel is verplicht");
+      if (!aoBodyDetail.trim()) return toast.error("Detail van de gekwetste lichaamsdelen is verplicht");
       if (!aoRelaas.trim()) return toast.error("Relaas is verplicht");
-      finalTitle = finalTitle || `${aoIncidentType} — ${aoVictimName}`;
+      if (!aoInvestigation.trim()) return toast.error("Ongevallenonderzoek is verplicht");
+      // Auto-title: "ddmmyyyy - Achternaam" zoals in Monday
+      const d = new Date(aoIncidentDate);
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      const surname = aoVictimName.split(/[,\s]+/)[0] || aoVictimName;
+      finalTitle = finalTitle || `${dd}${mm}${yyyy} - ${surname}`;
       Object.assign(details, {
         incident_date: aoIncidentDate,
         incident_type: aoIncidentType,

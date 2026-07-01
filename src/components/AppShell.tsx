@@ -157,7 +157,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
         {nav.map((item) => {
           if ("kind" in item && item.kind === "group") {
-            const groupActive = pathname.startsWith(item.basePath);
+            const groupActive =
+              pathname.startsWith(item.basePath) ||
+              item.children.some((c) => pathname === c.to || pathname.startsWith(c.to + "/"));
             const expanded = openGroups[item.basePath] ?? groupActive;
             const Icon = item.icon;
             const Chevron = expanded ? ChevronDown : ChevronRight;

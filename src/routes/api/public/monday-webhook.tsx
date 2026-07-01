@@ -53,7 +53,8 @@ const norm = (s: string | undefined | null) =>
 // Column-title → employees field mapping (fuzzy on normalised title)
 const FIELD_MAP: Array<{ match: (title: string) => boolean; field: string }> = [
   { match: (t) => ["voornaam", "firstname"].includes(t), field: "first_name" },
-  { match: (t) => ["naam", "achternaam", "familienaam", "lastname", "surname"].includes(t), field: "last_name" },
+  { match: (t) => ["naam", "achternaam", "familienaam", "lastname", "surname", "employee"].includes(t), field: "_employee_name" },
+  { match: (t) => ["roepnaam", "nickname"].includes(t), field: "nickname" },
   { match: (t) => ["email", "emailadres", "mail", "mailadres", "epost"].includes(t), field: "email" },
   { match: (t) => ["telefoon", "telefoonnummer", "gsm", "phone", "mobile"].includes(t), field: "phone" },
   { match: (t) => ["functie", "functies", "function", "role", "rol", "jobtitle"].includes(t), field: "function_title" },
@@ -102,9 +103,17 @@ function mapColumnsToFields(
   return out;
 }
 
-function splitPulseName(name: string | undefined): { first_name?: string; last_name?: string } {
+function parseEmployeeName(name: string | undefined): { first_name?: string; last_name?: string } {
   if (!name) return {};
-  const parts = name.trim().split(/\s+/);
+  const trimmed = name.trim();
+  // Preferred Monday format: "Achternaam, Voornaam"
+  if (trimmed.includes(",")) {
+    const [last, ...firstParts] = trimmed.split(",");
+    const first = firstParts.join(",").trim();
+    return { last_name: last.trim() || undefined, first_name: first || undefined };
+  }
+  // Fallback: "Voornaam Achternaam"
+  const parts = trimmed.split(/\s+/);
   if (parts.length === 1) return { last_name: parts[0] };
   return { first_name: parts[0], last_name: parts.slice(1).join(" ") };
 }
@@ -188,7 +197,10 @@ export const Route = createFileRoute("/api/public/monday-webhook")({
             }
           }
 
-          const nameParts = splitPulseName(event.pulseName);
+          // Employee-column value (e.g. "Zardoua, Saïd") also parses as "Last, First"
+          const employeeNameField = mapped._employee_name ?? null;
+          delete mapped._employee_name;
+          const nameParts = parseEmployeeName(employeeNameField ?? event.pulseName);
 
           const email = (mapped.email ?? "").trim().toLowerCase() || null;
           const status = mapped._status ?? null;
@@ -200,7 +212,7 @@ export const Route = createFileRoute("/api/public/monday-webhook")({
             ...mapped,
             email,
             first_name: mapped.first_name || nameParts.first_name || undefined,
-            last_name: mapped.last_name || nameParts.last_name || undefined,
+            last_name: nameParts.last_name || undefined,
             monday_item_id: itemId,
             monday_board_id: boardId,
             last_synced_at: new Date().toISOString(),

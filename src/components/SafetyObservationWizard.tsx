@@ -49,7 +49,11 @@ const STEPS = [
 ] as const;
 
 export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Props) {
-  const { user } = useAuth();
+  const { user, hasAnyRole } = useAuth();
+  const functionOptions =
+    mode === "internal" && hasAnyRole(["admin", "hse_manager", "manager"])
+      ? FUNCTION_OPTIONS_ALL
+      : FUNCTION_OPTIONS_USER;
   const qc = useQueryClient();
   const label = TYPE_LABELS[type];
   const [step, setStep] = useState(0);

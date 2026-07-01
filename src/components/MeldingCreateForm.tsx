@@ -149,9 +149,35 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
         : new Date().toISOString(),
       details,
     };
-    const { error } = await supabase.from("reports").insert(payload as never);
+    const { data: inserted, error } = await supabase
+      .from("reports")
+      .insert(payload as never)
+      .select("id")
+      .single();
+    if (error) {
+      setSaving(false);
+      return toast.error(error.message);
+    }
+
+    // Upload bijlagen (foto's / documenten ongevallenonderzoek)
+    if (type === "ao_ehbo" && aoFiles.length > 0 && inserted) {
+      const uploaded: { path: string; name: string; type: string }[] = [];
+      for (const f of aoFiles) {
+        const path = `${inserted.id}/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+        const { error: upErr } = await supabase.storage
+          .from("reports-attachments")
+          .upload(path, f, { upsert: false });
+        if (!upErr) uploaded.push({ path, name: f.name, type: f.type });
+      }
+      if (uploaded.length > 0) {
+        await supabase
+          .from("reports")
+          .update({ details: { ...details, attachments: uploaded } as never })
+          .eq("id", inserted.id);
+      }
+    }
+
     setSaving(false);
-    if (error) return toast.error(error.message);
     toast.success("Melding aangemaakt");
     onCreated();
   };

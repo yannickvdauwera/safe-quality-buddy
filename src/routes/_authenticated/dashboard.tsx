@@ -46,9 +46,14 @@ function pickRole(roles: AppRole[]): AppRole {
 }
 
 function DashboardPage() {
-  const { user, roles } = useAuth();
+  const { user, roles, loading } = useAuth();
+
+  if (loading || !user) {
+    return <div className="text-sm text-muted-foreground">Bezig met laden…</div>;
+  }
+
   const primaryRole = pickRole(roles);
-  const greeting = user?.user_metadata?.full_name?.split(" ")[0] ?? "welkom";
+  const greeting = user.user_metadata?.full_name?.split(" ")[0] ?? "welkom";
   const roleLabel =
     primaryRole === "admin" ? "Beheerder"
     : primaryRole === "hse_manager" ? "HSE-manager"
@@ -64,8 +69,8 @@ function DashboardPage() {
         </p>
       </div>
 
-      {primaryRole === "operator" && <OperatorDashboard userId={user!.id} />}
-      {primaryRole === "manager" && <ManagerDashboard userId={user!.id} />}
+      {primaryRole === "operator" && <OperatorDashboard userId={user.id} />}
+      {primaryRole === "manager" && <ManagerDashboard userId={user.id} />}
       {primaryRole === "hse_manager" && <HseDashboard />}
       {primaryRole === "admin" && <AdminDashboard />}
     </div>

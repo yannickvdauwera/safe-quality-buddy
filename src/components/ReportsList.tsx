@@ -21,6 +21,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Plus, MoreHorizontal, type LucideIcon } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 
 export const STATUS_LABELS: Record<string, string> = {
   open: "Open",
@@ -78,6 +79,7 @@ export function ReportsList({
   const { user, hasAnyRole } = useAuth();
   const canManage = hasAnyRole(["admin", "hse_manager", "manager"]);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState<"all" | "mine" | "assigned">("all");
@@ -268,7 +270,11 @@ export function ReportsList({
                     Nog geen items in deze weergave.
                   </TableCell></TableRow>
                 ) : filtered.map((r) => (
-                  <TableRow key={r.id}>
+                  <TableRow
+                    key={r.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => navigate({ to: "/meldingen/$id", params: { id: r.id } })}
+                  >
                     <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
                       {new Date(r.observed_at).toLocaleDateString("nl-BE")}
                     </TableCell>
@@ -278,7 +284,7 @@ export function ReportsList({
                     <TableCell><Badge variant={severityVariant(r.severity)}>{SEVERITY_LABELS[r.severity]}</Badge></TableCell>
                     <TableCell><Badge variant={statusVariant(r.status)}>{STATUS_LABELS[r.status]}</Badge></TableCell>
                     {canManage && (
-                      <TableCell>
+                      <TableCell onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="w-8 h-8"><MoreHorizontal className="w-4 h-4" /></Button>

@@ -21,6 +21,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Plus, MoreHorizontal, type LucideIcon } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 
 export const STATUS_LABELS: Record<string, string> = {
   open: "Open",

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { SignaturePad } from "@/components/SignaturePad";
 import { cn } from "@/lib/utils";
 
 export interface ChecklistQuestion {

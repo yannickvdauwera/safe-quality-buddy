@@ -70,6 +70,7 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
   const [aoBodyDetail, setAoBodyDetail] = useState("");
   const [aoRelaas, setAoRelaas] = useState("");
   const [aoInvestigation, setAoInvestigation] = useState("");
+  const [aoFiles, setAoFiles] = useState<File[]>([]);
 
   // Klacht / incident
   const [klSubmitterName, setKlSubmitterName] = useState("");
@@ -90,8 +91,20 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
     if (type === "ao_ehbo") {
       if (!aoIncidentType) return toast.error("Kies een type incident");
       if (!aoVictimName.trim()) return toast.error("Slachtoffernaam is verplicht");
+      if (!aoFirstAider.trim()) return toast.error("Hulpverlener is verplicht");
+      if (!location.trim()) return toast.error("Locatie is verplicht");
+      if (!aoContractType) return toast.error("Type contract is verplicht");
+      if (!aoBodyPart) return toast.error("Lichaamsdeel is verplicht");
+      if (!aoBodyDetail.trim()) return toast.error("Detail van de gekwetste lichaamsdelen is verplicht");
       if (!aoRelaas.trim()) return toast.error("Relaas is verplicht");
-      finalTitle = finalTitle || `${aoIncidentType} — ${aoVictimName}`;
+      if (!aoInvestigation.trim()) return toast.error("Ongevallenonderzoek is verplicht");
+      // Auto-title: "ddmmyyyy - Achternaam" zoals in Monday
+      const d = new Date(aoIncidentDate);
+      const dd = String(d.getDate()).padStart(2, "0");
+      const mm = String(d.getMonth() + 1).padStart(2, "0");
+      const yyyy = d.getFullYear();
+      const surname = aoVictimName.split(/[,\s]+/)[0] || aoVictimName;
+      finalTitle = finalTitle || `${dd}${mm}${yyyy} - ${surname}`;
       Object.assign(details, {
         incident_date: aoIncidentDate,
         incident_type: aoIncidentType,
@@ -136,9 +149,35 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
         : new Date().toISOString(),
       details,
     };
-    const { error } = await supabase.from("reports").insert(payload as never);
+    const { data: inserted, error } = await supabase
+      .from("reports")
+      .insert(payload as never)
+      .select("id")
+      .single();
+    if (error) {
+      setSaving(false);
+      return toast.error(error.message);
+    }
+
+    // Upload bijlagen (foto's / documenten ongevallenonderzoek)
+    if (type === "ao_ehbo" && aoFiles.length > 0 && inserted) {
+      const uploaded: { path: string; name: string; type: string }[] = [];
+      for (const f of aoFiles) {
+        const path = `${inserted.id}/${Date.now()}-${f.name.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
+        const { error: upErr } = await supabase.storage
+          .from("reports-attachments")
+          .upload(path, f, { upsert: false });
+        if (!upErr) uploaded.push({ path, name: f.name, type: f.type });
+      }
+      if (uploaded.length > 0) {
+        await supabase
+          .from("reports")
+          .update({ details: { ...details, attachments: uploaded } as never })
+          .eq("id", inserted.id);
+      }
+    }
+
     setSaving(false);
-    if (error) return toast.error(error.message);
     toast.success("Melding aangemaakt");
     onCreated();
   };
@@ -197,13 +236,13 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
               <Input value={aoVictimName} onChange={(e) => setAoVictimName(e.target.value)} placeholder="Achternaam, Voornaam" required />
             </div>
             <div className="space-y-1.5">
-              <Label>Hulpverlener</Label>
-              <Input value={aoFirstAider} onChange={(e) => setAoFirstAider(e.target.value)} placeholder="Naam EHBO/hulpverlener" />
+              <Label>Hulpverlener *</Label>
+              <Input value={aoFirstAider} onChange={(e) => setAoFirstAider(e.target.value)} placeholder="Naam EHBO/hulpverlener" required />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Type contract</Label>
+              <Label>Type contract *</Label>
               <Select value={aoContractType} onValueChange={setAoContractType}>
                 <SelectTrigger><SelectValue placeholder="Kies…" /></SelectTrigger>
                 <SelectContent>
@@ -212,13 +251,13 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Locatie</Label>
-              <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Plant / werf / zone" />
+              <Label>Locatie *</Label>
+              <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Plant / werf / zone" required />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Lichaamsdeel</Label>
+              <Label>Lichaamsdeel *</Label>
               <Select value={aoBodyPart} onValueChange={setAoBodyPart}>
                 <SelectTrigger><SelectValue placeholder="Kies…" /></SelectTrigger>
                 <SelectContent>
@@ -232,20 +271,32 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Detail van de gekwetste lichaamsdelen</Label>
-            <Input value={aoBodyDetail} onChange={(e) => setAoBodyDetail(e.target.value)} placeholder="bv. linker wijsvinger, bovenkant" />
+            <Label>Detail van de gekwetste lichaamsdelen *</Label>
+            <Input value={aoBodyDetail} onChange={(e) => setAoBodyDetail(e.target.value)} placeholder="bv. linker wijsvinger, bovenkant" required />
           </div>
           <div className="space-y-1.5">
             <Label>Relaas *</Label>
             <Textarea rows={4} value={aoRelaas} onChange={(e) => setAoRelaas(e.target.value)} maxLength={4000} placeholder="Wat is er precies gebeurd?" required />
           </div>
           <div className="space-y-1.5">
-            <Label>Ongevallenonderzoek</Label>
-            <Textarea rows={3} value={aoInvestigation} onChange={(e) => setAoInvestigation(e.target.value)} maxLength={4000} placeholder="Oorzaken, vaststellingen, genomen maatregelen…" />
+            <Label>Ongevallenonderzoek *</Label>
+            <Textarea rows={3} value={aoInvestigation} onChange={(e) => setAoInvestigation(e.target.value)} maxLength={4000} placeholder="Oorzaken, vaststellingen, genomen maatregelen…" required />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Bijlagen (foto's, PV, verklaringen…)</Label>
+            <Input
+              type="file"
+              multiple
+              accept="image/*,application/pdf,.doc,.docx"
+              onChange={(e) => setAoFiles(Array.from(e.target.files ?? []))}
+            />
+            {aoFiles.length > 0 && (
+              <p className="text-xs text-muted-foreground">{aoFiles.length} bestand(en) geselecteerd</p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>Korte titel (optioneel)</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Wordt automatisch samengesteld indien leeg" />
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Wordt automatisch samengesteld (ddmmyyyy - achternaam)" />
           </div>
         </>
       )}

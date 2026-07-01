@@ -1,0 +1,164 @@
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useState, type ReactNode } from "react";
+import {
+  LayoutDashboard,
+  FileText,
+  AlertTriangle,
+  ClipboardCheck,
+  ShieldAlert,
+  Users,
+  Wrench,
+  LogOut,
+  Menu,
+  X,
+  ShieldCheck,
+} from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
+
+interface NavItem {
+  to: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  disabled?: boolean;
+}
+
+const nav: NavItem[] = [
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/employees", label: "Personeelsfiches", icon: Users },
+  { to: "/documents", label: "Documenten", icon: FileText, disabled: true },
+  { to: "/reports", label: "Meldingen & inspecties", icon: AlertTriangle, disabled: true },
+  { to: "/toolboxes", label: "Toolboxen", icon: ClipboardCheck, disabled: true },
+  { to: "/risk-analyses", label: "Risicoanalyses", icon: ShieldAlert, disabled: true },
+  { to: "/settings", label: "Instellingen", icon: Wrench, disabled: true },
+];
+
+export function AppShell({ children }: { children: ReactNode }) {
+  const { user, roles } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await supabase.auth.signOut();
+    navigate({ to: "/auth", replace: true });
+  };
+
+  const initials =
+    user?.user_metadata?.full_name?.split(" ").map((s: string) => s[0]).slice(0, 2).join("").toUpperCase() ??
+    user?.email?.slice(0, 2).toUpperCase() ??
+    "??";
+
+  const roleLabel =
+    roles.includes("admin") ? "Admin"
+    : roles.includes("hse_manager") ? "HSE-manager"
+    : roles.includes("manager") ? "Manager"
+    : "Operator";
+
+  const SidebarContent = (
+    <div className="flex flex-col h-full">
+      <div className="p-4 border-b flex items-center gap-2.5">
+        <div className="w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
+          <ShieldCheck className="w-5 h-5" />
+        </div>
+        <div className="min-w-0">
+          <div className="font-semibold text-sm leading-tight">HSE & Kwaliteit</div>
+          <div className="text-xs text-muted-foreground truncate">Beheerplatform</div>
+        </div>
+      </div>
+      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
+        {nav.map((item) => {
+          const active = pathname === item.to || pathname.startsWith(item.to + "/");
+          const Icon = item.icon;
+          if (item.disabled) {
+            return (
+              <div
+                key={item.to}
+                className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground/60 cursor-not-allowed"
+                title="Binnenkort beschikbaar"
+              >
+                <Icon className="w-4 h-4" />
+                <span>{item.label}</span>
+                <span className="ml-auto text-[10px] uppercase tracking-wide">Soon</span>
+              </div>
+            );
+          }
+          return (
+            <Link
+              key={item.to}
+              to={item.to}
+              onClick={() => setMobileOpen(false)}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                active
+                  ? "bg-primary text-primary-foreground font-medium"
+                  : "text-foreground hover:bg-muted",
+              )}
+            >
+              <Icon className="w-4 h-4" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+      <div className="p-3 border-t">
+        <div className="flex items-center gap-3 px-2 py-2">
+          <Avatar className="w-8 h-8">
+            <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-medium truncate">{user?.user_metadata?.full_name ?? user?.email}</div>
+            <div className="text-xs text-muted-foreground">{roleLabel}</div>
+          </div>
+        </div>
+        <Button variant="ghost" size="sm" className="w-full justify-start mt-1" onClick={handleSignOut}>
+          <LogOut className="w-4 h-4" /> Afmelden
+        </Button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="min-h-screen bg-muted/20">
+      {/* Desktop sidebar */}
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 w-64 border-r bg-card z-30">
+        {SidebarContent}
+      </aside>
+
+      {/* Mobile top bar */}
+      <header className="lg:hidden sticky top-0 z-20 bg-card border-b flex items-center gap-3 px-4 py-3">
+        <Button variant="ghost" size="icon" onClick={() => setMobileOpen(true)}>
+          <Menu className="w-5 h-5" />
+        </Button>
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-5 h-5 text-primary" />
+          <span className="font-semibold text-sm">HSE & Kwaliteit</span>
+        </div>
+      </header>
+
+      {/* Mobile drawer */}
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-40 flex">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
+          <aside className="relative w-64 bg-card border-r flex flex-col">
+            <button className="absolute top-3 right-3 p-1" onClick={() => setMobileOpen(false)}>
+              <X className="w-5 h-5" />
+            </button>
+            {SidebarContent}
+          </aside>
+        </div>
+      )}
+
+      <main className="lg:pl-64">
+        <div className="max-w-7xl mx-auto p-4 md:p-8">{children}</div>
+      </main>
+    </div>
+  );
+}

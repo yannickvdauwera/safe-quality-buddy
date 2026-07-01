@@ -16,6 +16,19 @@ import {
 import {
   HAZARDS, RISKS, TYPE_LABELS, type SafetyObservationType,
 } from "@/lib/safety-observations";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+
+const FUNCTION_OPTIONS_USER = ["Brandwacht", "Veiligheidswacht", "Gasanalist"] as const;
+const FUNCTION_OPTIONS_ALL = [
+  "Brandwacht",
+  "Veiligheidswacht",
+  "Safety Supervisor",
+  "Preventieadviseur",
+  "Gasanalist",
+  "Coördinator",
+] as const;
 
 interface Props {
   type: SafetyObservationType;
@@ -36,7 +49,11 @@ const STEPS = [
 ] as const;
 
 export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Props) {
-  const { user } = useAuth();
+  const { user, hasAnyRole } = useAuth();
+  const functionOptions =
+    mode === "internal" && hasAnyRole(["admin", "hse_manager", "manager"])
+      ? FUNCTION_OPTIONS_ALL
+      : FUNCTION_OPTIONS_USER;
   const qc = useQueryClient();
   const label = TYPE_LABELS[type];
   const [step, setStep] = useState(0);
@@ -261,11 +278,19 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
           </div>
           <div className="space-y-1.5">
             <Label>Functie</Label>
-            <Input
-              value={form.reporter_function}
-              onChange={(e) => upd("reporter_function", e.target.value)}
-              maxLength={120}
-            />
+            <Select
+              value={form.reporter_function || undefined}
+              onValueChange={(v) => upd("reporter_function", v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Kies functie" />
+              </SelectTrigger>
+              <SelectContent>
+                {functionOptions.map((opt) => (
+                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5">
             <Label>Datum</Label>
@@ -483,11 +508,19 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
             </div>
             <div className="space-y-1.5">
               <Label>Functie</Label>
-              <Input
-                value={form.signer_function}
-                onChange={(e) => upd("signer_function", e.target.value)}
-                maxLength={120}
-              />
+              <Select
+                value={form.signer_function || undefined}
+                onValueChange={(v) => upd("signer_function", v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Kies functie" />
+                </SelectTrigger>
+                <SelectContent>
+                  {functionOptions.map((opt) => (
+                    <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="space-y-2">

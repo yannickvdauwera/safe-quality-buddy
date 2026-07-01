@@ -318,7 +318,9 @@ function AdminDashboard() {
 /* ---------------- SHARED ---------------- */
 function StatCard({
   icon: Icon, label, value, accent,
-}: { icon: typeof Users; label: string; value: number | undefined; accent: string }) {
+function StatCard({
+  icon: Icon, label, value, accent,
+}: { icon: typeof Users; label: string; value: number | null | undefined; accent: string }) {
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -338,7 +340,7 @@ interface MiniReport {
   id: string; type: string; title: string; status: string; severity: string; observed_at: string;
 }
 
-function RecentReportsCard({ title, reports, emptyText }: { title: string; reports?: MiniReport[]; emptyText: string }) {
+function RecentReportsCard({ title, reports, emptyText }: { title: string; reports?: MiniReport[] | null; emptyText: string }) {
   return (
     <Card>
       <CardHeader className="flex-row items-center justify-between space-y-0">

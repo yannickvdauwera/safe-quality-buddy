@@ -114,7 +114,7 @@ function OperatorDashboard({ userId }: { userId: string }) {
             <div className="font-medium">Iets vastgesteld op de werf?</div>
             <div className="text-sm text-muted-foreground">Registreer een MOS-, STOP- of andere melding in enkele klikken.</div>
           </div>
-          <Button asChild><Link to="/reports">Nieuwe melding <ArrowRight className="w-4 h-4" /></Link></Button>
+          <Button asChild><Link to="/meldingen">Nieuwe melding <ArrowRight className="w-4 h-4" /></Link></Button>
         </CardContent>
       </Card>
     </>
@@ -351,7 +351,7 @@ function RecentReportsCard({ title, reports, emptyText }: { title: string; repor
           <CardTitle className="text-base">{title}</CardTitle>
         </div>
         <Button variant="ghost" size="sm" asChild>
-          <Link to="/reports">Bekijk alle <ArrowRight className="w-4 h-4" /></Link>
+          <Link to="/meldingen">Bekijk alle <ArrowRight className="w-4 h-4" /></Link>
         </Button>
       </CardHeader>
       <CardContent>

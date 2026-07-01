@@ -38,8 +38,8 @@ export const getMondaySyncEvents = createServerFn({ method: "GET" })
 
     const { data, error } = await context.supabase
       .from("monday_sync_events")
-      .select("id, created_at, event_type, status, error, monday_item_id, employee_id")
-      .order("created_at", { ascending: false })
+      .select("id, received_at, event_type, status, error, monday_item_id, employee_id")
+      .order("received_at", { ascending: false })
       .limit(25);
     if (error) throw error;
     return data ?? [];

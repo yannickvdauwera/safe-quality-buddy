@@ -91,7 +91,7 @@ export function ReportsList({
       const { data, error } = await supabase
         .from("reports")
         .select("*")
-        .in("type", allowedTypes)
+        .in("type", allowedTypes as never)
         .order("observed_at", { ascending: false });
       if (error) throw error;
       return data;

@@ -197,7 +197,10 @@ export const Route = createFileRoute("/api/public/monday-webhook")({
             }
           }
 
-          const nameParts = splitPulseName(event.pulseName);
+          // Employee-column value (e.g. "Zardoua, Saïd") also parses as "Last, First"
+          const employeeNameField = mapped._employee_name ?? null;
+          delete mapped._employee_name;
+          const nameParts = parseEmployeeName(employeeNameField ?? event.pulseName);
 
           const email = (mapped.email ?? "").trim().toLowerCase() || null;
           const status = mapped._status ?? null;
@@ -209,7 +212,7 @@ export const Route = createFileRoute("/api/public/monday-webhook")({
             ...mapped,
             email,
             first_name: mapped.first_name || nameParts.first_name || undefined,
-            last_name: mapped.last_name || nameParts.last_name || undefined,
+            last_name: nameParts.last_name || undefined,
             monday_item_id: itemId,
             monday_board_id: boardId,
             last_synced_at: new Date().toISOString(),

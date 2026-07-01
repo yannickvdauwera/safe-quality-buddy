@@ -5,6 +5,7 @@ import {
   FileText,
   AlertTriangle,
   ClipboardCheck,
+  ClipboardList,
   ShieldAlert,
   Users,
   Wrench,
@@ -15,6 +16,8 @@ import {
   Shield,
   Eye,
   Hand,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -23,18 +26,38 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 
-interface NavItem {
+type IconType = typeof LayoutDashboard;
+
+interface NavLeaf {
+  kind?: "leaf";
   to: string;
   label: string;
-  icon: typeof LayoutDashboard;
+  icon: IconType;
   disabled?: boolean;
 }
+interface NavGroup {
+  kind: "group";
+  basePath: string; // used to determine "active" and expanded state
+  label: string;
+  icon: IconType;
+  children: NavLeaf[];
+}
+type NavItem = NavLeaf | NavGroup;
 
 const baseNav: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/employees", label: "Personeelsfiches", icon: Users },
   { to: "/meldingen", label: "Meldingen", icon: AlertTriangle },
-  { to: "/inspecties", label: "Inspecties", icon: ClipboardCheck },
+  {
+    kind: "group",
+    basePath: "/inspecties",
+    label: "Inspecties",
+    icon: ClipboardCheck,
+    children: [
+      { to: "/inspecties/wpi", label: "Werkplekinspecties", icon: ClipboardCheck },
+      { to: "/inspecties/kwaliteit", label: "Kwaliteitscontroles", icon: ClipboardList },
+    ],
+  },
   { to: "/mos", label: "MOS-meldingen", icon: Eye },
   { to: "/stop", label: "STOP-reflexen", icon: Hand },
   { to: "/documents", label: "Documenten", icon: FileText, disabled: true },
@@ -49,6 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
   const nav: NavItem[] = hasRole("admin")
     ? [...baseNav, { to: "/users", label: "Gebruikers & rollen", icon: Shield }, { to: "/settings", label: "Instellingen", icon: Wrench, disabled: true }]
@@ -72,6 +96,44 @@ export function AppShell({ children }: { children: ReactNode }) {
     : roles.includes("manager") ? "Manager"
     : "Operator";
 
+  const renderLeaf = (item: NavLeaf, indent = false) => {
+    const active = pathname === item.to || pathname.startsWith(item.to + "/");
+    const Icon = item.icon;
+    if (item.disabled) {
+      return (
+        <div
+          key={item.to}
+          className={cn(
+            "flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground/60 cursor-not-allowed",
+            indent && "ml-6",
+          )}
+          title="Binnenkort beschikbaar"
+        >
+          <Icon className="w-4 h-4" />
+          <span>{item.label}</span>
+          <span className="ml-auto text-[10px] uppercase tracking-wide">Soon</span>
+        </div>
+      );
+    }
+    return (
+      <Link
+        key={item.to}
+        to={item.to}
+        onClick={() => setMobileOpen(false)}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+          indent && "ml-6",
+          active
+            ? "bg-primary text-primary-foreground font-medium"
+            : "text-foreground hover:bg-muted",
+        )}
+      >
+        <Icon className="w-4 h-4" />
+        <span>{item.label}</span>
+      </Link>
+    );
+  };
+
   const SidebarContent = (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b flex items-center gap-2.5">
@@ -85,39 +147,37 @@ export function AppShell({ children }: { children: ReactNode }) {
       </div>
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
         {nav.map((item) => {
-          const active = pathname === item.to || pathname.startsWith(item.to + "/");
-          const Icon = item.icon;
-          if (item.disabled) {
+          if ("kind" in item && item.kind === "group") {
+            const groupActive = pathname.startsWith(item.basePath);
+            const expanded = openGroups[item.basePath] ?? groupActive;
+            const Icon = item.icon;
+            const Chevron = expanded ? ChevronDown : ChevronRight;
             return (
-              <div
-                key={item.to}
-                className="flex items-center gap-3 px-3 py-2 rounded-md text-sm text-muted-foreground/60 cursor-not-allowed"
-                title="Binnenkort beschikbaar"
-              >
-                <Icon className="w-4 h-4" />
-                <span>{item.label}</span>
-                <span className="ml-auto text-[10px] uppercase tracking-wide">Soon</span>
+              <div key={item.basePath}>
+                <button
+                  type="button"
+                  onClick={() => setOpenGroups((s) => ({ ...s, [item.basePath]: !expanded }))}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
+                    groupActive ? "text-foreground font-medium" : "text-foreground hover:bg-muted",
+                  )}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{item.label}</span>
+                  <Chevron className="w-4 h-4 ml-auto text-muted-foreground" />
+                </button>
+                {expanded && (
+                  <div className="mt-0.5 space-y-0.5">
+                    {item.children.map((c) => renderLeaf(c, true))}
+                  </div>
+                )}
               </div>
             );
           }
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              onClick={() => setMobileOpen(false)}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
-                active
-                  ? "bg-primary text-primary-foreground font-medium"
-                  : "text-foreground hover:bg-muted",
-              )}
-            >
-              <Icon className="w-4 h-4" />
-              <span>{item.label}</span>
-            </Link>
-          );
+          return renderLeaf(item as NavLeaf);
         })}
       </nav>
+
       <div className="p-3 border-t">
         <div className="flex items-center gap-3 px-2 py-2">
           <Avatar className="w-8 h-8">

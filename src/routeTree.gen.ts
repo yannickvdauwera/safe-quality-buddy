@@ -22,9 +22,12 @@ import { Route as AuthenticatedInspectiesRouteImport } from './routes/_authentic
 import { Route as AuthenticatedEmployeesRouteImport } from './routes/_authenticated/employees'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedToolboxesIndexRouteImport } from './routes/_authenticated/toolboxes.index'
+import { Route as AuthenticatedInspectiesIndexRouteImport } from './routes/_authenticated/inspecties.index'
 import { Route as ApiPublicToolboxSignRouteImport } from './routes/api/public/toolbox-sign'
 import { Route as AuthenticatedToolboxesNewRouteImport } from './routes/_authenticated/toolboxes.new'
 import { Route as AuthenticatedToolboxesIdRouteImport } from './routes/_authenticated/toolboxes.$id'
+import { Route as AuthenticatedInspectiesWpiRouteImport } from './routes/_authenticated/inspecties.wpi'
+import { Route as AuthenticatedInspectiesKwaliteitRouteImport } from './routes/_authenticated/inspecties.kwaliteit'
 import { Route as AuthenticatedToolboxesSessionsIdRouteImport } from './routes/_authenticated/toolboxes.sessions.$id'
 
 const AuthRoute = AuthRouteImport.update({
@@ -92,6 +95,12 @@ const AuthenticatedToolboxesIndexRoute =
     path: '/toolboxes/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedInspectiesIndexRoute =
+  AuthenticatedInspectiesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedInspectiesRoute,
+  } as any)
 const ApiPublicToolboxSignRoute = ApiPublicToolboxSignRouteImport.update({
   id: '/api/public/toolbox-sign',
   path: '/api/public/toolbox-sign',
@@ -109,6 +118,18 @@ const AuthenticatedToolboxesIdRoute =
     path: '/toolboxes/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedInspectiesWpiRoute =
+  AuthenticatedInspectiesWpiRouteImport.update({
+    id: '/wpi',
+    path: '/wpi',
+    getParentRoute: () => AuthenticatedInspectiesRoute,
+  } as any)
+const AuthenticatedInspectiesKwaliteitRoute =
+  AuthenticatedInspectiesKwaliteitRouteImport.update({
+    id: '/kwaliteit',
+    path: '/kwaliteit',
+    getParentRoute: () => AuthenticatedInspectiesRoute,
+  } as any)
 const AuthenticatedToolboxesSessionsIdRoute =
   AuthenticatedToolboxesSessionsIdRouteImport.update({
     id: '/toolboxes/sessions/$id',
@@ -121,16 +142,19 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/employees': typeof AuthenticatedEmployeesRoute
-  '/inspecties': typeof AuthenticatedInspectiesRoute
+  '/inspecties': typeof AuthenticatedInspectiesRouteWithChildren
   '/meldingen': typeof AuthenticatedMeldingenRoute
   '/mos': typeof AuthenticatedMosRoute
   '/stop': typeof AuthenticatedStopRoute
   '/users': typeof AuthenticatedUsersRoute
   '/report/$type': typeof ReportTypeRoute
   '/sign/$token': typeof SignTokenRoute
+  '/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
+  '/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
   '/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
+  '/inspecties/': typeof AuthenticatedInspectiesIndexRoute
   '/toolboxes/': typeof AuthenticatedToolboxesIndexRoute
   '/toolboxes/sessions/$id': typeof AuthenticatedToolboxesSessionsIdRoute
 }
@@ -139,16 +163,18 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/employees': typeof AuthenticatedEmployeesRoute
-  '/inspecties': typeof AuthenticatedInspectiesRoute
   '/meldingen': typeof AuthenticatedMeldingenRoute
   '/mos': typeof AuthenticatedMosRoute
   '/stop': typeof AuthenticatedStopRoute
   '/users': typeof AuthenticatedUsersRoute
   '/report/$type': typeof ReportTypeRoute
   '/sign/$token': typeof SignTokenRoute
+  '/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
+  '/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
   '/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
+  '/inspecties': typeof AuthenticatedInspectiesIndexRoute
   '/toolboxes': typeof AuthenticatedToolboxesIndexRoute
   '/toolboxes/sessions/$id': typeof AuthenticatedToolboxesSessionsIdRoute
 }
@@ -159,16 +185,19 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/employees': typeof AuthenticatedEmployeesRoute
-  '/_authenticated/inspecties': typeof AuthenticatedInspectiesRoute
+  '/_authenticated/inspecties': typeof AuthenticatedInspectiesRouteWithChildren
   '/_authenticated/meldingen': typeof AuthenticatedMeldingenRoute
   '/_authenticated/mos': typeof AuthenticatedMosRoute
   '/_authenticated/stop': typeof AuthenticatedStopRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/report/$type': typeof ReportTypeRoute
   '/sign/$token': typeof SignTokenRoute
+  '/_authenticated/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
+  '/_authenticated/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
   '/_authenticated/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/_authenticated/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
+  '/_authenticated/inspecties/': typeof AuthenticatedInspectiesIndexRoute
   '/_authenticated/toolboxes/': typeof AuthenticatedToolboxesIndexRoute
   '/_authenticated/toolboxes/sessions/$id': typeof AuthenticatedToolboxesSessionsIdRoute
 }
@@ -186,9 +215,12 @@ export interface FileRouteTypes {
     | '/users'
     | '/report/$type'
     | '/sign/$token'
+    | '/inspecties/kwaliteit'
+    | '/inspecties/wpi'
     | '/toolboxes/$id'
     | '/toolboxes/new'
     | '/api/public/toolbox-sign'
+    | '/inspecties/'
     | '/toolboxes/'
     | '/toolboxes/sessions/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -197,16 +229,18 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/employees'
-    | '/inspecties'
     | '/meldingen'
     | '/mos'
     | '/stop'
     | '/users'
     | '/report/$type'
     | '/sign/$token'
+    | '/inspecties/kwaliteit'
+    | '/inspecties/wpi'
     | '/toolboxes/$id'
     | '/toolboxes/new'
     | '/api/public/toolbox-sign'
+    | '/inspecties'
     | '/toolboxes'
     | '/toolboxes/sessions/$id'
   id:
@@ -223,9 +257,12 @@ export interface FileRouteTypes {
     | '/_authenticated/users'
     | '/report/$type'
     | '/sign/$token'
+    | '/_authenticated/inspecties/kwaliteit'
+    | '/_authenticated/inspecties/wpi'
     | '/_authenticated/toolboxes/$id'
     | '/_authenticated/toolboxes/new'
     | '/api/public/toolbox-sign'
+    | '/_authenticated/inspecties/'
     | '/_authenticated/toolboxes/'
     | '/_authenticated/toolboxes/sessions/$id'
   fileRoutesById: FileRoutesById
@@ -332,6 +369,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedToolboxesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/inspecties/': {
+      id: '/_authenticated/inspecties/'
+      path: '/'
+      fullPath: '/inspecties/'
+      preLoaderRoute: typeof AuthenticatedInspectiesIndexRouteImport
+      parentRoute: typeof AuthenticatedInspectiesRoute
+    }
     '/api/public/toolbox-sign': {
       id: '/api/public/toolbox-sign'
       path: '/api/public/toolbox-sign'
@@ -353,6 +397,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedToolboxesIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/inspecties/wpi': {
+      id: '/_authenticated/inspecties/wpi'
+      path: '/wpi'
+      fullPath: '/inspecties/wpi'
+      preLoaderRoute: typeof AuthenticatedInspectiesWpiRouteImport
+      parentRoute: typeof AuthenticatedInspectiesRoute
+    }
+    '/_authenticated/inspecties/kwaliteit': {
+      id: '/_authenticated/inspecties/kwaliteit'
+      path: '/kwaliteit'
+      fullPath: '/inspecties/kwaliteit'
+      preLoaderRoute: typeof AuthenticatedInspectiesKwaliteitRouteImport
+      parentRoute: typeof AuthenticatedInspectiesRoute
+    }
     '/_authenticated/toolboxes/sessions/$id': {
       id: '/_authenticated/toolboxes/sessions/$id'
       path: '/toolboxes/sessions/$id'
@@ -363,10 +421,29 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedInspectiesRouteChildren {
+  AuthenticatedInspectiesKwaliteitRoute: typeof AuthenticatedInspectiesKwaliteitRoute
+  AuthenticatedInspectiesWpiRoute: typeof AuthenticatedInspectiesWpiRoute
+  AuthenticatedInspectiesIndexRoute: typeof AuthenticatedInspectiesIndexRoute
+}
+
+const AuthenticatedInspectiesRouteChildren: AuthenticatedInspectiesRouteChildren =
+  {
+    AuthenticatedInspectiesKwaliteitRoute:
+      AuthenticatedInspectiesKwaliteitRoute,
+    AuthenticatedInspectiesWpiRoute: AuthenticatedInspectiesWpiRoute,
+    AuthenticatedInspectiesIndexRoute: AuthenticatedInspectiesIndexRoute,
+  }
+
+const AuthenticatedInspectiesRouteWithChildren =
+  AuthenticatedInspectiesRoute._addFileChildren(
+    AuthenticatedInspectiesRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEmployeesRoute: typeof AuthenticatedEmployeesRoute
-  AuthenticatedInspectiesRoute: typeof AuthenticatedInspectiesRoute
+  AuthenticatedInspectiesRoute: typeof AuthenticatedInspectiesRouteWithChildren
   AuthenticatedMeldingenRoute: typeof AuthenticatedMeldingenRoute
   AuthenticatedMosRoute: typeof AuthenticatedMosRoute
   AuthenticatedStopRoute: typeof AuthenticatedStopRoute
@@ -380,7 +457,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEmployeesRoute: AuthenticatedEmployeesRoute,
-  AuthenticatedInspectiesRoute: AuthenticatedInspectiesRoute,
+  AuthenticatedInspectiesRoute: AuthenticatedInspectiesRouteWithChildren,
   AuthenticatedMeldingenRoute: AuthenticatedMeldingenRoute,
   AuthenticatedMosRoute: AuthenticatedMosRoute,
   AuthenticatedStopRoute: AuthenticatedStopRoute,

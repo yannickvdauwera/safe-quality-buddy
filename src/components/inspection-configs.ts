@@ -2,10 +2,11 @@ import type { ChecklistConfig } from "@/components/ChecklistCreateForm";
 
 export const WPI_CONFIG: ChecklistConfig = {
   reportType: "werkplekinspectie",
+  captureSignature: true,
   titleTemplate: (h) =>
     `WPI — ${h.observed_name || "geobserveerde"}${h.worksite ? ` @ ${h.worksite}` : ""}`,
   headerFields: [
-    { key: "date", label: "Datum en tijdstip", type: "date", required: true },
+    { key: "date", label: "Datum en tijdstip", type: "datetime", required: true },
     { key: "observed_function", label: "Functie geobserveerde", type: "text", required: true },
     { key: "employer", label: "Werkgever", type: "text" },
     { key: "principal", label: "Opdrachtgever", type: "text", required: true },

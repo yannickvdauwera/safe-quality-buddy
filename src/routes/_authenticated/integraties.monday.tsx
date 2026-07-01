@@ -15,10 +15,6 @@ import {
 } from "@/lib/monday-integration.functions";
 
 export const Route = createFileRoute("/_authenticated/integraties/monday")({
-  beforeLoad: ({ context }) => {
-    const roles = (context as { roles?: string[] }).roles ?? [];
-    if (!roles.includes("admin")) throw redirect({ to: "/dashboard" });
-  },
   component: MondayIntegrationPage,
 });
 

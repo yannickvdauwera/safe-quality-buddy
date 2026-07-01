@@ -111,7 +111,7 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
           <div key={f.key} className="space-y-1.5">
             <Label>{f.label}{f.required ? " *" : ""}</Label>
             <Input
-              type={f.type}
+              type={f.type === "datetime" ? "datetime-local" : f.type}
               value={header[f.key] ?? ""}
               onChange={(e) => setHeader((h) => ({ ...h, [f.key]: e.target.value }))}
               placeholder={f.placeholder}

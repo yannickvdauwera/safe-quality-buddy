@@ -18,7 +18,9 @@ import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedMosRouteImport } from './routes/_authenticated/mos'
 import { Route as AuthenticatedEmployeesRouteImport } from './routes/_authenticated/employees'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedToolboxesIndexRouteImport } from './routes/_authenticated/toolboxes.index'
 import { Route as ApiPublicToolboxSignRouteImport } from './routes/api/public/toolbox-sign'
+import { Route as AuthenticatedToolboxesNewRouteImport } from './routes/_authenticated/toolboxes.new'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -64,11 +66,23 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedToolboxesIndexRoute =
+  AuthenticatedToolboxesIndexRouteImport.update({
+    id: '/toolboxes/',
+    path: '/toolboxes/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiPublicToolboxSignRoute = ApiPublicToolboxSignRouteImport.update({
   id: '/api/public/toolbox-sign',
   path: '/api/public/toolbox-sign',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedToolboxesNewRoute =
+  AuthenticatedToolboxesNewRouteImport.update({
+    id: '/toolboxes/new',
+    path: '/toolboxes/new',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -79,7 +93,9 @@ export interface FileRoutesByFullPath {
   '/reports': typeof AuthenticatedReportsRoute
   '/stop': typeof AuthenticatedStopRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
+  '/toolboxes/': typeof AuthenticatedToolboxesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -90,7 +106,9 @@ export interface FileRoutesByTo {
   '/reports': typeof AuthenticatedReportsRoute
   '/stop': typeof AuthenticatedStopRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
+  '/toolboxes': typeof AuthenticatedToolboxesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -103,7 +121,9 @@ export interface FileRoutesById {
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/stop': typeof AuthenticatedStopRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/_authenticated/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
+  '/_authenticated/toolboxes/': typeof AuthenticatedToolboxesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -116,7 +136,9 @@ export interface FileRouteTypes {
     | '/reports'
     | '/stop'
     | '/users'
+    | '/toolboxes/new'
     | '/api/public/toolbox-sign'
+    | '/toolboxes/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -127,7 +149,9 @@ export interface FileRouteTypes {
     | '/reports'
     | '/stop'
     | '/users'
+    | '/toolboxes/new'
     | '/api/public/toolbox-sign'
+    | '/toolboxes'
   id:
     | '__root__'
     | '/'
@@ -139,7 +163,9 @@ export interface FileRouteTypes {
     | '/_authenticated/reports'
     | '/_authenticated/stop'
     | '/_authenticated/users'
+    | '/_authenticated/toolboxes/new'
     | '/api/public/toolbox-sign'
+    | '/_authenticated/toolboxes/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -214,12 +240,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/toolboxes/': {
+      id: '/_authenticated/toolboxes/'
+      path: '/toolboxes'
+      fullPath: '/toolboxes/'
+      preLoaderRoute: typeof AuthenticatedToolboxesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/toolbox-sign': {
       id: '/api/public/toolbox-sign'
       path: '/api/public/toolbox-sign'
       fullPath: '/api/public/toolbox-sign'
       preLoaderRoute: typeof ApiPublicToolboxSignRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/toolboxes/new': {
+      id: '/_authenticated/toolboxes/new'
+      path: '/toolboxes/new'
+      fullPath: '/toolboxes/new'
+      preLoaderRoute: typeof AuthenticatedToolboxesNewRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
   }
 }
@@ -231,6 +271,8 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedStopRoute: typeof AuthenticatedStopRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
+  AuthenticatedToolboxesNewRoute: typeof AuthenticatedToolboxesNewRoute
+  AuthenticatedToolboxesIndexRoute: typeof AuthenticatedToolboxesIndexRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -240,6 +282,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedStopRoute: AuthenticatedStopRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
+  AuthenticatedToolboxesNewRoute: AuthenticatedToolboxesNewRoute,
+  AuthenticatedToolboxesIndexRoute: AuthenticatedToolboxesIndexRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

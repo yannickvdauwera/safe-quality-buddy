@@ -37,7 +37,7 @@ const baseNav: NavItem[] = [
   { to: "/mos", label: "MOS-meldingen", icon: Eye },
   { to: "/stop", label: "STOP-reflexen", icon: Hand },
   { to: "/documents", label: "Documenten", icon: FileText, disabled: true },
-  { to: "/toolboxes", label: "Toolboxen", icon: ClipboardCheck, disabled: true },
+  { to: "/toolboxes", label: "Toolboxen", icon: ClipboardCheck },
   { to: "/risk-analyses", label: "Risicoanalyses", icon: ShieldAlert, disabled: true },
 ];
 

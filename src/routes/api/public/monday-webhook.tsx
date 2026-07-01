@@ -166,8 +166,14 @@ export const Route = createFileRoute("/api/public/monday-webhook")({
         };
 
         try {
-          // Handle item deletion → set inactive if we have it
-          if (eventType === "delete_pulse" || eventType === "item_deleted") {
+          // Item deleted OR moved to another board → deactivate the employee
+          const isDeactivationEvent =
+            eventType === "delete_pulse" ||
+            eventType === "item_deleted" ||
+            eventType === "move_pulse_into_board" ||
+            eventType === "item_moved_to_any_board" ||
+            eventType === "item_moved_to_specific_board";
+          if (isDeactivationEvent) {
             if (itemId) {
               const { data } = await supabaseAdmin
                 .from("employees")
@@ -177,7 +183,7 @@ export const Route = createFileRoute("/api/public/monday-webhook")({
                 .maybeSingle();
               await logResult("deactivated", data?.id ?? null);
             } else {
-              await logResult("ignored", null, "delete without pulseId");
+              await logResult("ignored", null, `${eventType} without pulseId`);
             }
             return json({ ok: true });
           }

@@ -140,7 +140,7 @@ function ToolboxDetail() {
               <DialogTrigger asChild><Button variant="outline"><Plus className="w-4 h-4" /> Nieuwe versie</Button></DialogTrigger>
               <NewVersionDialog
                 toolboxId={id}
-                baseContent={(currentVersion?.content as ToolboxContent) ?? EMPTY_CONTENT}
+                baseContent={(currentVersion?.content as unknown as ToolboxContent) ?? EMPTY_CONTENT}
                 nextVersion={(toolbox.current_version ?? 0) + 1}
                 onDone={() => {
                   setNewVersionOpen(false);
@@ -173,7 +173,7 @@ function ToolboxDetail() {
             </div>
             <div className="space-y-2">
               <Label>Status</Label>
-              <Select value={toolbox.status} onValueChange={(v) => updateMeta({ status: v })}>
+              <Select value={toolbox.status} onValueChange={(v) => updateMeta({ status: v as "draft" | "published" | "archived" })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="draft">Concept</SelectItem>
@@ -188,7 +188,7 @@ function ToolboxDetail() {
         {currentVersion && (
           <Card className="p-5">
             <h2 className="font-semibold mb-4">Inhoud (huidige versie {currentVersion.version_number})</h2>
-            <ContentView content={currentVersion.content as ToolboxContent} />
+            <ContentView content={currentVersion.content as unknown as ToolboxContent} />
           </Card>
         )}
 

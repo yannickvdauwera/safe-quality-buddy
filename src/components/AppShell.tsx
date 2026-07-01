@@ -47,7 +47,18 @@ type NavItem = NavLeaf | NavGroup;
 const baseNav: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/employees", label: "Personeelsfiches", icon: Users },
-  { to: "/meldingen", label: "Meldingen", icon: AlertTriangle },
+  {
+    kind: "group",
+    basePath: "/meldingen-hub",
+    label: "Meldingen",
+    icon: AlertTriangle,
+    children: [
+      { to: "/mos", label: "MOS-meldingen", icon: Eye },
+      { to: "/stop", label: "STOP-reflexen", icon: Hand },
+      { to: "/meldingen/intern", label: "Interne meldingen", icon: AlertTriangle },
+      { to: "/meldingen/ongevallen", label: "(Bijna)ongevallen", icon: ShieldAlert },
+    ],
+  },
   {
     kind: "group",
     basePath: "/inspecties",
@@ -58,8 +69,6 @@ const baseNav: NavItem[] = [
       { to: "/inspecties/kwaliteit", label: "Kwaliteitscontroles", icon: ClipboardList },
     ],
   },
-  { to: "/mos", label: "MOS-meldingen", icon: Eye },
-  { to: "/stop", label: "STOP-reflexen", icon: Hand },
   { to: "/documents", label: "Documenten", icon: FileText, disabled: true },
   { to: "/toolboxes", label: "Toolboxen", icon: ClipboardCheck },
   { to: "/risk-analyses", label: "Risicoanalyses", icon: ShieldAlert, disabled: true },
@@ -148,7 +157,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
         {nav.map((item) => {
           if ("kind" in item && item.kind === "group") {
-            const groupActive = pathname.startsWith(item.basePath);
+            const groupActive =
+              pathname.startsWith(item.basePath) ||
+              item.children.some((c) => pathname === c.to || pathname.startsWith(c.to + "/"));
             const expanded = openGroups[item.basePath] ?? groupActive;
             const Icon = item.icon;
             const Chevron = expanded ? ChevronDown : ChevronRight;

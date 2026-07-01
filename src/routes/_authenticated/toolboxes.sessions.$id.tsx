@@ -38,13 +38,21 @@ function SessionDetail() {
         .select(`
           id, status, scheduled_at, given_at, location, notes, signing_token, given_by_employee_id,
           toolboxes(id, title, description, category),
-          toolbox_versions(id, version_number, content),
-          given_by:employees!toolbox_sessions_given_by_employee_id_fkey(id, full_name)
+          toolbox_versions(id, version_number, content)
         `)
         .eq("id", id)
         .single();
       if (error) throw error;
-      return data;
+      let given_by: { full_name: string } | null = null;
+      if (data.given_by_employee_id) {
+        const { data: emp } = await supabase
+          .from("employees")
+          .select("first_name, last_name")
+          .eq("id", data.given_by_employee_id)
+          .maybeSingle();
+        if (emp) given_by = { full_name: `${emp.first_name} ${emp.last_name}` };
+      }
+      return { ...data, given_by };
     },
   });
 
@@ -53,11 +61,18 @@ function SessionDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("toolbox_session_participants")
-        .select("employee_id, employees(id, full_name, function_title)")
+        .select("employee_id, employees(id, first_name, last_name, function_title)")
         .eq("session_id", id);
       if (error) throw error;
-      return data;
+      return data.map((p) => {
+        const emp = p.employees as unknown as { id: string; first_name: string; last_name: string; function_title: string | null } | null;
+        return {
+          employee_id: p.employee_id,
+          employees: emp ? { full_name: `${emp.first_name} ${emp.last_name}`, function_title: emp.function_title } : { full_name: "—", function_title: null },
+        };
+      });
     },
+  });
   });
 
   const { data: signatures } = useQuery({

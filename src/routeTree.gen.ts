@@ -16,7 +16,6 @@ import { Route as SignTokenRouteImport } from './routes/sign.$token'
 import { Route as ReportTypeRouteImport } from './routes/report.$type'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedStopRouteImport } from './routes/_authenticated/stop'
-import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedMosRouteImport } from './routes/_authenticated/mos'
 import { Route as AuthenticatedMeldingenRouteImport } from './routes/_authenticated/meldingen'
 import { Route as AuthenticatedInspectiesRouteImport } from './routes/_authenticated/inspecties'
@@ -60,11 +59,6 @@ const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
 const AuthenticatedStopRoute = AuthenticatedStopRouteImport.update({
   id: '/stop',
   path: '/stop',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedReportsRoute = AuthenticatedReportsRouteImport.update({
-  id: '/reports',
-  path: '/reports',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedMosRoute = AuthenticatedMosRouteImport.update({
@@ -130,7 +124,6 @@ export interface FileRoutesByFullPath {
   '/inspecties': typeof AuthenticatedInspectiesRoute
   '/meldingen': typeof AuthenticatedMeldingenRoute
   '/mos': typeof AuthenticatedMosRoute
-  '/reports': typeof AuthenticatedReportsRoute
   '/stop': typeof AuthenticatedStopRoute
   '/users': typeof AuthenticatedUsersRoute
   '/report/$type': typeof ReportTypeRoute
@@ -149,7 +142,6 @@ export interface FileRoutesByTo {
   '/inspecties': typeof AuthenticatedInspectiesRoute
   '/meldingen': typeof AuthenticatedMeldingenRoute
   '/mos': typeof AuthenticatedMosRoute
-  '/reports': typeof AuthenticatedReportsRoute
   '/stop': typeof AuthenticatedStopRoute
   '/users': typeof AuthenticatedUsersRoute
   '/report/$type': typeof ReportTypeRoute
@@ -170,7 +162,6 @@ export interface FileRoutesById {
   '/_authenticated/inspecties': typeof AuthenticatedInspectiesRoute
   '/_authenticated/meldingen': typeof AuthenticatedMeldingenRoute
   '/_authenticated/mos': typeof AuthenticatedMosRoute
-  '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/stop': typeof AuthenticatedStopRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/report/$type': typeof ReportTypeRoute
@@ -191,7 +182,6 @@ export interface FileRouteTypes {
     | '/inspecties'
     | '/meldingen'
     | '/mos'
-    | '/reports'
     | '/stop'
     | '/users'
     | '/report/$type'
@@ -210,7 +200,6 @@ export interface FileRouteTypes {
     | '/inspecties'
     | '/meldingen'
     | '/mos'
-    | '/reports'
     | '/stop'
     | '/users'
     | '/report/$type'
@@ -230,7 +219,6 @@ export interface FileRouteTypes {
     | '/_authenticated/inspecties'
     | '/_authenticated/meldingen'
     | '/_authenticated/mos'
-    | '/_authenticated/reports'
     | '/_authenticated/stop'
     | '/_authenticated/users'
     | '/report/$type'
@@ -300,13 +288,6 @@ declare module '@tanstack/react-router' {
       path: '/stop'
       fullPath: '/stop'
       preLoaderRoute: typeof AuthenticatedStopRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/reports': {
-      id: '/_authenticated/reports'
-      path: '/reports'
-      fullPath: '/reports'
-      preLoaderRoute: typeof AuthenticatedReportsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/mos': {
@@ -388,7 +369,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedInspectiesRoute: typeof AuthenticatedInspectiesRoute
   AuthenticatedMeldingenRoute: typeof AuthenticatedMeldingenRoute
   AuthenticatedMosRoute: typeof AuthenticatedMosRoute
-  AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
   AuthenticatedStopRoute: typeof AuthenticatedStopRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedToolboxesIdRoute: typeof AuthenticatedToolboxesIdRoute
@@ -403,7 +383,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedInspectiesRoute: AuthenticatedInspectiesRoute,
   AuthenticatedMeldingenRoute: AuthenticatedMeldingenRoute,
   AuthenticatedMosRoute: AuthenticatedMosRoute,
-  AuthenticatedReportsRoute: AuthenticatedReportsRoute,
   AuthenticatedStopRoute: AuthenticatedStopRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedToolboxesIdRoute: AuthenticatedToolboxesIdRoute,

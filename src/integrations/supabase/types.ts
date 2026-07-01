@@ -32,6 +32,7 @@ export type Database = {
           last_synced_at: string | null
           monday_board_id: number | null
           monday_item_id: number | null
+          nickname: string | null
           notes: string | null
           phone: string | null
           updated_at: string
@@ -54,6 +55,7 @@ export type Database = {
           last_synced_at?: string | null
           monday_board_id?: number | null
           monday_item_id?: number | null
+          nickname?: string | null
           notes?: string | null
           phone?: string | null
           updated_at?: string
@@ -76,6 +78,7 @@ export type Database = {
           last_synced_at?: string | null
           monday_board_id?: number | null
           monday_item_id?: number | null
+          nickname?: string | null
           notes?: string | null
           phone?: string | null
           updated_at?: string

@@ -81,18 +81,18 @@ function ToolboxDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("employees")
-        .select("id, full_name, function_title")
-        .eq("is_active", true)
-        .order("full_name");
+        .select("id, first_name, last_name, function_title")
+        .eq("active", true)
+        .order("last_name");
       if (error) throw error;
-      return data;
+      return data.map((e) => ({ id: e.id, full_name: `${e.first_name} ${e.last_name}`, function_title: e.function_title }));
     },
     enabled: planSessionOpen,
   });
 
   const currentVersion = versions?.find((v) => v.version_number === toolbox?.current_version) ?? versions?.[0];
 
-  const updateMeta = async (patch: Partial<{ title: string; description: string; category: string; status: string }>) => {
+  const updateMeta = async (patch: { title?: string; description?: string; category?: string; status?: "draft" | "published" | "archived" }) => {
     const { error } = await supabase.from("toolboxes").update(patch).eq("id", id);
     if (error) return toast.error(error.message);
     queryClient.invalidateQueries({ queryKey: ["toolbox", id] });

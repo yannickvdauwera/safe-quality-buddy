@@ -169,6 +169,75 @@ export type Database = {
           },
         ]
       }
+      safety_observations: {
+        Row: {
+          action_taken: string | null
+          area: string | null
+          company_action: string | null
+          created_at: string
+          hazards: string[]
+          id: string
+          improvement_proposal: string | null
+          involved_party: string | null
+          location: string | null
+          observed_date: string
+          observed_time: string | null
+          plant: string | null
+          reporter_function: string | null
+          reporter_id: string | null
+          reporter_name: string
+          risks: string[]
+          situation_description: string | null
+          status: Database["public"]["Enums"]["report_status"]
+          type: Database["public"]["Enums"]["safety_observation_type"]
+          updated_at: string
+        }
+        Insert: {
+          action_taken?: string | null
+          area?: string | null
+          company_action?: string | null
+          created_at?: string
+          hazards?: string[]
+          id?: string
+          improvement_proposal?: string | null
+          involved_party?: string | null
+          location?: string | null
+          observed_date?: string
+          observed_time?: string | null
+          plant?: string | null
+          reporter_function?: string | null
+          reporter_id?: string | null
+          reporter_name: string
+          risks?: string[]
+          situation_description?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          type: Database["public"]["Enums"]["safety_observation_type"]
+          updated_at?: string
+        }
+        Update: {
+          action_taken?: string | null
+          area?: string | null
+          company_action?: string | null
+          created_at?: string
+          hazards?: string[]
+          id?: string
+          improvement_proposal?: string | null
+          involved_party?: string | null
+          location?: string | null
+          observed_date?: string
+          observed_time?: string | null
+          plant?: string | null
+          reporter_function?: string | null
+          reporter_id?: string | null
+          reporter_name?: string
+          risks?: string[]
+          situation_description?: string | null
+          status?: Database["public"]["Enums"]["report_status"]
+          type?: Database["public"]["Enums"]["safety_observation_type"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -215,6 +284,7 @@ export type Database = {
         | "kwaliteit"
         | "klacht"
         | "andere"
+      safety_observation_type: "mos" | "stop"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -354,6 +424,7 @@ export const Constants = {
         "klacht",
         "andere",
       ],
+      safety_observation_type: ["mos", "stop"],
     },
   },
 } as const

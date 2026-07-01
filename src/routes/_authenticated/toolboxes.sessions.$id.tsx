@@ -181,7 +181,7 @@ function SessionDetail() {
             </div>
             <div className="flex items-center gap-2">
               <Label className="text-xs">Status:</Label>
-              <Select value={session.status} onValueChange={updateStatus}>
+              <Select value={session.status} onValueChange={(v) => updateStatus(v as "planned" | "in_progress" | "completed" | "cancelled")}>
                 <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="planned">Gepland</SelectItem>

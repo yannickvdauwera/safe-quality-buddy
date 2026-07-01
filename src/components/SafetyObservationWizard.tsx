@@ -215,9 +215,12 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
   };
 
   // Cleanup preview URLs
+  // Cleanup preview URLs on unmount
+  const photosRef = useRef(photos);
+  photosRef.current = photos;
   useEffect(() => () => {
-    photos.forEach((p) => URL.revokeObjectURL(p.previewUrl));
-  }, [photos]);
+    photosRef.current.forEach((p) => URL.revokeObjectURL(p.previewUrl));
+  }, []);
 
   return (
     <div className="space-y-6">

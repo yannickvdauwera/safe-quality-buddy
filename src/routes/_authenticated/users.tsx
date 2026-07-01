@@ -241,6 +241,17 @@ function UsersPage() {
                           })}>
                             <Link2 className="w-4 h-4" /> Koppel personeelsfiche
                           </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => setDeleteDialog({
+                              userId: u.id,
+                              name: u.full_name ?? u.email ?? "gebruiker",
+                              email: u.email,
+                            })}
+                          >
+                            <Trash2 className="w-4 h-4" /> Verwijder gebruiker
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

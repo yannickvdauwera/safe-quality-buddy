@@ -224,6 +224,57 @@ export async function exportToPdf(o: ObservationExport) {
     y = (doc.lastAutoTable?.finalY ?? y) + 6;
   }
 
+  // Signature block
+  if (o.signature_data_url) {
+    if (y > pageH - 60) { doc.addPage(); drawHeader(); y = 32; }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(...TSA_DARK);
+    doc.text("ONDERTEKENING", 12, y);
+    y += 4;
+    doc.setDrawColor(...TSA_RED);
+    doc.setLineWidth(0.4);
+    doc.line(12, y, pageW - 12, y);
+    y += 4;
+    try {
+      doc.addImage(o.signature_data_url, "PNG", 12, y, 70, 26);
+    } catch { /* ignore */ }
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...TSA_DARK);
+    doc.text(o.signer_name ?? o.reporter_name, 90, y + 10);
+    doc.setTextColor(120, 120, 120);
+    doc.text(o.signer_function ?? o.reporter_function ?? "", 90, y + 15);
+    y += 32;
+  }
+
+  // Photos
+  const photoBytes = o.photos?.length ? await loadPhotoBytes(o.photos) : [];
+  if (photoBytes.length) {
+    if (y > pageH - 70) { doc.addPage(); drawHeader(); y = 32; }
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(...TSA_DARK);
+    doc.text("FOTO'S", 12, y);
+    y += 4;
+    doc.setDrawColor(...TSA_RED);
+    doc.line(12, y, pageW - 12, y);
+    y += 4;
+    const colW = (pageW - 24 - 6) / 2;
+    const rowH = 55;
+    let col = 0;
+    for (const p of photoBytes) {
+      if (y + rowH > pageH - 20) { doc.addPage(); drawHeader(); y = 32; col = 0; }
+      const x = 12 + col * (colW + 6);
+      try {
+        doc.addImage(p.dataUrl, "JPEG", x, y, colW, rowH);
+      } catch { /* skip broken image */ }
+      col++;
+      if (col === 2) { col = 0; y += rowH + 4; }
+    }
+    if (col !== 0) y += rowH + 4;
+  }
+
   const total = doc.getNumberOfPages();
   for (let i = 1; i <= total; i++) {
     doc.setPage(i);

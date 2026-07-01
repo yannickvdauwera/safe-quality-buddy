@@ -159,61 +159,75 @@ export function ReportsList({
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4" /> {newLabel}</Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className={CreateFormComponent ? "max-w-2xl max-h-[90vh] overflow-y-auto" : "max-w-lg"}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2"><Icon className="w-5 h-5" /> {newLabel}</DialogTitle>
               <DialogDescription>Registreer een nieuwe {singularNoun}.</DialogDescription>
             </DialogHeader>
-            <form onSubmit={handleCreate} className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="type">Type *</Label>
-                  <Select name="type" defaultValue={defaultType} required>
-                    <SelectTrigger id="type"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      {typeOptions.map((t) => (<SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="severity">Ernst *</Label>
-                  <Select name="severity" defaultValue="middel" required>
-                    <SelectTrigger id="severity"><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="laag">Laag</SelectItem>
-                      <SelectItem value="middel">Middel</SelectItem>
-                      <SelectItem value="hoog">Hoog</SelectItem>
-                      <SelectItem value="kritiek">Kritiek</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="title">Titel *</Label>
-                <Input id="title" name="title" required maxLength={200} placeholder="Korte samenvatting" />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="description">Beschrijving</Label>
-                <Textarea id="description" name="description" rows={4} maxLength={4000} placeholder="Wat is er vastgesteld? Waar? Waarom?" />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="location">{locationLabel}</Label>
-                  <Input id="location" name="location" maxLength={200} placeholder="Plant / afdeling / zone" />
-                </div>
-                {showInvolvedFirm && (
+            {CreateFormComponent ? (
+              <CreateFormComponent
+                onClose={() => setOpen(false)}
+                onCreated={() => {
+                  setOpen(false);
+                  queryClient.invalidateQueries({ queryKey: [queryKey] });
+                  queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
+                }}
+                typeOptions={typeOptions}
+                defaultType={defaultType}
+              />
+            ) : (
+              <form onSubmit={handleCreate} className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="involved_firm">Betrokken firma</Label>
-                    <Input id="involved_firm" name="involved_firm" maxLength={200} />
+                    <Label htmlFor="type">Type *</Label>
+                    <Select name="type" defaultValue={defaultType} required>
+                      <SelectTrigger id="type"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {typeOptions.map((t) => (<SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                )}
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setOpen(false)}>Annuleren</Button>
-                <Button type="submit" disabled={saving}>Registreren</Button>
-              </DialogFooter>
-            </form>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="severity">Ernst *</Label>
+                    <Select name="severity" defaultValue="middel" required>
+                      <SelectTrigger id="severity"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="laag">Laag</SelectItem>
+                        <SelectItem value="middel">Middel</SelectItem>
+                        <SelectItem value="hoog">Hoog</SelectItem>
+                        <SelectItem value="kritiek">Kritiek</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="title">Titel *</Label>
+                  <Input id="title" name="title" required maxLength={200} placeholder="Korte samenvatting" />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="description">Beschrijving</Label>
+                  <Textarea id="description" name="description" rows={4} maxLength={4000} placeholder="Wat is er vastgesteld? Waar? Waarom?" />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="location">{locationLabel}</Label>
+                    <Input id="location" name="location" maxLength={200} placeholder="Plant / afdeling / zone" />
+                  </div>
+                  {showInvolvedFirm && (
+                    <div className="space-y-1.5">
+                      <Label htmlFor="involved_firm">Betrokken firma</Label>
+                      <Input id="involved_firm" name="involved_firm" maxLength={200} />
+                    </div>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setOpen(false)}>Annuleren</Button>
+                  <Button type="submit" disabled={saving}>Registreren</Button>
+                </DialogFooter>
+              </form>
+            )}
           </DialogContent>
+
         </Dialog>
       </div>
 

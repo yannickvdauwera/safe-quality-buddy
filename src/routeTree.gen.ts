@@ -13,6 +13,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignTokenRouteImport } from './routes/sign.$token'
+import { Route as ReportTypeRouteImport } from './routes/report.$type'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedStopRouteImport } from './routes/_authenticated/stop'
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
@@ -42,6 +43,11 @@ const IndexRoute = IndexRouteImport.update({
 const SignTokenRoute = SignTokenRouteImport.update({
   id: '/sign/$token',
   path: '/sign/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportTypeRoute = ReportTypeRouteImport.update({
+  id: '/report/$type',
+  path: '/report/$type',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/reports': typeof AuthenticatedReportsRoute
   '/stop': typeof AuthenticatedStopRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/report/$type': typeof ReportTypeRoute
   '/sign/$token': typeof SignTokenRoute
   '/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
@@ -129,6 +136,7 @@ export interface FileRoutesByTo {
   '/reports': typeof AuthenticatedReportsRoute
   '/stop': typeof AuthenticatedStopRoute
   '/users': typeof AuthenticatedUsersRoute
+  '/report/$type': typeof ReportTypeRoute
   '/sign/$token': typeof SignTokenRoute
   '/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
@@ -147,6 +155,7 @@ export interface FileRoutesById {
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
   '/_authenticated/stop': typeof AuthenticatedStopRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
+  '/report/$type': typeof ReportTypeRoute
   '/sign/$token': typeof SignTokenRoute
   '/_authenticated/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/_authenticated/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
@@ -165,6 +174,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/stop'
     | '/users'
+    | '/report/$type'
     | '/sign/$token'
     | '/toolboxes/$id'
     | '/toolboxes/new'
@@ -181,6 +191,7 @@ export interface FileRouteTypes {
     | '/reports'
     | '/stop'
     | '/users'
+    | '/report/$type'
     | '/sign/$token'
     | '/toolboxes/$id'
     | '/toolboxes/new'
@@ -198,6 +209,7 @@ export interface FileRouteTypes {
     | '/_authenticated/reports'
     | '/_authenticated/stop'
     | '/_authenticated/users'
+    | '/report/$type'
     | '/sign/$token'
     | '/_authenticated/toolboxes/$id'
     | '/_authenticated/toolboxes/new'
@@ -210,6 +222,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ReportTypeRoute: typeof ReportTypeRoute
   SignTokenRoute: typeof SignTokenRoute
   ApiPublicToolboxSignRoute: typeof ApiPublicToolboxSignRoute
 }
@@ -242,6 +255,13 @@ declare module '@tanstack/react-router' {
       path: '/sign/$token'
       fullPath: '/sign/$token'
       preLoaderRoute: typeof SignTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/report/$type': {
+      id: '/report/$type'
+      path: '/report/$type'
+      fullPath: '/report/$type'
+      preLoaderRoute: typeof ReportTypeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/users': {
@@ -357,6 +377,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ReportTypeRoute: ReportTypeRoute,
   SignTokenRoute: SignTokenRoute,
   ApiPublicToolboxSignRoute: ApiPublicToolboxSignRoute,
 }

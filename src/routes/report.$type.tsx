@@ -32,7 +32,7 @@ export const Route = createFileRoute("/report/$type")({
 });
 
 function PublicReportPage() {
-  const { type } = Route.useLoaderData();
+  const { type } = Route.useLoaderData() as { type: SafetyObservationType };
   const label = TYPE_LABELS[type];
   const [done, setDone] = useState(false);
 

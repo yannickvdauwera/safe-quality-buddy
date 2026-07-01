@@ -193,6 +193,23 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
         </>
       )}
 
+      {config.captureSignature && (
+        <div className="space-y-2">
+          <Separator />
+          <Label>Handtekening uitvoerder WPI/observatie</Label>
+          {signature ? (
+            <div className="flex items-center gap-3">
+              <img src={signature} alt="Handtekening" className="h-20 border rounded bg-white" />
+              <Button type="button" variant="outline" size="sm" onClick={() => setSignature(null)}>
+                Opnieuw tekenen
+              </Button>
+            </div>
+          ) : (
+            <SignaturePad onSave={(dataUrl) => setSignature(dataUrl)} />
+          )}
+        </div>
+      )}
+
       <DialogFooter>
         <Button type="button" variant="outline" onClick={onClose}>Annuleren</Button>
         <Button type="submit" disabled={saving}>Registreren</Button>

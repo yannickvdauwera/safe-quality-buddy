@@ -94,8 +94,8 @@ function SessionDetail() {
     } finally { setSaving(false); }
   };
 
-  const updateStatus = async (status: string) => {
-    const patch: Record<string, unknown> = { status };
+  const updateStatus = async (status: "planned" | "in_progress" | "completed" | "cancelled") => {
+    const patch: { status: typeof status; given_at?: string } = { status };
     if (status === "in_progress" || status === "completed") patch.given_at = new Date().toISOString();
     const { error } = await supabase.from("toolbox_sessions").update(patch).eq("id", id);
     if (error) return toast.error(error.message);

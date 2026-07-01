@@ -174,7 +174,7 @@ function MondayIntegrationPage() {
                       {e.error && <div className="mt-1 truncate text-xs text-destructive">{e.error}</div>}
                     </div>
                     <div className="shrink-0 text-xs text-muted-foreground">
-                      {new Date(e.created_at).toLocaleString("nl-BE")}
+                      {new Date(e.received_at).toLocaleString("nl-BE")}
                     </div>
                   </div>
                 ))}

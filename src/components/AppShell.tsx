@@ -87,11 +87,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   const nav: NavItem[] = hasRole("admin")
     ? [
         ...baseNav,
-        { to: "/integraties/monday", label: "Monday-integratie", icon: Plug },
-        { to: "/users", label: "Gebruikers & rollen", icon: Shield },
-        { to: "/settings", label: "Instellingen", icon: Wrench, disabled: true },
+        {
+          kind: "group",
+          basePath: "/instellingen-hub",
+          label: "Instellingen",
+          icon: Wrench,
+          children: [
+            { to: "/users", label: "Gebruikers & rollen", icon: Shield },
+            { to: "/integraties/monday", label: "Monday-integratie", icon: Plug },
+          ],
+        },
       ]
-    : [...baseNav, { to: "/settings", label: "Instellingen", icon: Wrench, disabled: true }];
+    : baseNav;
 
   const handleSignOut = async () => {
     await queryClient.cancelQueries();

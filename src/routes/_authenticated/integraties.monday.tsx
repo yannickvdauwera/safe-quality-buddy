@@ -1,4 +1,4 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
@@ -15,10 +15,6 @@ import {
 } from "@/lib/monday-integration.functions";
 
 export const Route = createFileRoute("/_authenticated/integraties/monday")({
-  beforeLoad: ({ context }) => {
-    const roles = (context as { roles?: string[] }).roles ?? [];
-    if (!roles.includes("admin")) throw redirect({ to: "/dashboard" });
-  },
   component: MondayIntegrationPage,
 });
 

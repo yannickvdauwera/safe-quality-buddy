@@ -25,6 +25,7 @@ import { Route as AuthenticatedToolboxesIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedMeldingenIndexRouteImport } from './routes/_authenticated/meldingen.index'
 import { Route as AuthenticatedInspectiesIndexRouteImport } from './routes/_authenticated/inspecties.index'
 import { Route as ApiPublicToolboxSignRouteImport } from './routes/api/public/toolbox-sign'
+import { Route as ApiPublicMondayWebhookRouteImport } from './routes/api/public/monday-webhook'
 import { Route as AuthenticatedToolboxesNewRouteImport } from './routes/_authenticated/toolboxes.new'
 import { Route as AuthenticatedToolboxesIdRouteImport } from './routes/_authenticated/toolboxes.$id'
 import { Route as AuthenticatedMeldingenOngevallenRouteImport } from './routes/_authenticated/meldingen.ongevallen'
@@ -116,6 +117,11 @@ const ApiPublicToolboxSignRoute = ApiPublicToolboxSignRouteImport.update({
   path: '/api/public/toolbox-sign',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicMondayWebhookRoute = ApiPublicMondayWebhookRouteImport.update({
+  id: '/api/public/monday-webhook',
+  path: '/api/public/monday-webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedToolboxesNewRoute =
   AuthenticatedToolboxesNewRouteImport.update({
     id: '/toolboxes/new',
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
   '/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
+  '/api/public/monday-webhook': typeof ApiPublicMondayWebhookRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
   '/inspecties/': typeof AuthenticatedInspectiesIndexRoute
   '/meldingen/': typeof AuthenticatedMeldingenIndexRoute
@@ -207,6 +214,7 @@ export interface FileRoutesByTo {
   '/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
   '/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
+  '/api/public/monday-webhook': typeof ApiPublicMondayWebhookRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
   '/inspecties': typeof AuthenticatedInspectiesIndexRoute
   '/meldingen': typeof AuthenticatedMeldingenIndexRoute
@@ -234,6 +242,7 @@ export interface FileRoutesById {
   '/_authenticated/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
   '/_authenticated/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/_authenticated/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
+  '/api/public/monday-webhook': typeof ApiPublicMondayWebhookRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
   '/_authenticated/inspecties/': typeof AuthenticatedInspectiesIndexRoute
   '/_authenticated/meldingen/': typeof AuthenticatedMeldingenIndexRoute
@@ -261,6 +270,7 @@ export interface FileRouteTypes {
     | '/meldingen/ongevallen'
     | '/toolboxes/$id'
     | '/toolboxes/new'
+    | '/api/public/monday-webhook'
     | '/api/public/toolbox-sign'
     | '/inspecties/'
     | '/meldingen/'
@@ -284,6 +294,7 @@ export interface FileRouteTypes {
     | '/meldingen/ongevallen'
     | '/toolboxes/$id'
     | '/toolboxes/new'
+    | '/api/public/monday-webhook'
     | '/api/public/toolbox-sign'
     | '/inspecties'
     | '/meldingen'
@@ -310,6 +321,7 @@ export interface FileRouteTypes {
     | '/_authenticated/meldingen/ongevallen'
     | '/_authenticated/toolboxes/$id'
     | '/_authenticated/toolboxes/new'
+    | '/api/public/monday-webhook'
     | '/api/public/toolbox-sign'
     | '/_authenticated/inspecties/'
     | '/_authenticated/meldingen/'
@@ -323,6 +335,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ReportTypeRoute: typeof ReportTypeRoute
   SignTokenRoute: typeof SignTokenRoute
+  ApiPublicMondayWebhookRoute: typeof ApiPublicMondayWebhookRoute
   ApiPublicToolboxSignRoute: typeof ApiPublicToolboxSignRoute
 }
 
@@ -438,6 +451,13 @@ declare module '@tanstack/react-router' {
       path: '/api/public/toolbox-sign'
       fullPath: '/api/public/toolbox-sign'
       preLoaderRoute: typeof ApiPublicToolboxSignRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/monday-webhook': {
+      id: '/api/public/monday-webhook'
+      path: '/api/public/monday-webhook'
+      fullPath: '/api/public/monday-webhook'
+      preLoaderRoute: typeof ApiPublicMondayWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/toolboxes/new': {
@@ -576,18 +596,9 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ReportTypeRoute: ReportTypeRoute,
   SignTokenRoute: SignTokenRoute,
+  ApiPublicMondayWebhookRoute: ApiPublicMondayWebhookRoute,
   ApiPublicToolboxSignRoute: ApiPublicToolboxSignRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

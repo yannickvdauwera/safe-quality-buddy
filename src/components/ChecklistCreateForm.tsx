@@ -21,12 +21,14 @@ export interface ChecklistSection {
 export interface ChecklistConfig {
   reportType: string;
   headerFields: Array<
-    | { key: string; label: string; type: "text" | "date"; required?: boolean; placeholder?: string }
+    | { key: string; label: string; type: "text" | "date" | "datetime"; required?: boolean; placeholder?: string }
   >;
   sections: ChecklistSection[];
   /** Auto title template using header field keys, e.g. `WPI — {victim} @ {location}` */
   titleTemplate: (h: Record<string, string>) => string;
   extraTextFields?: Array<{ key: string; label: string; placeholder?: string; required?: boolean; rows?: number }>;
+  /** Show signature pad for the executor at bottom of form */
+  captureSignature?: boolean;
 }
 
 const ANSWERS: Array<{ value: "ok" | "nok" | "nvt"; label: string; cls: string }> = [

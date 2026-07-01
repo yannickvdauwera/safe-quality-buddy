@@ -22,12 +22,16 @@ export type Database = {
           department: string | null
           email: string | null
           employee_number: string | null
+          employer: string | null
           end_date: string | null
           first_name: string
           function_title: string | null
           hire_date: string | null
           id: string
           last_name: string
+          last_synced_at: string | null
+          monday_board_id: number | null
+          monday_item_id: number | null
           notes: string | null
           phone: string | null
           updated_at: string
@@ -40,12 +44,16 @@ export type Database = {
           department?: string | null
           email?: string | null
           employee_number?: string | null
+          employer?: string | null
           end_date?: string | null
           first_name: string
           function_title?: string | null
           hire_date?: string | null
           id?: string
           last_name: string
+          last_synced_at?: string | null
+          monday_board_id?: number | null
+          monday_item_id?: number | null
           notes?: string | null
           phone?: string | null
           updated_at?: string
@@ -58,18 +66,66 @@ export type Database = {
           department?: string | null
           email?: string | null
           employee_number?: string | null
+          employer?: string | null
           end_date?: string | null
           first_name?: string
           function_title?: string | null
           hire_date?: string | null
           id?: string
           last_name?: string
+          last_synced_at?: string | null
+          monday_board_id?: number | null
+          monday_item_id?: number | null
           notes?: string | null
           phone?: string | null
           updated_at?: string
           user_id?: string | null
         }
         Relationships: []
+      }
+      monday_sync_events: {
+        Row: {
+          employee_id: string | null
+          error: string | null
+          event_type: string | null
+          id: string
+          monday_board_id: number | null
+          monday_item_id: number | null
+          payload: Json
+          received_at: string
+          status: string
+        }
+        Insert: {
+          employee_id?: string | null
+          error?: string | null
+          event_type?: string | null
+          id?: string
+          monday_board_id?: number | null
+          monday_item_id?: number | null
+          payload: Json
+          received_at?: string
+          status: string
+        }
+        Update: {
+          employee_id?: string | null
+          error?: string | null
+          event_type?: string | null
+          id?: string
+          monday_board_id?: number | null
+          monday_item_id?: number | null
+          payload?: Json
+          received_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monday_sync_events_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

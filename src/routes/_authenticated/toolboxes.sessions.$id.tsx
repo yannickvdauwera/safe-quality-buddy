@@ -73,7 +73,7 @@ function SessionDetail() {
       });
     },
   });
-  });
+
 
   const { data: signatures } = useQuery({
     queryKey: ["session-signatures", id],

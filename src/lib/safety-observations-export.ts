@@ -7,6 +7,7 @@ import {
 } from "docx";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import { supabase } from "@/integrations/supabase/client";
 import { TYPE_LABELS, type SafetyObservationType } from "./safety-observations";
 import tsaLogoUrl from "@/assets/tsa-logo.png";
 

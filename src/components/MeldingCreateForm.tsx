@@ -236,13 +236,13 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
               <Input value={aoVictimName} onChange={(e) => setAoVictimName(e.target.value)} placeholder="Achternaam, Voornaam" required />
             </div>
             <div className="space-y-1.5">
-              <Label>Hulpverlener</Label>
-              <Input value={aoFirstAider} onChange={(e) => setAoFirstAider(e.target.value)} placeholder="Naam EHBO/hulpverlener" />
+              <Label>Hulpverlener *</Label>
+              <Input value={aoFirstAider} onChange={(e) => setAoFirstAider(e.target.value)} placeholder="Naam EHBO/hulpverlener" required />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Type contract</Label>
+              <Label>Type contract *</Label>
               <Select value={aoContractType} onValueChange={setAoContractType}>
                 <SelectTrigger><SelectValue placeholder="Kies…" /></SelectTrigger>
                 <SelectContent>
@@ -251,13 +251,13 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
               </Select>
             </div>
             <div className="space-y-1.5">
-              <Label>Locatie</Label>
-              <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Plant / werf / zone" />
+              <Label>Locatie *</Label>
+              <Input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Plant / werf / zone" required />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Lichaamsdeel</Label>
+              <Label>Lichaamsdeel *</Label>
               <Select value={aoBodyPart} onValueChange={setAoBodyPart}>
                 <SelectTrigger><SelectValue placeholder="Kies…" /></SelectTrigger>
                 <SelectContent>
@@ -271,20 +271,32 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label>Detail van de gekwetste lichaamsdelen</Label>
-            <Input value={aoBodyDetail} onChange={(e) => setAoBodyDetail(e.target.value)} placeholder="bv. linker wijsvinger, bovenkant" />
+            <Label>Detail van de gekwetste lichaamsdelen *</Label>
+            <Input value={aoBodyDetail} onChange={(e) => setAoBodyDetail(e.target.value)} placeholder="bv. linker wijsvinger, bovenkant" required />
           </div>
           <div className="space-y-1.5">
             <Label>Relaas *</Label>
             <Textarea rows={4} value={aoRelaas} onChange={(e) => setAoRelaas(e.target.value)} maxLength={4000} placeholder="Wat is er precies gebeurd?" required />
           </div>
           <div className="space-y-1.5">
-            <Label>Ongevallenonderzoek</Label>
-            <Textarea rows={3} value={aoInvestigation} onChange={(e) => setAoInvestigation(e.target.value)} maxLength={4000} placeholder="Oorzaken, vaststellingen, genomen maatregelen…" />
+            <Label>Ongevallenonderzoek *</Label>
+            <Textarea rows={3} value={aoInvestigation} onChange={(e) => setAoInvestigation(e.target.value)} maxLength={4000} placeholder="Oorzaken, vaststellingen, genomen maatregelen…" required />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Bijlagen (foto's, PV, verklaringen…)</Label>
+            <Input
+              type="file"
+              multiple
+              accept="image/*,application/pdf,.doc,.docx"
+              onChange={(e) => setAoFiles(Array.from(e.target.files ?? []))}
+            />
+            {aoFiles.length > 0 && (
+              <p className="text-xs text-muted-foreground">{aoFiles.length} bestand(en) geselecteerd</p>
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>Korte titel (optioneel)</Label>
-            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Wordt automatisch samengesteld indien leeg" />
+            <Input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Wordt automatisch samengesteld (ddmmyyyy - achternaam)" />
           </div>
         </>
       )}

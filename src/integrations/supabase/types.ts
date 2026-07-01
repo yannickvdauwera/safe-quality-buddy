@@ -101,6 +101,74 @@ export type Database = {
         }
         Relationships: []
       }
+      reports: {
+        Row: {
+          assigned_to: string | null
+          closed_at: string | null
+          created_at: string
+          deadline: string | null
+          description: string | null
+          follow_up_notes: string | null
+          id: string
+          involved_firm: string | null
+          location: string | null
+          observed_at: string
+          reporter_employee_id: string | null
+          reporter_id: string | null
+          severity: Database["public"]["Enums"]["report_severity"]
+          status: Database["public"]["Enums"]["report_status"]
+          title: string
+          type: Database["public"]["Enums"]["report_type"]
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          closed_at?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          follow_up_notes?: string | null
+          id?: string
+          involved_firm?: string | null
+          location?: string | null
+          observed_at?: string
+          reporter_employee_id?: string | null
+          reporter_id?: string | null
+          severity?: Database["public"]["Enums"]["report_severity"]
+          status?: Database["public"]["Enums"]["report_status"]
+          title: string
+          type: Database["public"]["Enums"]["report_type"]
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          closed_at?: string | null
+          created_at?: string
+          deadline?: string | null
+          description?: string | null
+          follow_up_notes?: string | null
+          id?: string
+          involved_firm?: string | null
+          location?: string | null
+          observed_at?: string
+          reporter_employee_id?: string | null
+          reporter_id?: string | null
+          severity?: Database["public"]["Enums"]["report_severity"]
+          status?: Database["public"]["Enums"]["report_status"]
+          title?: string
+          type?: Database["public"]["Enums"]["report_type"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reports_reporter_employee_id_fkey"
+            columns: ["reporter_employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -137,6 +205,16 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "hse_manager" | "manager" | "operator"
+      report_severity: "laag" | "middel" | "hoog" | "kritiek"
+      report_status: "open" | "in_behandeling" | "opgevolgd" | "gesloten"
+      report_type:
+        | "mos"
+        | "stop"
+        | "ao_ehbo"
+        | "werkplekinspectie"
+        | "kwaliteit"
+        | "klacht"
+        | "andere"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -265,6 +343,17 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "hse_manager", "manager", "operator"],
+      report_severity: ["laag", "middel", "hoog", "kritiek"],
+      report_status: ["open", "in_behandeling", "opgevolgd", "gesloten"],
+      report_type: [
+        "mos",
+        "stop",
+        "ao_ehbo",
+        "werkplekinspectie",
+        "kwaliteit",
+        "klacht",
+        "andere",
+      ],
     },
   },
 } as const

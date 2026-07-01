@@ -29,6 +29,40 @@ export interface ObservationExport {
   improvement_proposal: string | null;
   company_action: string | null;
   status: string;
+  photos?: string[] | null;
+  signature_data_url?: string | null;
+  signer_name?: string | null;
+  signer_function?: string | null;
+}
+
+async function loadPhotoBytes(paths: string[]): Promise<{ dataUrl: string; bytes: Uint8Array }[]> {
+  const out: { dataUrl: string; bytes: Uint8Array }[] = [];
+  for (const p of paths) {
+    const { data } = await supabase.storage.from("safety-observations").createSignedUrl(p, 300);
+    if (!data?.signedUrl) continue;
+    try {
+      const res = await fetch(data.signedUrl);
+      const blob = await res.blob();
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      const dataUrl: string = await new Promise((r) => {
+        const fr = new FileReader();
+        fr.onload = () => r(fr.result as string);
+        fr.readAsDataURL(blob);
+      });
+      out.push({ dataUrl, bytes });
+    } catch {
+      /* skip */
+    }
+  }
+  return out;
+}
+
+function dataUrlToBytes(dataUrl: string): Uint8Array {
+  const b64 = dataUrl.split(",")[1] ?? "";
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
 }
 
 // TSA brand palette

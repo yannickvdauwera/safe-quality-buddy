@@ -530,6 +530,7 @@ export type Database = {
         | "kwaliteit"
         | "klacht"
         | "andere"
+        | "kwaliteitscontrole"
       safety_observation_type: "mos" | "stop"
       toolbox_session_status:
         | "planned"
@@ -676,6 +677,7 @@ export const Constants = {
         "kwaliteit",
         "klacht",
         "andere",
+        "kwaliteitscontrole",
       ],
       safety_observation_type: ["mos", "stop"],
       toolbox_session_status: [

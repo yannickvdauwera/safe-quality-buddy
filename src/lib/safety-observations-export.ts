@@ -110,6 +110,15 @@ const sections = (o: ObservationExport): Array<{ title: string; rows: Array<[str
       ["Status", o.status],
     ],
   },
+  {
+    title: "Bijlagen",
+    rows: [
+      ["Foto's", o.photos?.length ? `${o.photos.length} bijgevoegd` : "—"],
+      ["Handtekening", o.signature_data_url ? "Ja" : "—"],
+      ["Ondertekenaar", o.signer_name ?? "—"],
+      ["Functie ondertekenaar", o.signer_function ?? "—"],
+    ],
+  },
 ];
 
 const filename = (o: ObservationExport, ext: string) =>

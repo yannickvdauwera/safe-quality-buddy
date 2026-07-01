@@ -16,6 +16,19 @@ import {
 import {
   HAZARDS, RISKS, TYPE_LABELS, type SafetyObservationType,
 } from "@/lib/safety-observations";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+
+const FUNCTION_OPTIONS_USER = ["Brandwacht", "Veiligheidswacht", "Gasanalist"] as const;
+const FUNCTION_OPTIONS_ALL = [
+  "Brandwacht",
+  "Veiligheidswacht",
+  "Safety Supervisor",
+  "Preventieadviseur",
+  "Gasanalist",
+  "Coördinator",
+] as const;
 
 interface Props {
   type: SafetyObservationType;

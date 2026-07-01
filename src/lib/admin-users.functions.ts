@@ -161,3 +161,21 @@ export const listUnlinkedEmployees = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return data;
   });
+
+export const deleteUser = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ user_id: z.string().uuid() }).parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    if (data.user_id === context.userId) {
+      throw new Error("Je kan je eigen account niet verwijderen.");
+    }
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    await supabaseAdmin.from("employees").update({ user_id: null }).eq("user_id", data.user_id);
+    await supabaseAdmin.from("user_roles").delete().eq("user_id", data.user_id);
+    const { error } = await supabaseAdmin.auth.admin.deleteUser(data.user_id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });

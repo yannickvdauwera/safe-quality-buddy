@@ -10,6 +10,7 @@ import {
   inviteUser,
   linkEmployee,
   listUnlinkedEmployees,
+  deleteUser,
 } from "@/lib/admin-users.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +28,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { UserPlus, MoreHorizontal, Link2, Shield, Mail, Search } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { UserPlus, MoreHorizontal, Link2, Shield, Mail, Search, Trash2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/users")({
   head: () => ({ meta: [{ title: "Gebruikers & rollen — HSE & Kwaliteit" }] }),
@@ -67,11 +72,13 @@ function UsersPage() {
   const inviteFn = useServerFn(inviteUser);
   const linkFn = useServerFn(linkEmployee);
   const unlinkedFn = useServerFn(listUnlinkedEmployees);
+  const deleteFn = useServerFn(deleteUser);
 
   const [search, setSearch] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
   const [rolesDialog, setRolesDialog] = useState<{ userId: string; name: string; roles: RoleValue[] } | null>(null);
   const [linkDialog, setLinkDialog] = useState<{ userId: string; name: string; currentEmployeeId: string | null } | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{ userId: string; name: string; email: string | null } | null>(null);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin-users"],
@@ -108,6 +115,16 @@ function UsersPage() {
     onSuccess: () => {
       toast.success("Personeelsfiche gekoppeld");
       setLinkDialog(null);
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (data: { user_id: string }) => deleteFn({ data }),
+    onSuccess: () => {
+      toast.success("Gebruiker verwijderd");
+      setDeleteDialog(null);
       invalidate();
     },
     onError: (e: Error) => toast.error(e.message),
@@ -224,6 +241,17 @@ function UsersPage() {
                           })}>
                             <Link2 className="w-4 h-4" /> Koppel personeelsfiche
                           </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem
+                            className="text-destructive focus:text-destructive"
+                            onClick={() => setDeleteDialog({
+                              userId: u.id,
+                              name: u.full_name ?? u.email ?? "gebruiker",
+                              email: u.email,
+                            })}
+                          >
+                            <Trash2 className="w-4 h-4" /> Verwijder gebruiker
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>
@@ -253,6 +281,32 @@ function UsersPage() {
           onSave={(employee_id) => linkMut.mutate({ user_id: linkDialog.userId, employee_id })}
         />
       )}
+
+      <AlertDialog open={!!deleteDialog} onOpenChange={(o) => !o && setDeleteDialog(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Gebruiker verwijderen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Je staat op het punt <strong>{deleteDialog?.name}</strong>
+              {deleteDialog?.email ? <> ({deleteDialog.email})</> : null} definitief te verwijderen.
+              Het account, alle rollen en de koppeling met de personeelsfiche worden verwijderd. Deze actie kan niet ongedaan gemaakt worden.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteMut.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (deleteDialog) deleteMut.mutate({ user_id: deleteDialog.userId });
+              }}
+            >
+              Verwijderen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

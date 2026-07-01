@@ -103,9 +103,17 @@ function mapColumnsToFields(
   return out;
 }
 
-function splitPulseName(name: string | undefined): { first_name?: string; last_name?: string } {
+function parseEmployeeName(name: string | undefined): { first_name?: string; last_name?: string } {
   if (!name) return {};
-  const parts = name.trim().split(/\s+/);
+  const trimmed = name.trim();
+  // Preferred Monday format: "Achternaam, Voornaam"
+  if (trimmed.includes(",")) {
+    const [last, ...firstParts] = trimmed.split(",");
+    const first = firstParts.join(",").trim();
+    return { last_name: last.trim() || undefined, first_name: first || undefined };
+  }
+  // Fallback: "Voornaam Achternaam"
+  const parts = trimmed.split(/\s+/);
   if (parts.length === 1) return { last_name: parts[0] };
   return { first_name: parts[0], last_name: parts.slice(1).join(" ") };
 }

@@ -12,6 +12,7 @@ import {
   Menu,
   X,
   ShieldCheck,
+  Shield,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -27,22 +28,25 @@ interface NavItem {
   disabled?: boolean;
 }
 
-const nav: NavItem[] = [
+const baseNav: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/employees", label: "Personeelsfiches", icon: Users },
   { to: "/documents", label: "Documenten", icon: FileText, disabled: true },
   { to: "/reports", label: "Meldingen & inspecties", icon: AlertTriangle, disabled: true },
   { to: "/toolboxes", label: "Toolboxen", icon: ClipboardCheck, disabled: true },
   { to: "/risk-analyses", label: "Risicoanalyses", icon: ShieldAlert, disabled: true },
-  { to: "/settings", label: "Instellingen", icon: Wrench, disabled: true },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { user, roles } = useAuth();
+  const { user, roles, hasRole } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const nav: NavItem[] = hasRole("admin")
+    ? [...baseNav, { to: "/users", label: "Gebruikers & rollen", icon: Shield }, { to: "/settings", label: "Instellingen", icon: Wrench, disabled: true }]
+    : [...baseNav, { to: "/settings", label: "Instellingen", icon: Wrench, disabled: true }];
 
   const handleSignOut = async () => {
     await queryClient.cancelQueries();

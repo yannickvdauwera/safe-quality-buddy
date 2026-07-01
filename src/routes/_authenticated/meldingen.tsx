@@ -11,9 +11,9 @@ export const Route = createFileRoute("/_authenticated/meldingen")({
 const TYPES = [
   { value: "ao_ehbo", label: "Arbeidsongeval / EHBO" },
   { value: "klacht", label: "Interne klacht / incident" },
-  { value: "kwaliteit", label: "Kwaliteitscontrole" },
   { value: "andere", label: "Andere melding" },
 ];
+
 
 function MeldingenPage() {
   return (

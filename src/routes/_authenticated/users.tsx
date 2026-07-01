@@ -281,6 +281,32 @@ function UsersPage() {
           onSave={(employee_id) => linkMut.mutate({ user_id: linkDialog.userId, employee_id })}
         />
       )}
+
+      <AlertDialog open={!!deleteDialog} onOpenChange={(o) => !o && setDeleteDialog(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Gebruiker verwijderen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Je staat op het punt <strong>{deleteDialog?.name}</strong>
+              {deleteDialog?.email ? <> ({deleteDialog.email})</> : null} definitief te verwijderen.
+              Het account, alle rollen en de koppeling met de personeelsfiche worden verwijderd. Deze actie kan niet ongedaan gemaakt worden.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteMut.isPending}
+              onClick={(e) => {
+                e.preventDefault();
+                if (deleteDialog) deleteMut.mutate({ user_id: deleteDialog.userId });
+              }}
+            >
+              Verwijderen
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

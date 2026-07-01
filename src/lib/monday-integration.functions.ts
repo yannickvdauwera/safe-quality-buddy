@@ -17,14 +17,28 @@ export const getMondayWebhookUrl = createServerFn({ method: "GET" })
       return { url: null as string | null, configured: false as const };
     }
 
-    // Prefer the stable published URL when we're on a *.lovable.app host,
-    // otherwise fall back to the current host (works in preview too).
+    // Build stable *.lovable.app URLs so Monday keeps working across renames/redeploys.
+    // id-preview--<id>.lovable.app → project--<id>.lovable.app (published) & -dev (preview).
     const host = getRequestHost();
-    const scheme = host.startsWith("localhost") ? "http" : "https";
-    const base = `${scheme}://${host}`;
-    const url = `${base}/api/public/monday-webhook?secret=${encodeURIComponent(secret)}`;
+    let projectId: string | null = null;
+    const m = host.match(/^(?:id-preview--|project--)([0-9a-f-]+)(?:-dev)?\.lovable\.app$/i);
+    if (m) projectId = m[1];
 
-    return { url, configured: true as const };
+    const scheme = host.startsWith("localhost") ? "http" : "https";
+    const currentUrl = `${scheme}://${host}/api/public/monday-webhook?secret=${encodeURIComponent(secret)}`;
+    const publishedUrl = projectId
+      ? `https://project--${projectId}.lovable.app/api/public/monday-webhook?secret=${encodeURIComponent(secret)}`
+      : null;
+    const previewUrl = projectId
+      ? `https://project--${projectId}-dev.lovable.app/api/public/monday-webhook?secret=${encodeURIComponent(secret)}`
+      : null;
+
+    return {
+      url: publishedUrl ?? currentUrl,
+      publishedUrl,
+      previewUrl,
+      configured: true as const,
+    };
   });
 
 export const getMondaySyncEvents = createServerFn({ method: "GET" })

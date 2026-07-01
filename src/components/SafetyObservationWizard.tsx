@@ -278,11 +278,19 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
           </div>
           <div className="space-y-1.5">
             <Label>Functie</Label>
-            <Input
-              value={form.reporter_function}
-              onChange={(e) => upd("reporter_function", e.target.value)}
-              maxLength={120}
-            />
+            <Select
+              value={form.reporter_function || undefined}
+              onValueChange={(v) => upd("reporter_function", v)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Kies functie" />
+              </SelectTrigger>
+              <SelectContent>
+                {functionOptions.map((opt) => (
+                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           <div className="space-y-1.5">
             <Label>Datum</Label>

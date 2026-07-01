@@ -50,11 +50,16 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
   const [severity, setSeverity] = useState<string>("middel");
   const [header, setHeader] = useState<Record<string, string>>(() => {
     const out: Record<string, string> = {};
-    config.headerFields.forEach((f) => (out[f.key] = f.type === "date" ? new Date().toISOString().slice(0, 10) : ""));
+    config.headerFields.forEach((f) => {
+      if (f.type === "date") out[f.key] = new Date().toISOString().slice(0, 10);
+      else if (f.type === "datetime") out[f.key] = new Date().toISOString().slice(0, 16);
+      else out[f.key] = "";
+    });
     return out;
   });
   const [answers, setAnswers] = useState<Record<string, "ok" | "nok" | "nvt">>({});
   const [extras, setExtras] = useState<Record<string, string>>({});
+  const [signature, setSignature] = useState<string | null>(null);
 
   const totalQ = config.sections.reduce((s, sec) => s + sec.questions.length, 0);
   const answered = Object.keys(answers).length;

@@ -70,6 +70,7 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
   const [aoBodyDetail, setAoBodyDetail] = useState("");
   const [aoRelaas, setAoRelaas] = useState("");
   const [aoInvestigation, setAoInvestigation] = useState("");
+  const [aoFiles, setAoFiles] = useState<File[]>([]);
 
   // Klacht / incident
   const [klSubmitterName, setKlSubmitterName] = useState("");

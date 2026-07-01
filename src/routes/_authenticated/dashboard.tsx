@@ -318,8 +318,6 @@ function AdminDashboard() {
 /* ---------------- SHARED ---------------- */
 function StatCard({
   icon: Icon, label, value, accent,
-function StatCard({
-  icon: Icon, label, value, accent,
 }: { icon: typeof Users; label: string; value: number | null | undefined; accent: string }) {
   return (
     <Card>

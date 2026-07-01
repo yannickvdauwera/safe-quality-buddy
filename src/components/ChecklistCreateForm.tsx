@@ -92,6 +92,7 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
         header,
         answers,
         extras,
+        signature: signature ?? null,
         stats: { total: totalQ, answered, nok: nokCount },
       },
     };

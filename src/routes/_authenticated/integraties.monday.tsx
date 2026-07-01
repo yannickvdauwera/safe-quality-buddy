@@ -34,11 +34,13 @@ function MondayIntegrationPage() {
     refetchInterval: 5000,
   });
 
-  const url = urlQuery.data?.url ?? "";
+  const publishedUrl = urlQuery.data?.publishedUrl ?? null;
+  const previewUrl = urlQuery.data?.previewUrl ?? null;
+  const url = publishedUrl ?? urlQuery.data?.url ?? "";
   const events = eventsQuery.data ?? [];
 
-  const copy = async () => {
-    await navigator.clipboard.writeText(url);
+  const copy = async (value: string) => {
+    await navigator.clipboard.writeText(value);
     setCopied(true);
     toast.success("Webhook-URL gekopieerd");
     setTimeout(() => setCopied(false), 2000);
@@ -61,6 +63,18 @@ function MondayIntegrationPage() {
           </p>
         </div>
 
+        <div className="flex items-start gap-2 rounded-2xl border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+          <div>
+            <div className="font-medium">Publiceer je app voordat je Monday koppelt.</div>
+            <div className="text-muted-foreground">
+              Monday roept alleen publiek bereikbare URL's aan. De preview-URL (met <em>id-preview</em>) is
+              niet stabiel — Monday krijgt <em>"No published build"</em> te zien. Klik rechtsboven op
+              <strong> Publish</strong> en gebruik daarna de <em>Productie</em>-URL hieronder.
+            </div>
+          </div>
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle>Webhook-URL</CardTitle>
@@ -76,17 +90,46 @@ function MondayIntegrationPage() {
                 <div>Er is nog geen MONDAY_WEBHOOK_SECRET geconfigureerd in de backend.</div>
               </div>
             )}
-            {url && (
+            {publishedUrl && (
+              <div className="space-y-1.5">
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Productie (aanbevolen voor Monday)
+                </div>
+                <div className="flex gap-2">
+                  <Input value={publishedUrl} readOnly className="font-mono text-xs" />
+                  <Button onClick={() => copy(publishedUrl)} variant="secondary" className="shrink-0">
+                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    {copied ? "Gekopieerd" : "Kopieer"}
+                  </Button>
+                </div>
+              </div>
+            )}
+            {previewUrl && (
+              <div className="space-y-1.5">
+                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Preview (voor testen zonder publiceren)
+                </div>
+                <div className="flex gap-2">
+                  <Input value={previewUrl} readOnly className="font-mono text-xs" />
+                  <Button onClick={() => copy(previewUrl)} variant="ghost" className="shrink-0">
+                    <Copy className="h-4 w-4" />
+                    Kopieer
+                  </Button>
+                </div>
+              </div>
+            )}
+            {!publishedUrl && !previewUrl && url && (
               <div className="flex gap-2">
                 <Input value={url} readOnly className="font-mono text-xs" />
-                <Button onClick={copy} variant="secondary" className="shrink-0">
-                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                  {copied ? "Gekopieerd" : "Kopieer"}
+                <Button onClick={() => copy(url)} variant="secondary" className="shrink-0">
+                  <Copy className="h-4 w-4" />
+                  Kopieer
                 </Button>
               </div>
             )}
           </CardContent>
         </Card>
+
 
         <Card>
           <CardHeader>

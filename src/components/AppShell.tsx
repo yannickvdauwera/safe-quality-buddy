@@ -13,6 +13,8 @@ import {
   X,
   ShieldCheck,
   Shield,
+  Eye,
+  Hand,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -32,10 +34,13 @@ const baseNav: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/employees", label: "Personeelsfiches", icon: Users },
   { to: "/reports", label: "Meldingen & inspecties", icon: AlertTriangle },
+  { to: "/mos", label: "MOS-meldingen", icon: Eye },
+  { to: "/stop", label: "STOP-reflexen", icon: Hand },
   { to: "/documents", label: "Documenten", icon: FileText, disabled: true },
   { to: "/toolboxes", label: "Toolboxen", icon: ClipboardCheck, disabled: true },
   { to: "/risk-analyses", label: "Risicoanalyses", icon: ShieldAlert, disabled: true },
 ];
+
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { user, roles, hasRole } = useAuth();

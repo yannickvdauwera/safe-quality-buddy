@@ -19,6 +19,7 @@ import { Route as AuthenticatedStopRouteImport } from './routes/_authenticated/s
 import { Route as AuthenticatedReportsRouteImport } from './routes/_authenticated/reports'
 import { Route as AuthenticatedMosRouteImport } from './routes/_authenticated/mos'
 import { Route as AuthenticatedMeldingenRouteImport } from './routes/_authenticated/meldingen'
+import { Route as AuthenticatedInspectiesRouteImport } from './routes/_authenticated/inspecties'
 import { Route as AuthenticatedEmployeesRouteImport } from './routes/_authenticated/employees'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedToolboxesIndexRouteImport } from './routes/_authenticated/toolboxes.index'
@@ -76,6 +77,11 @@ const AuthenticatedMeldingenRoute = AuthenticatedMeldingenRouteImport.update({
   path: '/meldingen',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedInspectiesRoute = AuthenticatedInspectiesRouteImport.update({
+  id: '/inspecties',
+  path: '/inspecties',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedEmployeesRoute = AuthenticatedEmployeesRouteImport.update({
   id: '/employees',
   path: '/employees',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/employees': typeof AuthenticatedEmployeesRoute
+  '/inspecties': typeof AuthenticatedInspectiesRoute
   '/meldingen': typeof AuthenticatedMeldingenRoute
   '/mos': typeof AuthenticatedMosRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -139,6 +146,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/employees': typeof AuthenticatedEmployeesRoute
+  '/inspecties': typeof AuthenticatedInspectiesRoute
   '/meldingen': typeof AuthenticatedMeldingenRoute
   '/mos': typeof AuthenticatedMosRoute
   '/reports': typeof AuthenticatedReportsRoute
@@ -159,6 +167,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/employees': typeof AuthenticatedEmployeesRoute
+  '/_authenticated/inspecties': typeof AuthenticatedInspectiesRoute
   '/_authenticated/meldingen': typeof AuthenticatedMeldingenRoute
   '/_authenticated/mos': typeof AuthenticatedMosRoute
   '/_authenticated/reports': typeof AuthenticatedReportsRoute
@@ -179,6 +188,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/employees'
+    | '/inspecties'
     | '/meldingen'
     | '/mos'
     | '/reports'
@@ -197,6 +207,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/dashboard'
     | '/employees'
+    | '/inspecties'
     | '/meldingen'
     | '/mos'
     | '/reports'
@@ -216,6 +227,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/_authenticated/dashboard'
     | '/_authenticated/employees'
+    | '/_authenticated/inspecties'
     | '/_authenticated/meldingen'
     | '/_authenticated/mos'
     | '/_authenticated/reports'
@@ -311,6 +323,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMeldingenRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/inspecties': {
+      id: '/_authenticated/inspecties'
+      path: '/inspecties'
+      fullPath: '/inspecties'
+      preLoaderRoute: typeof AuthenticatedInspectiesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/employees': {
       id: '/_authenticated/employees'
       path: '/employees'
@@ -366,6 +385,7 @@ declare module '@tanstack/react-router' {
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedEmployeesRoute: typeof AuthenticatedEmployeesRoute
+  AuthenticatedInspectiesRoute: typeof AuthenticatedInspectiesRoute
   AuthenticatedMeldingenRoute: typeof AuthenticatedMeldingenRoute
   AuthenticatedMosRoute: typeof AuthenticatedMosRoute
   AuthenticatedReportsRoute: typeof AuthenticatedReportsRoute
@@ -380,6 +400,7 @@ interface AuthenticatedRouteRouteChildren {
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedEmployeesRoute: AuthenticatedEmployeesRoute,
+  AuthenticatedInspectiesRoute: AuthenticatedInspectiesRoute,
   AuthenticatedMeldingenRoute: AuthenticatedMeldingenRoute,
   AuthenticatedMosRoute: AuthenticatedMosRoute,
   AuthenticatedReportsRoute: AuthenticatedReportsRoute,

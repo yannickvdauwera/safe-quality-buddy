@@ -28,7 +28,7 @@ export const generateToolbox = createServerFn({ method: "POST" })
     if (!key) throw new Error("Missing LOVABLE_API_KEY");
 
     const { createLovableAiGatewayProvider } = await import("@/lib/ai-gateway.server");
-    const { generateText, Output } = await import("ai");
+    const { generateObject } = await import("ai");
 
     const gateway = createLovableAiGatewayProvider(key);
     const model = gateway("google/gemini-3-flash-preview");
@@ -51,12 +51,12 @@ Structuur:
 - content.checklist: lijst van punten om ter plaatse na te kijken
 - content.questions: lijst van discussievragen om deelnemers te betrekken`;
 
-    const { experimental_output } = await generateText({
+    const { object } = await generateObject({
       model,
+      schema: ContentSchema,
       system: systemPrompt,
       prompt: userPrompt,
-      experimental_output: Output.object({ schema: ContentSchema }),
     });
 
-    return experimental_output;
+    return object;
   });

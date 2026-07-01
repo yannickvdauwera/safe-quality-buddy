@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { SignaturePad } from "@/components/SignaturePad";
 import { cn } from "@/lib/utils";
 
 export interface ChecklistQuestion {
@@ -21,12 +22,14 @@ export interface ChecklistSection {
 export interface ChecklistConfig {
   reportType: string;
   headerFields: Array<
-    | { key: string; label: string; type: "text" | "date"; required?: boolean; placeholder?: string }
+    | { key: string; label: string; type: "text" | "date" | "datetime"; required?: boolean; placeholder?: string }
   >;
   sections: ChecklistSection[];
   /** Auto title template using header field keys, e.g. `WPI — {victim} @ {location}` */
   titleTemplate: (h: Record<string, string>) => string;
   extraTextFields?: Array<{ key: string; label: string; placeholder?: string; required?: boolean; rows?: number }>;
+  /** Show signature pad for the executor at bottom of form */
+  captureSignature?: boolean;
 }
 
 const ANSWERS: Array<{ value: "ok" | "nok" | "nvt"; label: string; cls: string }> = [
@@ -47,11 +50,16 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
   const [severity, setSeverity] = useState<string>("middel");
   const [header, setHeader] = useState<Record<string, string>>(() => {
     const out: Record<string, string> = {};
-    config.headerFields.forEach((f) => (out[f.key] = f.type === "date" ? new Date().toISOString().slice(0, 10) : ""));
+    config.headerFields.forEach((f) => {
+      if (f.type === "date") out[f.key] = new Date().toISOString().slice(0, 10);
+      else if (f.type === "datetime") out[f.key] = new Date().toISOString().slice(0, 16);
+      else out[f.key] = "";
+    });
     return out;
   });
   const [answers, setAnswers] = useState<Record<string, "ok" | "nok" | "nvt">>({});
   const [extras, setExtras] = useState<Record<string, string>>({});
+  const [signature, setSignature] = useState<string | null>(null);
 
   const totalQ = config.sections.reduce((s, sec) => s + sec.questions.length, 0);
   const answered = Object.keys(answers).length;
@@ -84,6 +92,7 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
         header,
         answers,
         extras,
+        signature: signature ?? null,
         stats: { total: totalQ, answered, nok: nokCount },
       },
     };
@@ -102,7 +111,7 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
           <div key={f.key} className="space-y-1.5">
             <Label>{f.label}{f.required ? " *" : ""}</Label>
             <Input
-              type={f.type}
+              type={f.type === "datetime" ? "datetime-local" : f.type}
               value={header[f.key] ?? ""}
               onChange={(e) => setHeader((h) => ({ ...h, [f.key]: e.target.value }))}
               placeholder={f.placeholder}
@@ -182,6 +191,23 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
             </div>
           ))}
         </>
+      )}
+
+      {config.captureSignature && (
+        <div className="space-y-2">
+          <Separator />
+          <Label>Handtekening uitvoerder WPI/observatie</Label>
+          {signature ? (
+            <div className="flex items-center gap-3">
+              <img src={signature} alt="Handtekening" className="h-20 border rounded bg-white" />
+              <Button type="button" variant="outline" size="sm" onClick={() => setSignature(null)}>
+                Opnieuw tekenen
+              </Button>
+            </div>
+          ) : (
+            <SignaturePad onSave={(dataUrl) => setSignature(dataUrl)} />
+          )}
+        </div>
       )}
 
       <DialogFooter>

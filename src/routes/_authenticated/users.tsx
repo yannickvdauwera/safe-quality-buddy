@@ -72,11 +72,13 @@ function UsersPage() {
   const inviteFn = useServerFn(inviteUser);
   const linkFn = useServerFn(linkEmployee);
   const unlinkedFn = useServerFn(listUnlinkedEmployees);
+  const deleteFn = useServerFn(deleteUser);
 
   const [search, setSearch] = useState("");
   const [inviteOpen, setInviteOpen] = useState(false);
   const [rolesDialog, setRolesDialog] = useState<{ userId: string; name: string; roles: RoleValue[] } | null>(null);
   const [linkDialog, setLinkDialog] = useState<{ userId: string; name: string; currentEmployeeId: string | null } | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{ userId: string; name: string; email: string | null } | null>(null);
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["admin-users"],

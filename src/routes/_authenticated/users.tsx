@@ -120,6 +120,16 @@ function UsersPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const deleteMut = useMutation({
+    mutationFn: (data: { user_id: string }) => deleteFn({ data }),
+    onSuccess: () => {
+      toast.success("Gebruiker verwijderd");
+      setDeleteDialog(null);
+      invalidate();
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();
     if (!q) return true;

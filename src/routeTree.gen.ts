@@ -29,6 +29,7 @@ import { Route as AuthenticatedToolboxesNewRouteImport } from './routes/_authent
 import { Route as AuthenticatedToolboxesIdRouteImport } from './routes/_authenticated/toolboxes.$id'
 import { Route as AuthenticatedMeldingenOngevallenRouteImport } from './routes/_authenticated/meldingen.ongevallen'
 import { Route as AuthenticatedMeldingenInternRouteImport } from './routes/_authenticated/meldingen.intern'
+import { Route as AuthenticatedMeldingenIdRouteImport } from './routes/_authenticated/meldingen.$id'
 import { Route as AuthenticatedInspectiesWpiRouteImport } from './routes/_authenticated/inspecties.wpi'
 import { Route as AuthenticatedInspectiesKwaliteitRouteImport } from './routes/_authenticated/inspecties.kwaliteit'
 import { Route as AuthenticatedToolboxesSessionsIdRouteImport } from './routes/_authenticated/toolboxes.sessions.$id'
@@ -139,6 +140,12 @@ const AuthenticatedMeldingenInternRoute =
     path: '/intern',
     getParentRoute: () => AuthenticatedMeldingenRoute,
   } as any)
+const AuthenticatedMeldingenIdRoute =
+  AuthenticatedMeldingenIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedMeldingenRoute,
+  } as any)
 const AuthenticatedInspectiesWpiRoute =
   AuthenticatedInspectiesWpiRouteImport.update({
     id: '/wpi',
@@ -172,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/sign/$token': typeof SignTokenRoute
   '/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
   '/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
+  '/meldingen/$id': typeof AuthenticatedMeldingenIdRoute
   '/meldingen/intern': typeof AuthenticatedMeldingenInternRoute
   '/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
   '/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
@@ -194,6 +202,7 @@ export interface FileRoutesByTo {
   '/sign/$token': typeof SignTokenRoute
   '/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
   '/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
+  '/meldingen/$id': typeof AuthenticatedMeldingenIdRoute
   '/meldingen/intern': typeof AuthenticatedMeldingenInternRoute
   '/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
   '/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
@@ -220,6 +229,7 @@ export interface FileRoutesById {
   '/sign/$token': typeof SignTokenRoute
   '/_authenticated/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
   '/_authenticated/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
+  '/_authenticated/meldingen/$id': typeof AuthenticatedMeldingenIdRoute
   '/_authenticated/meldingen/intern': typeof AuthenticatedMeldingenInternRoute
   '/_authenticated/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
   '/_authenticated/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
@@ -246,6 +256,7 @@ export interface FileRouteTypes {
     | '/sign/$token'
     | '/inspecties/kwaliteit'
     | '/inspecties/wpi'
+    | '/meldingen/$id'
     | '/meldingen/intern'
     | '/meldingen/ongevallen'
     | '/toolboxes/$id'
@@ -268,6 +279,7 @@ export interface FileRouteTypes {
     | '/sign/$token'
     | '/inspecties/kwaliteit'
     | '/inspecties/wpi'
+    | '/meldingen/$id'
     | '/meldingen/intern'
     | '/meldingen/ongevallen'
     | '/toolboxes/$id'
@@ -293,6 +305,7 @@ export interface FileRouteTypes {
     | '/sign/$token'
     | '/_authenticated/inspecties/kwaliteit'
     | '/_authenticated/inspecties/wpi'
+    | '/_authenticated/meldingen/$id'
     | '/_authenticated/meldingen/intern'
     | '/_authenticated/meldingen/ongevallen'
     | '/_authenticated/toolboxes/$id'
@@ -455,6 +468,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMeldingenInternRouteImport
       parentRoute: typeof AuthenticatedMeldingenRoute
     }
+    '/_authenticated/meldingen/$id': {
+      id: '/_authenticated/meldingen/$id'
+      path: '/$id'
+      fullPath: '/meldingen/$id'
+      preLoaderRoute: typeof AuthenticatedMeldingenIdRouteImport
+      parentRoute: typeof AuthenticatedMeldingenRoute
+    }
     '/_authenticated/inspecties/wpi': {
       id: '/_authenticated/inspecties/wpi'
       path: '/wpi'
@@ -499,6 +519,7 @@ const AuthenticatedInspectiesRouteWithChildren =
   )
 
 interface AuthenticatedMeldingenRouteChildren {
+  AuthenticatedMeldingenIdRoute: typeof AuthenticatedMeldingenIdRoute
   AuthenticatedMeldingenInternRoute: typeof AuthenticatedMeldingenInternRoute
   AuthenticatedMeldingenOngevallenRoute: typeof AuthenticatedMeldingenOngevallenRoute
   AuthenticatedMeldingenIndexRoute: typeof AuthenticatedMeldingenIndexRoute
@@ -506,6 +527,7 @@ interface AuthenticatedMeldingenRouteChildren {
 
 const AuthenticatedMeldingenRouteChildren: AuthenticatedMeldingenRouteChildren =
   {
+    AuthenticatedMeldingenIdRoute: AuthenticatedMeldingenIdRoute,
     AuthenticatedMeldingenInternRoute: AuthenticatedMeldingenInternRoute,
     AuthenticatedMeldingenOngevallenRoute:
       AuthenticatedMeldingenOngevallenRoute,

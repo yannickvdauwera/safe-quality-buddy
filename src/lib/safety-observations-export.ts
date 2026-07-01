@@ -154,7 +154,7 @@ export async function exportToPdf(o: ObservationExport) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(90, 90, 90);
-  doc.text(label.subtitle ?? label.title, 12, y + 5);
+  doc.text(label.title, 12, y + 5);
   y += 12;
 
   for (const section of sections(o)) {
@@ -334,7 +334,7 @@ export async function exportToDocx(o: ObservationExport) {
         }),
         new Paragraph({
           spacing: { after: 200 },
-          children: [new TextRun({ text: label.subtitle ?? label.title, color: "666666", italics: true })],
+          children: [new TextRun({ text: label.title, color: "666666", italics: true })],
         }),
         dataTable,
       ],

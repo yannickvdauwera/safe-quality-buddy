@@ -44,6 +44,14 @@ function EmployeesPage() {
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [colFilters, setColFilters] = useState({
+    name: "",
+    employer: "",
+    email: "",
+    phone: "",
+    function_title: "",
+    status: "all" as "all" | "active" | "inactive",
+  });
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ["employees"],
@@ -57,16 +65,28 @@ function EmployeesPage() {
     },
   });
 
+  const match = (val: string | null | undefined, q: string) =>
+    !q || (val ?? "").toLowerCase().includes(q.toLowerCase());
+
   const filtered = employees.filter((e) => {
     const q = search.toLowerCase();
-    if (!q) return true;
-    return (
+    const globalOk =
+      !q ||
       e.first_name?.toLowerCase().includes(q) ||
       e.last_name?.toLowerCase().includes(q) ||
       e.employer?.toLowerCase().includes(q) ||
       e.email?.toLowerCase().includes(q) ||
-      e.function_title?.toLowerCase().includes(q)
-    );
+      e.function_title?.toLowerCase().includes(q);
+    if (!globalOk) return false;
+    const fullName = `${e.last_name ?? ""} ${e.first_name ?? ""}`;
+    if (!match(fullName, colFilters.name)) return false;
+    if (!match(e.employer, colFilters.employer)) return false;
+    if (!match(e.email, colFilters.email)) return false;
+    if (!match(e.phone, colFilters.phone)) return false;
+    if (!match(e.function_title, colFilters.function_title)) return false;
+    if (colFilters.status === "active" && !e.active) return false;
+    if (colFilters.status === "inactive" && e.active) return false;
+    return true;
   });
 
   const handleAdd = async (e: React.FormEvent<HTMLFormElement>) => {

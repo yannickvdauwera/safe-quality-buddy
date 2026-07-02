@@ -34,6 +34,7 @@ import { Route as AuthenticatedMeldingenIdRouteImport } from './routes/_authenti
 import { Route as AuthenticatedIntegratiesMondayRouteImport } from './routes/_authenticated/integraties.monday'
 import { Route as AuthenticatedInspectiesWpiRouteImport } from './routes/_authenticated/inspecties.wpi'
 import { Route as AuthenticatedInspectiesKwaliteitRouteImport } from './routes/_authenticated/inspecties.kwaliteit'
+import { Route as AuthenticatedInspectiesIdRouteImport } from './routes/_authenticated/inspecties.$id'
 import { Route as AuthenticatedEmployeesIdRouteImport } from './routes/_authenticated/employees.$id'
 import { Route as AuthenticatedToolboxesSessionsIdRouteImport } from './routes/_authenticated/toolboxes.sessions.$id'
 
@@ -173,6 +174,12 @@ const AuthenticatedInspectiesKwaliteitRoute =
     path: '/kwaliteit',
     getParentRoute: () => AuthenticatedInspectiesRoute,
   } as any)
+const AuthenticatedInspectiesIdRoute =
+  AuthenticatedInspectiesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedInspectiesRoute,
+  } as any)
 const AuthenticatedEmployeesIdRoute =
   AuthenticatedEmployeesIdRouteImport.update({
     id: '/employees/$id',
@@ -198,6 +205,7 @@ export interface FileRoutesByFullPath {
   '/report/$type': typeof ReportTypeRoute
   '/sign/$token': typeof SignTokenRoute
   '/employees/$id': typeof AuthenticatedEmployeesIdRoute
+  '/inspecties/$id': typeof AuthenticatedInspectiesIdRoute
   '/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
   '/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
   '/integraties/monday': typeof AuthenticatedIntegratiesMondayRoute
@@ -224,6 +232,7 @@ export interface FileRoutesByTo {
   '/report/$type': typeof ReportTypeRoute
   '/sign/$token': typeof SignTokenRoute
   '/employees/$id': typeof AuthenticatedEmployeesIdRoute
+  '/inspecties/$id': typeof AuthenticatedInspectiesIdRoute
   '/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
   '/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
   '/integraties/monday': typeof AuthenticatedIntegratiesMondayRoute
@@ -254,6 +263,7 @@ export interface FileRoutesById {
   '/report/$type': typeof ReportTypeRoute
   '/sign/$token': typeof SignTokenRoute
   '/_authenticated/employees/$id': typeof AuthenticatedEmployeesIdRoute
+  '/_authenticated/inspecties/$id': typeof AuthenticatedInspectiesIdRoute
   '/_authenticated/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
   '/_authenticated/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
   '/_authenticated/integraties/monday': typeof AuthenticatedIntegratiesMondayRoute
@@ -284,6 +294,7 @@ export interface FileRouteTypes {
     | '/report/$type'
     | '/sign/$token'
     | '/employees/$id'
+    | '/inspecties/$id'
     | '/inspecties/kwaliteit'
     | '/inspecties/wpi'
     | '/integraties/monday'
@@ -310,6 +321,7 @@ export interface FileRouteTypes {
     | '/report/$type'
     | '/sign/$token'
     | '/employees/$id'
+    | '/inspecties/$id'
     | '/inspecties/kwaliteit'
     | '/inspecties/wpi'
     | '/integraties/monday'
@@ -339,6 +351,7 @@ export interface FileRouteTypes {
     | '/report/$type'
     | '/sign/$token'
     | '/_authenticated/employees/$id'
+    | '/_authenticated/inspecties/$id'
     | '/_authenticated/inspecties/kwaliteit'
     | '/_authenticated/inspecties/wpi'
     | '/_authenticated/integraties/monday'
@@ -543,6 +556,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInspectiesKwaliteitRouteImport
       parentRoute: typeof AuthenticatedInspectiesRoute
     }
+    '/_authenticated/inspecties/$id': {
+      id: '/_authenticated/inspecties/$id'
+      path: '/$id'
+      fullPath: '/inspecties/$id'
+      preLoaderRoute: typeof AuthenticatedInspectiesIdRouteImport
+      parentRoute: typeof AuthenticatedInspectiesRoute
+    }
     '/_authenticated/employees/$id': {
       id: '/_authenticated/employees/$id'
       path: '/employees/$id'
@@ -561,6 +581,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedInspectiesRouteChildren {
+  AuthenticatedInspectiesIdRoute: typeof AuthenticatedInspectiesIdRoute
   AuthenticatedInspectiesKwaliteitRoute: typeof AuthenticatedInspectiesKwaliteitRoute
   AuthenticatedInspectiesWpiRoute: typeof AuthenticatedInspectiesWpiRoute
   AuthenticatedInspectiesIndexRoute: typeof AuthenticatedInspectiesIndexRoute
@@ -568,6 +589,7 @@ interface AuthenticatedInspectiesRouteChildren {
 
 const AuthenticatedInspectiesRouteChildren: AuthenticatedInspectiesRouteChildren =
   {
+    AuthenticatedInspectiesIdRoute: AuthenticatedInspectiesIdRoute,
     AuthenticatedInspectiesKwaliteitRoute:
       AuthenticatedInspectiesKwaliteitRoute,
     AuthenticatedInspectiesWpiRoute: AuthenticatedInspectiesWpiRoute,

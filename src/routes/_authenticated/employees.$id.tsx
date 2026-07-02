@@ -37,7 +37,13 @@ function EmployeeDetailPage() {
   const navigate = useNavigate();
   const { hasAnyRole } = useAuth();
   const canEvaluate = hasAnyRole(["admin", "hse_manager", "manager"]);
+  const canEdit = hasAnyRole(["admin", "hse_manager", "manager"]);
   const canDelete = hasAnyRole(["admin"]);
+  const qc = useQueryClient();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<Evaluation | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editFicheOpen, setEditFicheOpen] = useState(false);
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Evaluation | null>(null);

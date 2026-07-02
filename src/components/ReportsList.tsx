@@ -88,6 +88,7 @@ export function ReportsList({
   CreateFormComponent,
   extraActions,
   hideStatus = false,
+  hideSeverity = false,
 }: ReportsListProps) {
   const { user, hasAnyRole } = useAuth();
   const canManage = hasAnyRole(["admin", "hse_manager", "manager"]);

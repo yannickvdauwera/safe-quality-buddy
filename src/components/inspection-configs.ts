@@ -69,16 +69,21 @@ export const WPI_CONFIG: ChecklistConfig = {
 
 export const KWALITEIT_CONFIG: ChecklistConfig = {
   reportType: "kwaliteitscontrole",
+  employeePicker: {
+    label: "Geobserveerde medewerker",
+    required: true,
+    fillFirstNameKey: "first_name",
+    fillLastNameKey: "last_name",
+  },
   titleTemplate: (h) =>
     `KC — ${(h.first_name || "").trim()} ${(h.last_name || "").trim()}`.trim() +
     (h.worksite ? ` @ ${h.worksite}` : ""),
   headerFields: [
     { key: "date", label: "Datum", type: "date", required: true },
     { key: "worksite", label: "Werf / Locatie", type: "text", required: true },
-    { key: "last_name", label: "Achternaam geobserveerde", type: "text", required: true },
-    { key: "first_name", label: "Voornaam geobserveerde", type: "text", required: true },
     { key: "assessor", label: "Naam beoordeler", type: "text", required: true },
   ],
+
   sections: [
     { title: "PBMs", questions: [
       { key: "Q1", label: "1. Draagt iedereen de vereiste PBMs?" },

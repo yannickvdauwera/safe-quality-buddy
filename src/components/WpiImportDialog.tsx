@@ -50,8 +50,20 @@ export function WpiImportDialog() {
   const [fileName, setFileName] = useState("");
   const [rows, setRows] = useState<RowResult[]>([]);
   const [autoCreate, setAutoCreate] = useState(true);
+  const [employees, setEmployees] = useState<{ id: string; first_name: string | null; last_name: string | null }[]>([]);
 
   const allQuestionKeys = WPI_CONFIG.sections.flatMap((s) => s.questions.map((q) => ({ key: q.key, label: q.label })));
+  const sortedEmployees = [...employees].sort((a, b) =>
+    `${a.last_name ?? ""} ${a.first_name ?? ""}`.localeCompare(`${b.last_name ?? ""} ${b.first_name ?? ""}`),
+  );
+
+  const setRowEmployee = (rowNum: number, employeeId: string) => {
+    setRows((prev) => prev.map((r) => {
+      if (r.row !== rowNum) return r;
+      if (!employeeId) return { ...r, employeeId: undefined, matched: false };
+      return { ...r, employeeId, matched: true };
+    }));
+  };
 
   const handleFile = async (file: File) => {
     setParsing(true);

@@ -211,8 +211,8 @@ function EmployeesPage() {
 
       <Card>
         <CardContent className="p-0">
-          <div className="p-4 border-b">
-            <div className="relative max-w-sm">
+          <div className="p-4 border-b flex flex-wrap items-center gap-3 justify-between">
+            <div className="relative max-w-sm w-full">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Zoek op naam, werkgever, e-mail of functie…"
@@ -221,11 +221,32 @@ function EmployeesPage() {
                 className="pl-9"
               />
             </div>
+            {canEdit && selected.size > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">{selected.size} geselecteerd</span>
+                <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkSetActive(true)}>
+                  <UserCheck className="w-4 h-4" /> In dienst
+                </Button>
+                <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkSetActive(false)}>
+                  <UserX className="w-4 h-4" /> Uit dienst
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Wis</Button>
+              </div>
+            )}
           </div>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
+                  {canEdit && (
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={allSelected ? true : someSelected ? "indeterminate" : false}
+                        onCheckedChange={toggleAll}
+                        aria-label="Alles selecteren"
+                      />
+                    </TableHead>
+                  )}
                   <TableHead>Naam</TableHead>
                   <TableHead>Werkgever</TableHead>
                   <TableHead>E-mail</TableHead>
@@ -234,6 +255,7 @@ function EmployeesPage() {
                   <TableHead>Status</TableHead>
                 </TableRow>
                 <TableRow className="bg-muted/30">
+                  {canEdit && <TableHead className="py-2" />}
                   {([
                     { key: "name", values: employees.map((e) => `${e.last_name ?? ""} ${e.first_name ?? ""}`.trim()) },
                     { key: "employer", values: employees.map((e) => e.employer ?? "") },
@@ -273,19 +295,30 @@ function EmployeesPage() {
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-8">Laden…</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={canEdit ? 7 : 6} className="text-center text-muted-foreground py-8">Laden…</TableCell></TableRow>
                 ) : filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-12">
+                  <TableRow><TableCell colSpan={canEdit ? 7 : 6} className="text-center text-muted-foreground py-12">
                     {employees.length === 0 ? "Nog geen personeelsfiches. Maak er een aan om te starten." : "Geen resultaten voor je zoekopdracht."}
                   </TableCell></TableRow>
                 ) : filtered.map((e) => {
                   const functies = parseFunctions(e.function_title);
+                  const isChecked = selected.has(e.id);
                   return (
                     <TableRow
                       key={e.id}
                       className="cursor-pointer hover:bg-muted/50"
+                      data-state={isChecked ? "selected" : undefined}
                       onClick={() => navigate({ to: "/employees/$id", params: { id: e.id } })}
                     >
+                      {canEdit && (
+                        <TableCell onClick={(ev) => ev.stopPropagation()}>
+                          <Checkbox
+                            checked={isChecked}
+                            onCheckedChange={() => toggleOne(e.id)}
+                            aria-label={`Selecteer ${e.last_name} ${e.first_name}`}
+                          />
+                        </TableCell>
+                      )}
                       <TableCell className="font-medium">{e.last_name} {e.first_name}</TableCell>
                       <TableCell>{e.employer ?? "—"}</TableCell>
                       <TableCell className="text-muted-foreground">{e.email ?? "—"}</TableCell>

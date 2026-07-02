@@ -149,7 +149,8 @@ function EmployeesPage() {
                 </DialogFooter>
               </form>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         )}
       </div>
 

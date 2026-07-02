@@ -112,9 +112,6 @@ function InspectionDetailPage() {
                 <CardTitle className="text-xl mt-1">{report.title}</CardTitle>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Badge variant={report.status === "open" ? "destructive" : "secondary"}>
-                  {STATUS_LABELS[report.status] ?? report.status}
-                </Badge>
                 <Badge variant={report.severity === "kritiek" || report.severity === "hoog" ? "destructive" : "outline"}>
                   Ernst: {SEVERITY_LABELS[report.severity] ?? report.severity}
                 </Badge>

@@ -63,6 +63,8 @@ export interface ReportsListProps {
   }>;
   /** Extra action buttons rendered next to the "New" button (e.g. Import). */
   extraActions?: React.ReactNode;
+  /** Hide the status column and status-management actions (e.g. for inspections). */
+  hideStatus?: boolean;
 }
 
 export function ReportsList({
@@ -78,6 +80,7 @@ export function ReportsList({
   locationLabel = "Locatie",
   CreateFormComponent,
   extraActions,
+  hideStatus = false,
 }: ReportsListProps) {
   const { user, hasAnyRole } = useAuth();
   const canManage = hasAnyRole(["admin", "hse_manager", "manager"]);
@@ -151,7 +154,8 @@ export function ReportsList({
     queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
   };
 
-  const colCount = canManage ? 7 : 6;
+  const showActions = canManage && !hideStatus;
+  const colCount = 5 + (hideStatus ? 0 : 1) + (showActions ? 1 : 0);
 
   return (
     <div className="space-y-6">
@@ -264,8 +268,8 @@ export function ReportsList({
                   <TableHead>Titel</TableHead>
                   <TableHead>{locationLabel}</TableHead>
                   <TableHead>Ernst</TableHead>
-                  <TableHead>Status</TableHead>
-                  {canManage && <TableHead className="w-10"></TableHead>}
+                  {!hideStatus && <TableHead>Status</TableHead>}
+                  {showActions && <TableHead className="w-10"></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -294,8 +298,8 @@ export function ReportsList({
                     <TableCell className="font-medium">{r.title}</TableCell>
                     <TableCell className="text-muted-foreground">{r.location ?? "—"}</TableCell>
                     <TableCell><Badge variant={severityVariant(r.severity)}>{SEVERITY_LABELS[r.severity]}</Badge></TableCell>
-                    <TableCell><Badge variant={statusVariant(r.status)}>{STATUS_LABELS[r.status]}</Badge></TableCell>
-                    {canManage && (
+                    {!hideStatus && <TableCell><Badge variant={statusVariant(r.status)}>{STATUS_LABELS[r.status]}</Badge></TableCell>}
+                    {showActions && (
                       <TableCell onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>

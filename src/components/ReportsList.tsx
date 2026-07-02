@@ -298,12 +298,43 @@ export function ReportsList({
         )}
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 px-3 py-2">
+          <span className="text-sm font-medium">{selectedIds.size} geselecteerd</span>
+          <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>Selectie wissen</Button>
+          <div className="ml-auto flex flex-wrap gap-2">
+            {canManage && !hideStatus && (
+              <>
+                <Button size="sm" variant="outline" onClick={() => bulkUpdateStatus("in_behandeling")}>In behandeling</Button>
+                <Button size="sm" variant="outline" onClick={() => bulkUpdateStatus("opgevolgd")}>Opgevolgd</Button>
+                <Button size="sm" variant="outline" onClick={() => bulkUpdateStatus("gesloten")}>Sluiten</Button>
+                <Button size="sm" variant="outline" onClick={() => bulkUpdateStatus("open")}>Heropenen</Button>
+              </>
+            )}
+            {canDelete && (
+              <Button size="sm" variant="destructive" onClick={() => setConfirmDelete(true)}>
+                <Trash2 className="w-4 h-4" /> Verwijderen
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
+                  {showSelect && (
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={allSelected}
+                        onCheckedChange={(c) => toggleAll(!!c)}
+                        aria-label="Alles selecteren"
+                      />
+                    </TableHead>
+                  )}
                   <TableHead>Datum</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Titel</TableHead>

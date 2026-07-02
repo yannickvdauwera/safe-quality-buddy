@@ -124,13 +124,6 @@ export const Route = createFileRoute("/api/public/monday-webhook")({
       OPTIONS: async () => new Response(null, { status: 204, headers: CORS }),
 
       POST: async ({ request }) => {
-        const secret = process.env.MONDAY_WEBHOOK_SECRET;
-        if (!secret) return json({ error: "Server not configured" }, 500);
-
-        const url = new URL(request.url);
-        const provided = url.searchParams.get("secret") ?? request.headers.get("x-webhook-secret");
-        if (provided !== secret) return json({ error: "Unauthorized" }, 401);
-
         const rawBody = await request.text();
         let body: { challenge?: string; event?: MondayEvent } = {};
         try {
@@ -139,10 +132,19 @@ export const Route = createFileRoute("/api/public/monday-webhook")({
           return json({ error: "Invalid JSON" }, 400);
         }
 
-        // Monday's handshake: echo the challenge back
+        // Monday's webhook verification sometimes calls the URL before sending
+        // the configured query string. The challenge only proves reachability and
+        // never writes data, so answer it before enforcing the shared secret.
         if (body.challenge) {
           return json({ challenge: body.challenge });
         }
+
+        const secret = process.env.MONDAY_WEBHOOK_SECRET;
+        if (!secret) return json({ error: "Server not configured" }, 500);
+
+        const url = new URL(request.url);
+        const provided = url.searchParams.get("secret") ?? request.headers.get("x-webhook-secret");
+        if (provided !== secret) return json({ error: "Unauthorized" }, 401);
 
         const event = body.event;
         if (!event) return json({ ok: true, ignored: "no event" });

@@ -41,6 +41,7 @@ function EmployeesPage() {
   const navigate = useNavigate();
   const { hasAnyRole } = useAuth();
   const canEdit = hasAnyRole(["admin", "hse_manager"]);
+  const canImport = hasAnyRole(["admin"]);
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -153,7 +154,7 @@ function EmployeesPage() {
         </div>
         {canEdit && (
           <div className="flex flex-wrap items-center gap-2">
-            <EmployeesImportDialog />
+            {canImport && <EmployeesImportDialog />}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button><Plus className="w-4 h-4" /> Nieuwe fiche</Button>

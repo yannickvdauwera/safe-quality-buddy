@@ -191,9 +191,9 @@ export async function exportReportPdf(r: ReportExport) {
   const logo = await loadLogo();
 
   const drawHeader = () => {
-    doc.setFillColor(...TSA_RED);
-    doc.rect(0, 0, pageW, 22, "F");
     doc.setFillColor(...TSA_DARK);
+    doc.rect(0, 0, pageW, 22, "F");
+    doc.setFillColor(...TSA_RED);
     doc.rect(0, 22, pageW, 2, "F");
     if (logo) {
       const h = 14;

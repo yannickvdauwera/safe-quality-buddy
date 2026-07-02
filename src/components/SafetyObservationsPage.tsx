@@ -28,6 +28,12 @@ import {
 export function SafetyObservationsPage({ type }: { type: SafetyObservationType }) {
   const [open, setOpen] = useState(false);
   const label = TYPE_LABELS[type];
+  const { hasAnyRole } = useAuth();
+  const canDelete = hasAnyRole(["admin"]);
+  const queryClient = useQueryClient();
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["safety_observations", type],

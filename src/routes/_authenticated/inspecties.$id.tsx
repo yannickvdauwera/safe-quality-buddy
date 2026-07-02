@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, FileSpreadsheet, FileText } from "lucide-react";
-import { STATUS_LABELS, SEVERITY_LABELS } from "@/components/ReportsList";
+import { STATUS_LABELS } from "@/components/ReportsList";
 import { exportReportPdf, exportReportExcel, type ReportExport } from "@/lib/reports-export";
 import { WPI_CONFIG, KWALITEIT_CONFIG } from "@/components/inspection-configs";
 import type { ChecklistConfig } from "@/components/ChecklistCreateForm";
@@ -112,9 +112,6 @@ function InspectionDetailPage() {
                 <CardTitle className="text-xl mt-1">{report.title}</CardTitle>
               </div>
               <div className="flex flex-wrap gap-2">
-                <Badge variant={report.severity === "kritiek" || report.severity === "hoog" ? "destructive" : "outline"}>
-                  Ernst: {SEVERITY_LABELS[report.severity] ?? report.severity}
-                </Badge>
                 {details.stats && (
                   <Badge variant="outline">
                     {details.stats.answered}/{details.stats.total} beantwoord · {details.stats.nok} NOK

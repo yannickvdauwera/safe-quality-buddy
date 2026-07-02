@@ -70,6 +70,8 @@ export interface ReportsListProps {
   extraActions?: React.ReactNode;
   /** Hide the status column and status-management actions (e.g. for inspections). */
   hideStatus?: boolean;
+  /** Hide the severity column (e.g. for inspections). */
+  hideSeverity?: boolean;
 }
 
 export function ReportsList({
@@ -86,6 +88,7 @@ export function ReportsList({
   CreateFormComponent,
   extraActions,
   hideStatus = false,
+  hideSeverity = false,
 }: ReportsListProps) {
   const { user, hasAnyRole } = useAuth();
   const canManage = hasAnyRole(["admin", "hse_manager", "manager"]);
@@ -208,7 +211,7 @@ export function ReportsList({
 
   const showActions = canManage && !hideStatus;
   const showSelect = canManage || canDelete;
-  const colCount = 5 + (hideStatus ? 0 : 1) + (showActions ? 1 : 0) + (showSelect ? 1 : 0);
+  const colCount = 4 + (hideSeverity ? 0 : 1) + (hideStatus ? 0 : 1) + (showActions ? 1 : 0) + (showSelect ? 1 : 0);
 
   return (
     <div className="space-y-6">
@@ -339,7 +342,7 @@ export function ReportsList({
                   <TableHead>Type</TableHead>
                   <TableHead>Titel</TableHead>
                   <TableHead>{locationLabel}</TableHead>
-                  <TableHead>Ernst</TableHead>
+                  {!hideSeverity && <TableHead>Ernst</TableHead>}
                   {!hideStatus && <TableHead>Status</TableHead>}
                   {showActions && <TableHead className="w-10"></TableHead>}
                 </TableRow>
@@ -378,7 +381,7 @@ export function ReportsList({
                     <TableCell><Badge variant="outline">{typeOptions.find((t) => t.value === r.type)?.label ?? r.type}</Badge></TableCell>
                     <TableCell className="font-medium">{r.title}</TableCell>
                     <TableCell className="text-muted-foreground">{r.location ?? "—"}</TableCell>
-                    <TableCell><Badge variant={severityVariant(r.severity)}>{SEVERITY_LABELS[r.severity]}</Badge></TableCell>
+                    {!hideSeverity && <TableCell><Badge variant={severityVariant(r.severity)}>{SEVERITY_LABELS[r.severity]}</Badge></TableCell>}
                     {!hideStatus && <TableCell><Badge variant={statusVariant(r.status)}>{STATUS_LABELS[r.status]}</Badge></TableCell>}
                     {showActions && (
                       <TableCell onClick={(e) => e.stopPropagation()}>

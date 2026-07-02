@@ -154,11 +154,10 @@ export async function exportToPdf(o: ObservationExport) {
   const logo = await loadLogo().catch(() => null);
 
   const drawHeader = () => {
-    // Red band
-    doc.setFillColor(...TSA_RED);
-    doc.rect(0, 0, pageW, 22, "F");
-    // Dark accent under
+    // Dark band with red accent stripe (so the red TSA logo stays visible)
     doc.setFillColor(...TSA_DARK);
+    doc.rect(0, 0, pageW, 22, "F");
+    doc.setFillColor(...TSA_RED);
     doc.rect(0, 22, pageW, 2, "F");
 
     if (logo) {
@@ -349,7 +348,7 @@ export async function exportToDocx(o: ObservationExport) {
     bannerCells.push(new TableCell({
       borders: noBorders,
       width: { size: 3000, type: WidthType.DXA },
-      shading: { fill: TSA_RED_HEX, type: ShadingType.CLEAR, color: "auto" },
+      shading: { fill: TSA_DARK_HEX, type: ShadingType.CLEAR, color: "auto" },
       margins: { top: 160, bottom: 160, left: 200, right: 100 },
       children: [new Paragraph({
         children: [new ImageRun({
@@ -363,7 +362,7 @@ export async function exportToDocx(o: ObservationExport) {
   bannerCells.push(new TableCell({
     borders: noBorders,
     width: { size: logo ? 6360 : 9360, type: WidthType.DXA },
-    shading: { fill: TSA_RED_HEX, type: ShadingType.CLEAR, color: "auto" },
+    shading: { fill: TSA_DARK_HEX, type: ShadingType.CLEAR, color: "auto" },
     margins: { top: 160, bottom: 160, left: 200, right: 200 },
     children: [
       new Paragraph({

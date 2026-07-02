@@ -107,6 +107,27 @@ function aoSections(r: ReportExport): Array<{ title: string; rows: Array<[string
   ];
 }
 
+const humanize = (k: string) =>
+  k.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+const fmtValue = (v: unknown): string => {
+  if (v === null || v === undefined || v === "") return "—";
+  if (typeof v === "boolean") return v ? "Ja" : "Nee";
+  if (Array.isArray(v)) return v.length ? v.map(fmtValue).join(" • ") : "—";
+  if (typeof v === "object") {
+    const entries = Object.entries(v as Record<string, unknown>).filter(([, val]) => val !== null && val !== undefined && val !== "");
+    if (!entries.length) return "—";
+    return entries.map(([k, val]) => `${humanize(k)}: ${fmtValue(val)}`).join("\n");
+  }
+  return String(v);
+};
+
+function flattenRows(obj: Record<string, unknown>): Array<[string, string]> {
+  return Object.entries(obj)
+    .filter(([, v]) => v !== null && v !== undefined && v !== "" && !(Array.isArray(v) && v.length === 0))
+    .map(([k, v]) => [humanize(k), fmtValue(v)] as [string, string]);
+}
+
 function genericSections(r: ReportExport): Array<{ title: string; rows: Array<[string, string]> }> {
   const d = (r.details ?? {}) as Record<string, unknown>;
   const rows: Array<[string, string]> = [
@@ -119,11 +140,37 @@ function genericSections(r: ReportExport): Array<{ title: string; rows: Array<[s
     ["Ernst", r.severity],
     ["Status", r.status],
   ];
-  const detailRows = Object.entries(d)
-    .filter(([k]) => k !== "attachments")
-    .map(([k, v]) => [k, typeof v === "string" ? v : JSON.stringify(v)] as [string, string]);
-  const out = [{ title: "Melding", rows }];
-  if (detailRows.length) out.push({ title: "Details", rows: detailRows });
+  const out: Array<{ title: string; rows: Array<[string, string]> }> = [{ title: "Melding", rows }];
+
+  // Unpack well-known nested groups (WPI / KC checklist form structure)
+  const header = d.header as Record<string, unknown> | undefined;
+  const answers = d.answers as Record<string, unknown> | undefined;
+  const extras = d.extras as Record<string, unknown> | undefined;
+  const stats = d.stats as Record<string, unknown> | undefined;
+
+  if (header && typeof header === "object") {
+    const hRows = flattenRows(header);
+    if (hRows.length) out.push({ title: "Kopgegevens", rows: hRows });
+  }
+  if (answers && typeof answers === "object") {
+    const aRows = flattenRows(answers);
+    if (aRows.length) out.push({ title: "Antwoorden checklist", rows: aRows });
+  }
+  if (extras && typeof extras === "object") {
+    const eRows = flattenRows(extras);
+    if (eRows.length) out.push({ title: "Aanvullende informatie", rows: eRows });
+  }
+  if (stats && typeof stats === "object") {
+    const sRows = flattenRows(stats);
+    if (sRows.length) out.push({ title: "Statistieken", rows: sRows });
+  }
+
+  // Any remaining top-level detail keys we didn't already handle
+  const handled = new Set(["header", "answers", "extras", "stats", "signature", "attachments"]);
+  const extra = Object.fromEntries(Object.entries(d).filter(([k]) => !handled.has(k)));
+  const extraRows = flattenRows(extra);
+  if (extraRows.length) out.push({ title: "Details", rows: extraRows });
+
   if (r.description) out.push({ title: "Beschrijving", rows: [["Beschrijving", r.description]] });
   if (r.follow_up_notes) out.push({ title: "Opvolging", rows: [["Notities", r.follow_up_notes]] });
   return out;
@@ -144,9 +191,9 @@ export async function exportReportPdf(r: ReportExport) {
   const logo = await loadLogo();
 
   const drawHeader = () => {
-    doc.setFillColor(...TSA_RED);
-    doc.rect(0, 0, pageW, 22, "F");
     doc.setFillColor(...TSA_DARK);
+    doc.rect(0, 0, pageW, 22, "F");
+    doc.setFillColor(...TSA_RED);
     doc.rect(0, 22, pageW, 2, "F");
     if (logo) {
       const h = 14;

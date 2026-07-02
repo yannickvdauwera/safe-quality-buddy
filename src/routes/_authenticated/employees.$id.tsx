@@ -608,6 +608,14 @@ function EmployeeDetailPage() {
                             <p className="text-sm whitespace-pre-wrap">{ev.notes}</p>
                           </div>
                         )}
+                        {ev.evaluator_signature && (
+                          <div>
+                            <div className="text-sm font-medium mb-1">Handtekening leidinggevende</div>
+                            <div className="border rounded-md bg-white p-2 inline-block">
+                              <img src={ev.evaluator_signature} alt="Handtekening" className="max-h-32" />
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                     )}
                   </Card>

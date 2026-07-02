@@ -70,6 +70,8 @@ export interface ReportsListProps {
   extraActions?: React.ReactNode;
   /** Hide the status column and status-management actions (e.g. for inspections). */
   hideStatus?: boolean;
+  /** Hide the severity column (e.g. for inspections). */
+  hideSeverity?: boolean;
 }
 
 export function ReportsList({

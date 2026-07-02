@@ -92,6 +92,38 @@ function EmployeesPage() {
     return true;
   });
 
+  const filteredIds = filtered.map((e) => e.id);
+  const allSelected = filteredIds.length > 0 && filteredIds.every((id) => selected.has(id));
+  const someSelected = selected.size > 0 && !allSelected;
+  const toggleAll = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allSelected) filteredIds.forEach((id) => next.delete(id));
+      else filteredIds.forEach((id) => next.add(id));
+      return next;
+    });
+  };
+  const toggleOne = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const bulkSetActive = async (active: boolean) => {
+    if (selected.size === 0) return;
+    const ids = Array.from(selected);
+    setBulkBusy(true);
+    const { error } = await supabase.from("employees").update({ active }).in("id", ids);
+    setBulkBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success(`${ids.length} medewerker(s) ${active ? "in dienst" : "uit dienst"} gezet`);
+    setSelected(new Set());
+    queryClient.invalidateQueries({ queryKey: ["employees"] });
+    queryClient.invalidateQueries({ queryKey: ["employees-count"] });
+  };
+
   const handleAdd = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);

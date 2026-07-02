@@ -238,9 +238,11 @@ function EmployeeDetailPage() {
       <Tabs defaultValue="fiche" className="space-y-4">
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="fiche">Fiche</TabsTrigger>
-          <TabsTrigger value="evaluaties">
-            Evaluaties{evaluations.length > 0 && <span className="ml-1 text-xs text-muted-foreground">({evaluations.length})</span>}
-          </TabsTrigger>
+          {canViewEvaluations && (
+            <TabsTrigger value="evaluaties">
+              Evaluaties{evaluations.length > 0 && <span className="ml-1 text-xs text-muted-foreground">({evaluations.length})</span>}
+            </TabsTrigger>
+          )}
           <TabsTrigger value="inspecties">
             Inspecties{subjectReports.length > 0 && <span className="ml-1 text-xs text-muted-foreground">({subjectReports.length})</span>}
           </TabsTrigger>

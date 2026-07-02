@@ -157,7 +157,8 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
       for (const file of Array.from(files)) {
         if (!file.type.startsWith("image/")) continue;
         const blob = await compress(file);
-        const path = `${type}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+        const prefix = mode === "public" ? "public/" : "";
+        const path = `${prefix}${type}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
         const { error } = await supabase.storage
           .from("safety-observations")
           .upload(path, blob, { contentType: "image/jpeg", upsert: false });

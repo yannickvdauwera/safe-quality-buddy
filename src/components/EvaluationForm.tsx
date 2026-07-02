@@ -43,6 +43,7 @@ export function EvaluationForm({ open, onOpenChange, employeeId, employeeName, e
     notes: existing?.notes ?? "",
   });
   const [scores, setScores] = useState<Record<string, string>>(existing?.scores ?? {});
+  const [signature, setSignature] = useState<string | null>(existing?.evaluator_signature ?? null);
 
   const setScore = (k: string, v: string) => setScores((s) => ({ ...s, [k]: v }));
 
@@ -53,6 +54,7 @@ export function EvaluationForm({ open, onOpenChange, employeeId, employeeName, e
       if (!form.location.trim()) throw new Error("Locatie is verplicht");
       const missing = ALL_CRITERIA.filter((c) => !scores[c.key]);
       if (missing.length) throw new Error(`Nog ${missing.length} criteria niet gescoord`);
+      if (!signature) throw new Error("Handtekening leidinggevende ontbreekt");
 
       const payload = {
         employee_id: employeeId,
@@ -63,6 +65,7 @@ export function EvaluationForm({ open, onOpenChange, employeeId, employeeName, e
         evaluated_on: form.evaluated_on,
         notes: form.notes.trim() || null,
         scores,
+        evaluator_signature: signature,
       };
 
       if (existing) {

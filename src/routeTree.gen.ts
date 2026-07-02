@@ -34,6 +34,7 @@ import { Route as AuthenticatedMeldingenIdRouteImport } from './routes/_authenti
 import { Route as AuthenticatedIntegratiesMondayRouteImport } from './routes/_authenticated/integraties.monday'
 import { Route as AuthenticatedInspectiesWpiRouteImport } from './routes/_authenticated/inspecties.wpi'
 import { Route as AuthenticatedInspectiesKwaliteitRouteImport } from './routes/_authenticated/inspecties.kwaliteit'
+import { Route as AuthenticatedEmployeesIdRouteImport } from './routes/_authenticated/employees.$id'
 import { Route as AuthenticatedToolboxesSessionsIdRouteImport } from './routes/_authenticated/toolboxes.sessions.$id'
 
 const AuthRoute = AuthRouteImport.update({
@@ -171,6 +172,12 @@ const AuthenticatedInspectiesKwaliteitRoute =
     path: '/kwaliteit',
     getParentRoute: () => AuthenticatedInspectiesRoute,
   } as any)
+const AuthenticatedEmployeesIdRoute =
+  AuthenticatedEmployeesIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedEmployeesRoute,
+  } as any)
 const AuthenticatedToolboxesSessionsIdRoute =
   AuthenticatedToolboxesSessionsIdRouteImport.update({
     id: '/toolboxes/sessions/$id',
@@ -182,7 +189,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/employees': typeof AuthenticatedEmployeesRoute
+  '/employees': typeof AuthenticatedEmployeesRouteWithChildren
   '/inspecties': typeof AuthenticatedInspectiesRouteWithChildren
   '/meldingen': typeof AuthenticatedMeldingenRouteWithChildren
   '/mos': typeof AuthenticatedMosRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByFullPath {
   '/users': typeof AuthenticatedUsersRoute
   '/report/$type': typeof ReportTypeRoute
   '/sign/$token': typeof SignTokenRoute
+  '/employees/$id': typeof AuthenticatedEmployeesIdRoute
   '/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
   '/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
   '/integraties/monday': typeof AuthenticatedIntegratiesMondayRoute
@@ -209,12 +217,13 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/employees': typeof AuthenticatedEmployeesRoute
+  '/employees': typeof AuthenticatedEmployeesRouteWithChildren
   '/mos': typeof AuthenticatedMosRoute
   '/stop': typeof AuthenticatedStopRoute
   '/users': typeof AuthenticatedUsersRoute
   '/report/$type': typeof ReportTypeRoute
   '/sign/$token': typeof SignTokenRoute
+  '/employees/$id': typeof AuthenticatedEmployeesIdRoute
   '/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
   '/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
   '/integraties/monday': typeof AuthenticatedIntegratiesMondayRoute
@@ -236,7 +245,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/employees': typeof AuthenticatedEmployeesRoute
+  '/_authenticated/employees': typeof AuthenticatedEmployeesRouteWithChildren
   '/_authenticated/inspecties': typeof AuthenticatedInspectiesRouteWithChildren
   '/_authenticated/meldingen': typeof AuthenticatedMeldingenRouteWithChildren
   '/_authenticated/mos': typeof AuthenticatedMosRoute
@@ -244,6 +253,7 @@ export interface FileRoutesById {
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/report/$type': typeof ReportTypeRoute
   '/sign/$token': typeof SignTokenRoute
+  '/_authenticated/employees/$id': typeof AuthenticatedEmployeesIdRoute
   '/_authenticated/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
   '/_authenticated/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
   '/_authenticated/integraties/monday': typeof AuthenticatedIntegratiesMondayRoute
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/report/$type'
     | '/sign/$token'
+    | '/employees/$id'
     | '/inspecties/kwaliteit'
     | '/inspecties/wpi'
     | '/integraties/monday'
@@ -298,6 +309,7 @@ export interface FileRouteTypes {
     | '/users'
     | '/report/$type'
     | '/sign/$token'
+    | '/employees/$id'
     | '/inspecties/kwaliteit'
     | '/inspecties/wpi'
     | '/integraties/monday'
@@ -326,6 +338,7 @@ export interface FileRouteTypes {
     | '/_authenticated/users'
     | '/report/$type'
     | '/sign/$token'
+    | '/_authenticated/employees/$id'
     | '/_authenticated/inspecties/kwaliteit'
     | '/_authenticated/inspecties/wpi'
     | '/_authenticated/integraties/monday'
@@ -529,6 +542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInspectiesKwaliteitRouteImport
       parentRoute: typeof AuthenticatedInspectiesRoute
     }
+    '/_authenticated/employees/$id': {
+      id: '/_authenticated/employees/$id'
+      path: '/$id'
+      fullPath: '/employees/$id'
+      preLoaderRoute: typeof AuthenticatedEmployeesIdRouteImport
+      parentRoute: typeof AuthenticatedEmployeesRoute
+    }
     '/_authenticated/toolboxes/sessions/$id': {
       id: '/_authenticated/toolboxes/sessions/$id'
       path: '/toolboxes/sessions/$id'
@@ -538,6 +558,20 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedEmployeesRouteChildren {
+  AuthenticatedEmployeesIdRoute: typeof AuthenticatedEmployeesIdRoute
+}
+
+const AuthenticatedEmployeesRouteChildren: AuthenticatedEmployeesRouteChildren =
+  {
+    AuthenticatedEmployeesIdRoute: AuthenticatedEmployeesIdRoute,
+  }
+
+const AuthenticatedEmployeesRouteWithChildren =
+  AuthenticatedEmployeesRoute._addFileChildren(
+    AuthenticatedEmployeesRouteChildren,
+  )
 
 interface AuthenticatedInspectiesRouteChildren {
   AuthenticatedInspectiesKwaliteitRoute: typeof AuthenticatedInspectiesKwaliteitRoute
@@ -581,7 +615,7 @@ const AuthenticatedMeldingenRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedEmployeesRoute: typeof AuthenticatedEmployeesRoute
+  AuthenticatedEmployeesRoute: typeof AuthenticatedEmployeesRouteWithChildren
   AuthenticatedInspectiesRoute: typeof AuthenticatedInspectiesRouteWithChildren
   AuthenticatedMeldingenRoute: typeof AuthenticatedMeldingenRouteWithChildren
   AuthenticatedMosRoute: typeof AuthenticatedMosRoute
@@ -596,7 +630,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedEmployeesRoute: AuthenticatedEmployeesRoute,
+  AuthenticatedEmployeesRoute: AuthenticatedEmployeesRouteWithChildren,
   AuthenticatedInspectiesRoute: AuthenticatedInspectiesRouteWithChildren,
   AuthenticatedMeldingenRoute: AuthenticatedMeldingenRouteWithChildren,
   AuthenticatedMosRoute: AuthenticatedMosRoute,

@@ -41,6 +41,7 @@ function EmployeesPage() {
   const navigate = useNavigate();
   const { hasAnyRole } = useAuth();
   const canEdit = hasAnyRole(["admin", "hse_manager"]);
+  const canImport = hasAnyRole(["admin"]);
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);

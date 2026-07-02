@@ -163,8 +163,52 @@ export function ReportsList({
     queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
   };
 
+  const bulkUpdateStatus = async (status: string) => {
+    if (selectedIds.size === 0) return;
+    const payload: Record<string, unknown> = { status };
+    if (status === "gesloten") payload.closed_at = new Date().toISOString();
+    const { error } = await supabase
+      .from("reports")
+      .update(payload as never)
+      .in("id", Array.from(selectedIds));
+    if (error) return toast.error(error.message);
+    toast.success(`${selectedIds.size} item(s) bijgewerkt`);
+    setSelectedIds(new Set());
+    queryClient.invalidateQueries({ queryKey: [queryKey] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
+  };
+
+  const bulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setDeleting(true);
+    const { error } = await supabase
+      .from("reports")
+      .delete()
+      .in("id", Array.from(selectedIds));
+    setDeleting(false);
+    if (error) return toast.error(error.message);
+    toast.success(`${selectedIds.size} item(s) verwijderd`);
+    setSelectedIds(new Set());
+    setConfirmDelete(false);
+    queryClient.invalidateQueries({ queryKey: [queryKey] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
+  };
+
+  const toggleOne = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id); else next.delete(id);
+      return next;
+    });
+  };
+  const allSelected = filtered.length > 0 && filtered.every((r) => selectedIds.has(r.id));
+  const toggleAll = (checked: boolean) => {
+    setSelectedIds(() => (checked ? new Set(filtered.map((r) => r.id)) : new Set()));
+  };
+
   const showActions = canManage && !hideStatus;
-  const colCount = 5 + (hideStatus ? 0 : 1) + (showActions ? 1 : 0);
+  const showSelect = canManage || canDelete;
+  const colCount = 5 + (hideStatus ? 0 : 1) + (showActions ? 1 : 0) + (showSelect ? 1 : 0);
 
   return (
     <div className="space-y-6">

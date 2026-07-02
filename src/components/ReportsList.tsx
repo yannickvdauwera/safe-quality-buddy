@@ -211,7 +211,7 @@ export function ReportsList({
 
   const showActions = canManage && !hideStatus;
   const showSelect = canManage || canDelete;
-  const colCount = 5 + (hideStatus ? 0 : 1) + (showActions ? 1 : 0) + (showSelect ? 1 : 0);
+  const colCount = 4 + (hideSeverity ? 0 : 1) + (hideStatus ? 0 : 1) + (showActions ? 1 : 0) + (showSelect ? 1 : 0);
 
   return (
     <div className="space-y-6">

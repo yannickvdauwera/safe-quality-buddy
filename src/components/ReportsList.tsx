@@ -20,7 +20,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Plus, MoreHorizontal, type LucideIcon } from "lucide-react";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, MoreHorizontal, Trash2, type LucideIcon } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 
 export const STATUS_LABELS: Record<string, string> = {
@@ -84,11 +89,15 @@ export function ReportsList({
 }: ReportsListProps) {
   const { user, hasAnyRole } = useAuth();
   const canManage = hasAnyRole(["admin", "hse_manager", "manager"]);
+  const canDelete = hasAnyRole(["admin"]);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [filter, setFilter] = useState<"all" | "mine" | "assigned">("all");
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
 
   const allowedTypes = typeOptions.map((t) => t.value);
@@ -154,8 +163,52 @@ export function ReportsList({
     queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
   };
 
+  const bulkUpdateStatus = async (status: string) => {
+    if (selectedIds.size === 0) return;
+    const payload: Record<string, unknown> = { status };
+    if (status === "gesloten") payload.closed_at = new Date().toISOString();
+    const { error } = await supabase
+      .from("reports")
+      .update(payload as never)
+      .in("id", Array.from(selectedIds));
+    if (error) return toast.error(error.message);
+    toast.success(`${selectedIds.size} item(s) bijgewerkt`);
+    setSelectedIds(new Set());
+    queryClient.invalidateQueries({ queryKey: [queryKey] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
+  };
+
+  const bulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setDeleting(true);
+    const { error } = await supabase
+      .from("reports")
+      .delete()
+      .in("id", Array.from(selectedIds));
+    setDeleting(false);
+    if (error) return toast.error(error.message);
+    toast.success(`${selectedIds.size} item(s) verwijderd`);
+    setSelectedIds(new Set());
+    setConfirmDelete(false);
+    queryClient.invalidateQueries({ queryKey: [queryKey] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
+  };
+
+  const toggleOne = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id); else next.delete(id);
+      return next;
+    });
+  };
+  const allSelected = filtered.length > 0 && filtered.every((r) => selectedIds.has(r.id));
+  const toggleAll = (checked: boolean) => {
+    setSelectedIds(() => (checked ? new Set(filtered.map((r) => r.id)) : new Set()));
+  };
+
   const showActions = canManage && !hideStatus;
-  const colCount = 5 + (hideStatus ? 0 : 1) + (showActions ? 1 : 0);
+  const showSelect = canManage || canDelete;
+  const colCount = 5 + (hideStatus ? 0 : 1) + (showActions ? 1 : 0) + (showSelect ? 1 : 0);
 
   return (
     <div className="space-y-6">
@@ -245,12 +298,43 @@ export function ReportsList({
         )}
       </div>
 
+      {selectedIds.size > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 px-3 py-2">
+          <span className="text-sm font-medium">{selectedIds.size} geselecteerd</span>
+          <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>Selectie wissen</Button>
+          <div className="ml-auto flex flex-wrap gap-2">
+            {canManage && !hideStatus && (
+              <>
+                <Button size="sm" variant="outline" onClick={() => bulkUpdateStatus("in_behandeling")}>In behandeling</Button>
+                <Button size="sm" variant="outline" onClick={() => bulkUpdateStatus("opgevolgd")}>Opgevolgd</Button>
+                <Button size="sm" variant="outline" onClick={() => bulkUpdateStatus("gesloten")}>Sluiten</Button>
+                <Button size="sm" variant="outline" onClick={() => bulkUpdateStatus("open")}>Heropenen</Button>
+              </>
+            )}
+            {canDelete && (
+              <Button size="sm" variant="destructive" onClick={() => setConfirmDelete(true)}>
+                <Trash2 className="w-4 h-4" /> Verwijderen
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
       <Card>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
+                  {showSelect && (
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={allSelected}
+                        onCheckedChange={(c) => toggleAll(!!c)}
+                        aria-label="Alles selecteren"
+                      />
+                    </TableHead>
+                  )}
                   <TableHead>Datum</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Titel</TableHead>
@@ -279,6 +363,15 @@ export function ReportsList({
                       });
                     }}
                   >
+                    {showSelect && (
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedIds.has(r.id)}
+                          onCheckedChange={(c) => toggleOne(r.id, !!c)}
+                          aria-label="Rij selecteren"
+                        />
+                      </TableCell>
+                    )}
                     <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
                       {new Date(r.observed_at).toLocaleDateString("nl-BE")}
                     </TableCell>
@@ -309,6 +402,28 @@ export function ReportsList({
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Definitief verwijderen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Je staat op het punt om <strong>{selectedIds.size}</strong> item(s) permanent te verwijderen.
+              Deze actie kan niet ongedaan gemaakt worden en alle gekoppelde gegevens gaan verloren.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); bulkDelete(); }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Verwijderen…" : "Ja, definitief verwijderen"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

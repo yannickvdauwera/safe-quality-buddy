@@ -95,7 +95,7 @@ function EmployeeDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("safety_observations")
-        .select("id, type, observed_date, plant, area, location, status, description, function_title, severity")
+        .select("id, type, observed_date, plant, area, location, status, situation_description")
         .eq("reporter_id", employee!.user_id!)
         .order("observed_date", { ascending: false });
       if (error) throw error;

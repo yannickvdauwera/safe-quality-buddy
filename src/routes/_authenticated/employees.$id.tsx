@@ -143,10 +143,10 @@ function EmployeeDetailPage() {
       kind: (o.type === "stop" ? "stop" : "mos") as MeldingItem["kind"],
       label: o.type === "stop" ? KIND_LABEL.stop : KIND_LABEL.mos,
       date: o.observed_date,
-      title: (o.description ?? "").slice(0, 100) || (o.type === "stop" ? "STOP-reflex" : "MOS-melding"),
+      title: (o.situation_description ?? "").slice(0, 100) || (o.type === "stop" ? "STOP-reflex" : "MOS-melding"),
       subtitle: [o.plant, o.area, o.location].filter(Boolean).join(" · "),
       status: o.status ?? "open",
-      severity: o.severity,
+      severity: null,
       onOpen: () => toast.message("Detailweergave voor MOS/STOP komt binnenkort."),
     })),
     ...reporterReports.map((r): MeldingItem => ({

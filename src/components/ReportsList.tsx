@@ -381,7 +381,7 @@ export function ReportsList({
                     <TableCell><Badge variant="outline">{typeOptions.find((t) => t.value === r.type)?.label ?? r.type}</Badge></TableCell>
                     <TableCell className="font-medium">{r.title}</TableCell>
                     <TableCell className="text-muted-foreground">{r.location ?? "—"}</TableCell>
-                    <TableCell><Badge variant={severityVariant(r.severity)}>{SEVERITY_LABELS[r.severity]}</Badge></TableCell>
+                    {!hideSeverity && <TableCell><Badge variant={severityVariant(r.severity)}>{SEVERITY_LABELS[r.severity]}</Badge></TableCell>}
                     {!hideStatus && <TableCell><Badge variant={statusVariant(r.status)}>{STATUS_LABELS[r.status]}</Badge></TableCell>}
                     {showActions && (
                       <TableCell onClick={(e) => e.stopPropagation()}>

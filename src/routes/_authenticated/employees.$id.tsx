@@ -62,6 +62,48 @@ function EmployeeDetailPage() {
     },
   });
 
+  const { data: subjectReports = [] } = useQuery({
+    queryKey: ["employee-subject-reports", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reports")
+        .select("id, type, title, severity, status, observed_at, location")
+        .filter("details->header->>subject_employee_id", "eq", id)
+        .order("observed_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: toolboxes = [] } = useQuery({
+    queryKey: ["employee-toolboxes", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("toolbox_signatures")
+        .select("id, signed_at, session:toolbox_sessions(id, title, session_date, location)")
+        .eq("employee_id", id)
+        .order("signed_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const { data: observations = [] } = useQuery({
+    enabled: !!employee?.user_id,
+    queryKey: ["employee-observations", employee?.user_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("safety_observations")
+        .select("id, type, observed_date, plant, area, location, status")
+        .eq("reporter_id", employee!.user_id!)
+        .order("observed_date", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+
+
   const remove = useMutation({
     mutationFn: async (evalId: string) => {
       const { error } = await supabase.from("employee_evaluations").delete().eq("id", evalId);

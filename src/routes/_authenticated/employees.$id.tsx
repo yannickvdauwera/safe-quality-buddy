@@ -522,6 +522,7 @@ function EmployeeDetailPage() {
         </TabsContent>
 
 
+        {canViewEvaluations && (
         <TabsContent value="evaluaties" className="space-y-4">
 
           <div className="flex items-center justify-between">

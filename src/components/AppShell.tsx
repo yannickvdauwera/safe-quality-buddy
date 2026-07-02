@@ -204,20 +204,46 @@ export function AppShell({ children }: { children: ReactNode }) {
         })}
       </nav>
 
-      <div className="p-3 border-t">
+      <div className="p-3 border-t space-y-2">
+        {isRealAdmin && (
+          <div className="px-1">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Bekijk als rol</div>
+            <Select
+              value={previewRole ?? "__real"}
+              onValueChange={(v) => setPreviewRole(v === "__real" ? null : (v as any))}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__real">Mijn eigen rol (Admin)</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+                <SelectItem value="hse_manager">HSE-manager</SelectItem>
+                <SelectItem value="manager">Manager</SelectItem>
+                <SelectItem value="operator">Operator</SelectItem>
+              </SelectContent>
+            </Select>
+            {isPreviewing && (
+              <div className="text-[10px] text-amber-600 mt-1">
+                Preview-modus — data-toegang blijft admin
+              </div>
+            )}
+          </div>
+        )}
         <div className="flex items-center gap-3 px-2 py-2">
           <Avatar className="w-8 h-8">
             <AvatarFallback className="text-xs">{initials}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <div className="text-sm font-medium truncate">{user?.user_metadata?.full_name ?? user?.email}</div>
-            <div className="text-xs text-muted-foreground">{roleLabel}</div>
+            <div className="text-xs text-muted-foreground">{roleLabel}{isPreviewing && " (preview)"}</div>
           </div>
         </div>
-        <Button variant="ghost" size="sm" className="w-full justify-start mt-1" onClick={handleSignOut}>
+        <Button variant="ghost" size="sm" className="w-full justify-start" onClick={handleSignOut}>
           <LogOut className="w-4 h-4" /> Afmelden
         </Button>
       </div>
+
     </div>
   );
 

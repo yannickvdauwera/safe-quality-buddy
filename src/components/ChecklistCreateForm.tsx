@@ -78,6 +78,39 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
   const [answers, setAnswers] = useState<Record<string, "ok" | "nok" | "nvt">>({});
   const [extras, setExtras] = useState<Record<string, string>>({});
   const [signature, setSignature] = useState<string | null>(null);
+  const [subjectEmployeeId, setSubjectEmployeeId] = useState<string>("");
+
+  const { data: employees = [] } = useQuery({
+    enabled: !!config.employeePicker,
+    queryKey: ["employees-picker"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("employees")
+        .select("id, first_name, last_name, employer, function_title, active")
+        .eq("active", true)
+        .order("last_name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    if (!config.employeePicker || !subjectEmployeeId) return;
+    const emp = employees.find((e) => e.id === subjectEmployeeId);
+    if (!emp) return;
+    const p = config.employeePicker;
+    setHeader((h) => {
+      const next = { ...h };
+      if (p.fillNameKey) next[p.fillNameKey] = `${emp.first_name ?? ""} ${emp.last_name ?? ""}`.trim();
+      if (p.fillFirstNameKey) next[p.fillFirstNameKey] = emp.first_name ?? "";
+      if (p.fillLastNameKey) next[p.fillLastNameKey] = emp.last_name ?? "";
+      if (p.fillEmployerKey && emp.employer) next[p.fillEmployerKey] = emp.employer;
+      if (p.fillFunctionKey && !next[p.fillFunctionKey] && emp.function_title) {
+        next[p.fillFunctionKey] = emp.function_title;
+      }
+      return next;
+    });
+  }, [subjectEmployeeId, employees, config.employeePicker]);
 
   const totalQ = config.sections.reduce((s, sec) => s + sec.questions.length, 0);
   const answered = Object.keys(answers).length;
@@ -86,6 +119,9 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (config.employeePicker?.required && !subjectEmployeeId) {
+      return toast.error(`${config.employeePicker.label} is verplicht`);
+    }
     for (const f of config.headerFields) {
       if (f.required && !header[f.key]?.trim()) return toast.error(`${f.label} is verplicht`);
     }
@@ -96,7 +132,9 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
     }
 
     setSaving(true);
-    const title = config.titleTemplate(header).slice(0, 200);
+    const headerToStore = { ...header };
+    if (subjectEmployeeId) headerToStore.subject_employee_id = subjectEmployeeId;
+    const title = config.titleTemplate(headerToStore).slice(0, 200);
     const payload = {
       type: config.reportType,
       severity,
@@ -107,7 +145,7 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
       reporter_id: user.id,
       observed_at: header["date"] ? new Date(header["date"]).toISOString() : new Date().toISOString(),
       details: {
-        header,
+        header: headerToStore,
         answers,
         extras,
         signature: signature ?? null,
@@ -120,6 +158,7 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
     toast.success("Inspectie geregistreerd");
     onCreated();
   };
+
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">

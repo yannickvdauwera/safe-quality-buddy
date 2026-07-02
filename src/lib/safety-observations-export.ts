@@ -348,7 +348,7 @@ export async function exportToDocx(o: ObservationExport) {
     bannerCells.push(new TableCell({
       borders: noBorders,
       width: { size: 3000, type: WidthType.DXA },
-      shading: { fill: TSA_RED_HEX, type: ShadingType.CLEAR, color: "auto" },
+      shading: { fill: TSA_DARK_HEX, type: ShadingType.CLEAR, color: "auto" },
       margins: { top: 160, bottom: 160, left: 200, right: 100 },
       children: [new Paragraph({
         children: [new ImageRun({

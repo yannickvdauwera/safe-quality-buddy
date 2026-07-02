@@ -83,6 +83,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:description", content: "Platform voor documentenbeheer, meldingen, toolboxen en risicoanalyses." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: "HSE & Kwaliteitsbeheer" },
+      { name: "twitter:description", content: "Platform voor documentenbeheer, meldingen, toolboxen en risicoanalyses." },
+      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/ULwBOn44ZzVbMmgMtvA54ORsOer1/social-images/social-1783006662398-TSA_Logo_—_Transparent.webp" },
+      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/ULwBOn44ZzVbMmgMtvA54ORsOer1/social-images/social-1783006662398-TSA_Logo_—_Transparent.webp" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

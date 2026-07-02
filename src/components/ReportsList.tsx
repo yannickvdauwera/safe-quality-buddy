@@ -234,7 +234,8 @@ export function ReportsList({
             )}
           </DialogContent>
 
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       <div className="flex gap-2">

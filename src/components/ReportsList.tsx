@@ -159,8 +159,9 @@ export function ReportsList({
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           <p className="text-sm text-muted-foreground mt-1">{description}</p>
-        </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <div className="flex flex-wrap items-center gap-2">
+          {extraActions}
+          <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4" /> {newLabel}</Button>
           </DialogTrigger>

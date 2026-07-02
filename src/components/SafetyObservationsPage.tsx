@@ -114,10 +114,31 @@ export function SafetyObservationsPage({ type }: { type: SafetyObservationType }
         </div>
       </div>
 
+      {canDelete && selectedIds.size > 0 && (
+        <div className="flex flex-wrap items-center gap-2 rounded-md border bg-muted/40 px-3 py-2">
+          <span className="text-sm font-medium">{selectedIds.size} geselecteerd</span>
+          <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>Selectie wissen</Button>
+          <div className="ml-auto">
+            <Button size="sm" variant="destructive" onClick={() => setConfirmDelete(true)}>
+              <Trash2 className="w-4 h-4" /> Verwijderen
+            </Button>
+          </div>
+        </div>
+      )}
+
       <Card className="p-0 overflow-hidden">
         <Table>
           <TableHeader>
             <TableRow>
+              {canDelete && (
+                <TableHead className="w-10">
+                  <Checkbox
+                    checked={allSelected}
+                    onCheckedChange={(c) => toggleAll(!!c)}
+                    aria-label="Alles selecteren"
+                  />
+                </TableHead>
+              )}
               <TableHead>Datum</TableHead>
               <TableHead>Melder</TableHead>
               <TableHead>Plant / Locatie</TableHead>
@@ -129,12 +150,21 @@ export function SafetyObservationsPage({ type }: { type: SafetyObservationType }
           </TableHeader>
           <TableBody>
             {isLoading ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Laden…</TableCell></TableRow>
+              <TableRow><TableCell colSpan={colCount} className="text-center py-8 text-muted-foreground">Laden…</TableCell></TableRow>
             ) : data.length === 0 ? (
-              <TableRow><TableCell colSpan={7} className="text-center py-8 text-muted-foreground">Nog geen meldingen.</TableCell></TableRow>
+              <TableRow><TableCell colSpan={colCount} className="text-center py-8 text-muted-foreground">Nog geen meldingen.</TableCell></TableRow>
             ) : (
               data.map((o) => (
                 <TableRow key={o.id}>
+                  {canDelete && (
+                    <TableCell>
+                      <Checkbox
+                        checked={selectedIds.has(o.id)}
+                        onCheckedChange={(c) => toggleOne(o.id, !!c)}
+                        aria-label="Rij selecteren"
+                      />
+                    </TableCell>
+                  )}
                   <TableCell className="whitespace-nowrap">
                     {o.observed_date}{o.observed_time ? ` ${o.observed_time.slice(0, 5)}` : ""}
                   </TableCell>
@@ -180,6 +210,28 @@ export function SafetyObservationsPage({ type }: { type: SafetyObservationType }
           </TableBody>
         </Table>
       </Card>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Definitief verwijderen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Je staat op het punt om <strong>{selectedIds.size}</strong> melding(en) permanent te verwijderen.
+              Deze actie kan niet ongedaan gemaakt worden en alle gekoppelde gegevens (foto's, handtekeningen) gaan verloren.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); bulkDelete(); }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Verwijderen…" : "Ja, definitief verwijderen"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -3,6 +3,13 @@ import type { ChecklistConfig } from "@/components/ChecklistCreateForm";
 export const WPI_CONFIG: ChecklistConfig = {
   reportType: "werkplekinspectie",
   captureSignature: true,
+  employeePicker: {
+    label: "Geïnspecteerde medewerker",
+    required: true,
+    fillNameKey: "observed_name",
+    fillEmployerKey: "employer",
+    fillFunctionKey: "observed_function",
+  },
   titleTemplate: (h) =>
     `WPI — ${h.observed_name || "geobserveerde"}${h.worksite ? ` @ ${h.worksite}` : ""}`,
   headerFields: [
@@ -11,9 +18,9 @@ export const WPI_CONFIG: ChecklistConfig = {
     { key: "employer", label: "Werkgever", type: "text" },
     { key: "principal", label: "Opdrachtgever", type: "text", required: true },
     { key: "worksite", label: "Werflocatie(s)", type: "text", required: true },
-    { key: "observed_name", label: "Naam geïnspecteerden/geobserveerden", type: "text", required: true },
     { key: "executor", label: "Uitvoerder WPI", type: "text", required: true },
   ],
+
   sections: [
     {
       title: "Categorie A — Werkomgeving & procedures",

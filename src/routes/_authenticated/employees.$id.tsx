@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { ArrowLeft, Plus, Pencil, Trash2, ClipboardList, ClipboardCheck, MessageSquareWarning, PresentationIcon, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { EvaluationForm } from "@/components/EvaluationForm";
@@ -34,11 +37,13 @@ function EmployeeDetailPage() {
   const navigate = useNavigate();
   const { hasAnyRole } = useAuth();
   const canEvaluate = hasAnyRole(["admin", "hse_manager", "manager"]);
+  const canEdit = hasAnyRole(["admin", "hse_manager", "manager"]);
   const canDelete = hasAnyRole(["admin"]);
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Evaluation | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editFicheOpen, setEditFicheOpen] = useState(false);
 
   const { data: employee, isLoading } = useQuery({
     queryKey: ["employee", id],
@@ -187,6 +192,23 @@ function EmployeeDetailPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const saveFiche = useMutation({
+    mutationFn: async (payload: {
+      first_name: string; last_name: string; employer: string | null;
+      email: string | null; phone: string | null; function_title: string | null; active: boolean;
+    }) => {
+      const { error } = await supabase.from("employees").update(payload).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Fiche bijgewerkt");
+      qc.invalidateQueries({ queryKey: ["employee", id] });
+      qc.invalidateQueries({ queryKey: ["employees"] });
+      setEditFicheOpen(false);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (isLoading) return <div className="text-muted-foreground">Laden…</div>;
   if (!employee) return <div className="text-muted-foreground">Fiche niet gevonden.</div>;
 
@@ -231,7 +253,15 @@ function EmployeeDetailPage() {
 
         <TabsContent value="fiche">
           <Card>
-            <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <CardHeader className="flex-row items-center justify-between pb-3">
+              <CardTitle className="text-base">Gegevens</CardTitle>
+              {canEdit && (
+                <Button size="sm" variant="outline" onClick={() => setEditFicheOpen(true)}>
+                  <Pencil className="w-4 h-4" /> Bewerken
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="p-6 pt-0 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <InfoRow label="Voornaam" value={employee.first_name} />
               <InfoRow label="Naam" value={employee.last_name} />
               <InfoRow label="Werkgever" value={employee.employer} />
@@ -251,7 +281,78 @@ function EmployeeDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          <Dialog open={editFicheOpen} onOpenChange={setEditFicheOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Fiche bewerken</DialogTitle>
+                <DialogDescription>Wijzig de gegevens van deze medewerker.</DialogDescription>
+              </DialogHeader>
+              <form
+                id="edit-fiche-form"
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const fd = new FormData(e.currentTarget);
+                  const str = (k: string) => (fd.get(k) as string | null)?.trim() || "";
+                  const first = str("first_name").replace(/,/g, "").trim();
+                  const last = str("last_name").replace(/,/g, "").trim();
+                  if (!first || !last) return toast.error("Voornaam en naam zijn verplicht");
+                  saveFiche.mutate({
+                    first_name: first,
+                    last_name: last,
+                    employer: str("employer") || null,
+                    email: str("email").toLowerCase() || null,
+                    phone: str("phone") || null,
+                    function_title: str("function_title") || null,
+                    active: (fd.get("active") as string) === "on",
+                  });
+                }}
+              >
+                <div className="space-y-1">
+                  <Label htmlFor="ef_first_name">Voornaam *</Label>
+                  <Input id="ef_first_name" name="first_name" defaultValue={employee.first_name ?? ""} required maxLength={100} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="ef_last_name">Naam *</Label>
+                  <Input id="ef_last_name" name="last_name" defaultValue={employee.last_name ?? ""} required maxLength={100} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="ef_employer">Werkgever</Label>
+                  <Input id="ef_employer" name="employer" defaultValue={employee.employer ?? ""} maxLength={200} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="ef_email">E-mail</Label>
+                  <Input id="ef_email" name="email" type="email" defaultValue={employee.email ?? ""} maxLength={200} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="ef_phone">Telefoon</Label>
+                  <Input id="ef_phone" name="phone" defaultValue={employee.phone ?? ""} maxLength={50} />
+                </div>
+                <div className="space-y-1 md:col-span-2">
+                  <Label htmlFor="ef_function_title">Functies (komma-gescheiden)</Label>
+                  <Input
+                    id="ef_function_title"
+                    name="function_title"
+                    defaultValue={employee.function_title ?? ""}
+                    placeholder="bv. Brandwacht, Gasanalist"
+                  />
+                </div>
+                <label className="flex items-center gap-2 text-sm md:col-span-2">
+                  <input type="checkbox" name="active" defaultChecked={employee.active ?? true} className="accent-primary" />
+                  Actief in dienst
+                </label>
+              </form>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditFicheOpen(false)}>Annuleren</Button>
+                <Button type="submit" form="edit-fiche-form" disabled={saveFiche.isPending}>
+                  {saveFiche.isPending ? "Opslaan…" : "Opslaan"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
+
 
         <TabsContent value="inspecties" className="space-y-3">
           <p className="text-sm text-muted-foreground">

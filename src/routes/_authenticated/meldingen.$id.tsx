@@ -294,19 +294,8 @@ function EditForm({
           <Label>Titel</Label>
           <Input value={state.title} onChange={(e) => set("title", e.target.value)} />
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label>Ernst</Label>
-            <Select value={state.severity} onValueChange={(v) => set("severity", v)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="laag">Laag</SelectItem>
-                <SelectItem value="middel">Middel</SelectItem>
-                <SelectItem value="hoog">Hoog</SelectItem>
-                <SelectItem value="kritiek">Kritiek</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+        <div className="grid grid-cols-1 gap-3">
+
           <div className="space-y-1.5">
             <Label>Status</Label>
             <Select value={state.status} onValueChange={(v) => set("status", v)}>

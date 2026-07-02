@@ -253,7 +253,15 @@ function EmployeeDetailPage() {
 
         <TabsContent value="fiche">
           <Card>
-            <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <CardHeader className="flex-row items-center justify-between pb-3">
+              <CardTitle className="text-base">Gegevens</CardTitle>
+              {canEdit && (
+                <Button size="sm" variant="outline" onClick={() => setEditFicheOpen(true)}>
+                  <Pencil className="w-4 h-4" /> Bewerken
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="p-6 pt-0 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <InfoRow label="Voornaam" value={employee.first_name} />
               <InfoRow label="Naam" value={employee.last_name} />
               <InfoRow label="Werkgever" value={employee.employer} />
@@ -273,7 +281,78 @@ function EmployeeDetailPage() {
               </div>
             </CardContent>
           </Card>
+
+          <Dialog open={editFicheOpen} onOpenChange={setEditFicheOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Fiche bewerken</DialogTitle>
+                <DialogDescription>Wijzig de gegevens van deze medewerker.</DialogDescription>
+              </DialogHeader>
+              <form
+                id="edit-fiche-form"
+                className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const fd = new FormData(e.currentTarget);
+                  const str = (k: string) => (fd.get(k) as string | null)?.trim() || "";
+                  const first = str("first_name").replace(/,/g, "").trim();
+                  const last = str("last_name").replace(/,/g, "").trim();
+                  if (!first || !last) return toast.error("Voornaam en naam zijn verplicht");
+                  saveFiche.mutate({
+                    first_name: first,
+                    last_name: last,
+                    employer: str("employer") || null,
+                    email: str("email").toLowerCase() || null,
+                    phone: str("phone") || null,
+                    function_title: str("function_title") || null,
+                    active: (fd.get("active") as string) === "on",
+                  });
+                }}
+              >
+                <div className="space-y-1">
+                  <Label htmlFor="ef_first_name">Voornaam *</Label>
+                  <Input id="ef_first_name" name="first_name" defaultValue={employee.first_name ?? ""} required maxLength={100} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="ef_last_name">Naam *</Label>
+                  <Input id="ef_last_name" name="last_name" defaultValue={employee.last_name ?? ""} required maxLength={100} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="ef_employer">Werkgever</Label>
+                  <Input id="ef_employer" name="employer" defaultValue={employee.employer ?? ""} maxLength={200} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="ef_email">E-mail</Label>
+                  <Input id="ef_email" name="email" type="email" defaultValue={employee.email ?? ""} maxLength={200} />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="ef_phone">Telefoon</Label>
+                  <Input id="ef_phone" name="phone" defaultValue={employee.phone ?? ""} maxLength={50} />
+                </div>
+                <div className="space-y-1 md:col-span-2">
+                  <Label htmlFor="ef_function_title">Functies (komma-gescheiden)</Label>
+                  <Input
+                    id="ef_function_title"
+                    name="function_title"
+                    defaultValue={employee.function_title ?? ""}
+                    placeholder="bv. Brandwacht, Gasanalist"
+                  />
+                </div>
+                <label className="flex items-center gap-2 text-sm md:col-span-2">
+                  <input type="checkbox" name="active" defaultChecked={employee.active ?? true} className="accent-primary" />
+                  Actief in dienst
+                </label>
+              </form>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setEditFicheOpen(false)}>Annuleren</Button>
+                <Button type="submit" form="edit-fiche-form" disabled={saveFiche.isPending}>
+                  {saveFiche.isPending ? "Opslaan…" : "Opslaan"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </TabsContent>
+
 
         <TabsContent value="inspecties" className="space-y-3">
           <p className="text-sm text-muted-foreground">

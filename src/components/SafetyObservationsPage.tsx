@@ -56,6 +56,35 @@ export function SafetyObservationsPage({ type }: { type: SafetyObservationType }
     });
   };
 
+  const bulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    setDeleting(true);
+    const { error } = await supabase
+      .from("safety_observations")
+      .delete()
+      .in("id", Array.from(selectedIds));
+    setDeleting(false);
+    if (error) return toast.error(error.message);
+    toast.success(`${selectedIds.size} melding(en) verwijderd`);
+    setSelectedIds(new Set());
+    setConfirmDelete(false);
+    queryClient.invalidateQueries({ queryKey: ["safety_observations", type] });
+    queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
+  };
+
+  const toggleOne = (id: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(id); else next.delete(id);
+      return next;
+    });
+  };
+  const allSelected = data.length > 0 && data.every((o) => selectedIds.has(o.id));
+  const toggleAll = (checked: boolean) => {
+    setSelectedIds(() => (checked ? new Set(data.map((o) => o.id)) : new Set()));
+  };
+  const colCount = 7 + (canDelete ? 1 : 0);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">

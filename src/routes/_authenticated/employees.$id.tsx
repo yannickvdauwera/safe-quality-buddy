@@ -287,12 +287,9 @@ function EmployeeDetailPage() {
           ) : (
             <div className="space-y-2">
               {observations.map((o) => (
-                <Card
-                  key={o.id}
-                  className="cursor-pointer hover:bg-muted/40 transition"
-                  onClick={() => navigate({ to: "/meldingen/observaties/$id", params: { id: o.id } }).catch(() => {})}
-                >
+                <Card key={o.id}>
                   <CardContent className="p-3 flex items-center justify-between gap-3">
+
                     <div>
                       <div className="text-sm font-medium capitalize">{o.type.replace(/_/g, " ")}</div>
                       <div className="text-xs text-muted-foreground">

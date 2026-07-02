@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SignaturePad } from "@/components/SignaturePad";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +20,19 @@ export interface ChecklistQuestion {
 export interface ChecklistSection {
   title: string;
   questions: ChecklistQuestion[];
+}
+export interface EmployeePickerConfig {
+  label: string;
+  required?: boolean;
+  /** header key to fill with full name */
+  fillNameKey?: string;
+  /** header keys to split first/last name into */
+  fillFirstNameKey?: string;
+  fillLastNameKey?: string;
+  /** header key to fill with employer */
+  fillEmployerKey?: string;
+  /** header key to fill with function/title (only overwrites if empty) */
+  fillFunctionKey?: string;
 }
 export interface ChecklistConfig {
   reportType: string;
@@ -30,6 +45,8 @@ export interface ChecklistConfig {
   extraTextFields?: Array<{ key: string; label: string; placeholder?: string; required?: boolean; rows?: number }>;
   /** Show signature pad for the executor at bottom of form */
   captureSignature?: boolean;
+  /** Employee dropdown that auto-fills header fields and stores the id */
+  employeePicker?: EmployeePickerConfig;
 }
 
 const ANSWERS: Array<{ value: "ok" | "nok" | "nvt"; label: string; cls: string }> = [
@@ -43,6 +60,7 @@ interface Props {
   onCreated: () => void;
   config: ChecklistConfig;
 }
+
 
 export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
   const { user } = useAuth();
@@ -60,6 +78,39 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
   const [answers, setAnswers] = useState<Record<string, "ok" | "nok" | "nvt">>({});
   const [extras, setExtras] = useState<Record<string, string>>({});
   const [signature, setSignature] = useState<string | null>(null);
+  const [subjectEmployeeId, setSubjectEmployeeId] = useState<string>("");
+
+  const { data: employees = [] } = useQuery({
+    enabled: !!config.employeePicker,
+    queryKey: ["employees-picker"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("employees")
+        .select("id, first_name, last_name, employer, function_title, active")
+        .eq("active", true)
+        .order("last_name");
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    if (!config.employeePicker || !subjectEmployeeId) return;
+    const emp = employees.find((e) => e.id === subjectEmployeeId);
+    if (!emp) return;
+    const p = config.employeePicker;
+    setHeader((h) => {
+      const next = { ...h };
+      if (p.fillNameKey) next[p.fillNameKey] = `${emp.first_name ?? ""} ${emp.last_name ?? ""}`.trim();
+      if (p.fillFirstNameKey) next[p.fillFirstNameKey] = emp.first_name ?? "";
+      if (p.fillLastNameKey) next[p.fillLastNameKey] = emp.last_name ?? "";
+      if (p.fillEmployerKey && emp.employer) next[p.fillEmployerKey] = emp.employer;
+      if (p.fillFunctionKey && !next[p.fillFunctionKey] && emp.function_title) {
+        next[p.fillFunctionKey] = emp.function_title;
+      }
+      return next;
+    });
+  }, [subjectEmployeeId, employees, config.employeePicker]);
 
   const totalQ = config.sections.reduce((s, sec) => s + sec.questions.length, 0);
   const answered = Object.keys(answers).length;
@@ -68,6 +119,9 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    if (config.employeePicker?.required && !subjectEmployeeId) {
+      return toast.error(`${config.employeePicker.label} is verplicht`);
+    }
     for (const f of config.headerFields) {
       if (f.required && !header[f.key]?.trim()) return toast.error(`${f.label} is verplicht`);
     }
@@ -78,7 +132,9 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
     }
 
     setSaving(true);
-    const title = config.titleTemplate(header).slice(0, 200);
+    const headerToStore = { ...header };
+    if (subjectEmployeeId) headerToStore.subject_employee_id = subjectEmployeeId;
+    const title = config.titleTemplate(headerToStore).slice(0, 200);
     const payload = {
       type: config.reportType,
       severity,
@@ -89,7 +145,7 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
       reporter_id: user.id,
       observed_at: header["date"] ? new Date(header["date"]).toISOString() : new Date().toISOString(),
       details: {
-        header,
+        header: headerToStore,
         answers,
         extras,
         signature: signature ?? null,
@@ -103,9 +159,35 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
     onCreated();
   };
 
+
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {config.employeePicker && (
+        <div className="space-y-1.5">
+          <Label>{config.employeePicker.label}{config.employeePicker.required ? " *" : ""}</Label>
+          <Select value={subjectEmployeeId} onValueChange={setSubjectEmployeeId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Kies een medewerker uit de personeelsfiches…" />
+            </SelectTrigger>
+            <SelectContent>
+              {employees.length === 0 ? (
+                <div className="px-2 py-1.5 text-sm text-muted-foreground">Geen actieve medewerkers</div>
+              ) : employees.map((e) => (
+                <SelectItem key={e.id} value={e.id}>
+                  {e.last_name} {e.first_name}
+                  {e.employer ? ` — ${e.employer}` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Vult automatisch naam, werkgever en functie in. Voeg medewerkers toe via Personeelsfiches.
+          </p>
+        </div>
+      )}
+
       {/* Header fields */}
+
       <div className="grid grid-cols-2 gap-3">
         {config.headerFields.map((f) => (
           <div key={f.key} className="space-y-1.5">

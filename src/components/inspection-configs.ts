@@ -3,6 +3,13 @@ import type { ChecklistConfig } from "@/components/ChecklistCreateForm";
 export const WPI_CONFIG: ChecklistConfig = {
   reportType: "werkplekinspectie",
   captureSignature: true,
+  employeePicker: {
+    label: "Geïnspecteerde medewerker",
+    required: true,
+    fillNameKey: "observed_name",
+    fillEmployerKey: "employer",
+    fillFunctionKey: "observed_function",
+  },
   titleTemplate: (h) =>
     `WPI — ${h.observed_name || "geobserveerde"}${h.worksite ? ` @ ${h.worksite}` : ""}`,
   headerFields: [
@@ -11,9 +18,9 @@ export const WPI_CONFIG: ChecklistConfig = {
     { key: "employer", label: "Werkgever", type: "text" },
     { key: "principal", label: "Opdrachtgever", type: "text", required: true },
     { key: "worksite", label: "Werflocatie(s)", type: "text", required: true },
-    { key: "observed_name", label: "Naam geïnspecteerden/geobserveerden", type: "text", required: true },
     { key: "executor", label: "Uitvoerder WPI", type: "text", required: true },
   ],
+
   sections: [
     {
       title: "Categorie A — Werkomgeving & procedures",
@@ -62,16 +69,21 @@ export const WPI_CONFIG: ChecklistConfig = {
 
 export const KWALITEIT_CONFIG: ChecklistConfig = {
   reportType: "kwaliteitscontrole",
+  employeePicker: {
+    label: "Geobserveerde medewerker",
+    required: true,
+    fillFirstNameKey: "first_name",
+    fillLastNameKey: "last_name",
+  },
   titleTemplate: (h) =>
     `KC — ${(h.first_name || "").trim()} ${(h.last_name || "").trim()}`.trim() +
     (h.worksite ? ` @ ${h.worksite}` : ""),
   headerFields: [
     { key: "date", label: "Datum", type: "date", required: true },
     { key: "worksite", label: "Werf / Locatie", type: "text", required: true },
-    { key: "last_name", label: "Achternaam geobserveerde", type: "text", required: true },
-    { key: "first_name", label: "Voornaam geobserveerde", type: "text", required: true },
     { key: "assessor", label: "Naam beoordeler", type: "text", required: true },
   ],
+
   sections: [
     { title: "PBMs", questions: [
       { key: "Q1", label: "1. Draagt iedereen de vereiste PBMs?" },

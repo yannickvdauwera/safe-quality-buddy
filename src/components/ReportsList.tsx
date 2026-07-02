@@ -80,6 +80,7 @@ export function ReportsList({
   locationLabel = "Locatie",
   CreateFormComponent,
   extraActions,
+  hideStatus = false,
 }: ReportsListProps) {
   const { user, hasAnyRole } = useAuth();
   const canManage = hasAnyRole(["admin", "hse_manager", "manager"]);

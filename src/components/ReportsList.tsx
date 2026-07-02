@@ -342,7 +342,7 @@ export function ReportsList({
                   <TableHead>Type</TableHead>
                   <TableHead>Titel</TableHead>
                   <TableHead>{locationLabel}</TableHead>
-                  <TableHead>Ernst</TableHead>
+                  {!hideSeverity && <TableHead>Ernst</TableHead>}
                   {!hideStatus && <TableHead>Status</TableHead>}
                   {showActions && <TableHead className="w-10"></TableHead>}
                 </TableRow>

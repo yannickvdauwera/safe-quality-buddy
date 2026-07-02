@@ -63,6 +63,8 @@ export interface ReportsListProps {
   }>;
   /** Extra action buttons rendered next to the "New" button (e.g. Import). */
   extraActions?: React.ReactNode;
+  /** Hide the status column and status-management actions (e.g. for inspections). */
+  hideStatus?: boolean;
 }
 
 export function ReportsList({

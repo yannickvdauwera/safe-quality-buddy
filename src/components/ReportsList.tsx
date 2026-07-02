@@ -273,7 +273,13 @@ export function ReportsList({
                   <TableRow
                     key={r.id}
                     className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => navigate({ to: "/meldingen/$id", params: { id: r.id } })}
+                    onClick={() => {
+                      const isInspection = r.type === "werkplekinspectie" || r.type === "kwaliteitscontrole";
+                      navigate({
+                        to: isInspection ? "/inspecties/$id" : "/meldingen/$id",
+                        params: { id: r.id },
+                      });
+                    }}
                   >
                     <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
                       {new Date(r.observed_at).toLocaleDateString("nl-BE")}

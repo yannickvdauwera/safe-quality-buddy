@@ -97,7 +97,9 @@ function EmployeesPage() {
           </p>
         </div>
         {canEdit && (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <div className="flex flex-wrap items-center gap-2">
+            <EmployeesImportDialog />
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button><Plus className="w-4 h-4" /> Nieuwe fiche</Button>
             </DialogTrigger>

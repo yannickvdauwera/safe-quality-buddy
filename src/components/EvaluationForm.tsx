@@ -25,6 +25,7 @@ interface Props {
     scores: Record<string, string>;
     notes: string | null;
     evaluated_on: string;
+    evaluator_signature?: string | null;
   } | null;
 }
 

@@ -182,8 +182,129 @@ function EmployeeDetailPage() {
           </Card>
         </TabsContent>
 
+        <TabsContent value="inspecties" className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Werkplekinspecties en kwaliteitscontroles waarbij deze medewerker geobserveerd werd.
+          </p>
+          {subjectReports.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center text-muted-foreground">
+                <ClipboardCheck className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                Nog geen inspecties gekoppeld aan deze medewerker.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-2">
+              {subjectReports.map((r) => (
+                <Card
+                  key={r.id}
+                  className="cursor-pointer hover:bg-muted/40 transition"
+                  onClick={() => navigate({ to: "/inspecties/$id", params: { id: r.id } }).catch(() => {})}
+                >
+                  <CardContent className="p-3 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-medium">{r.title}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {r.type} · {new Date(r.observed_at).toLocaleDateString("nl-BE")}
+                        {r.location ? ` · ${r.location}` : ""}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="outline" className="text-xs">{r.severity}</Badge>
+                      <Badge variant="secondary" className="text-xs">{r.status}</Badge>
+                      <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="toolboxen" className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            Toolboxen die door deze medewerker ondertekend zijn.
+          </p>
+          {toolboxes.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center text-muted-foreground">
+                <PresentationIcon className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                Nog geen ondertekende toolboxen.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-2">
+              {toolboxes.map((t) => {
+                const s = (t as { session: { id: string; title: string; session_date: string; location: string | null } | null }).session;
+                return (
+                  <Card
+                    key={t.id}
+                    className="cursor-pointer hover:bg-muted/40 transition"
+                    onClick={() => s && navigate({ to: "/toolboxen/sessies/$id", params: { id: s.id } }).catch(() => {})}
+                  >
+                    <CardContent className="p-3 flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-medium">{s?.title ?? "Toolbox-sessie"}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {s?.session_date ? new Date(s.session_date).toLocaleDateString("nl-BE") : "—"}
+                          {s?.location ? ` · ${s.location}` : ""}
+                        </div>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        Ondertekend {new Date(t.signed_at).toLocaleDateString("nl-BE")}
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+
+        <TabsContent value="meldingen" className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            MOS-meldingen en STOP-reflexen ingediend door deze medewerker (koppeling via gebruikersaccount).
+          </p>
+          {!employee.user_id ? (
+            <Card>
+              <CardContent className="p-8 text-center text-sm text-muted-foreground">
+                Deze medewerker heeft nog geen gekoppeld gebruikersaccount. Meldingen worden pas zichtbaar zodra de fiche gekoppeld is aan een login.
+              </CardContent>
+            </Card>
+          ) : observations.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center text-muted-foreground">
+                <MessageSquareWarning className="w-8 h-8 mx-auto mb-2 opacity-50" />
+                Nog geen meldingen door deze medewerker.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-2">
+              {observations.map((o) => (
+                <Card
+                  key={o.id}
+                  className="cursor-pointer hover:bg-muted/40 transition"
+                  onClick={() => navigate({ to: "/meldingen/observaties/$id", params: { id: o.id } }).catch(() => {})}
+                >
+                  <CardContent className="p-3 flex items-center justify-between gap-3">
+                    <div>
+                      <div className="text-sm font-medium capitalize">{o.type.replace(/_/g, " ")}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {new Date(o.observed_date).toLocaleDateString("nl-BE")}
+                        {o.plant ? ` · ${o.plant}` : ""}
+                        {o.area ? ` · ${o.area}` : ""}
+                      </div>
+                    </div>
+                    <Badge variant="secondary" className="text-xs">{o.status}</Badge>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
 
         <TabsContent value="evaluaties" className="space-y-4">
+
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               Overzicht van alle evaluaties voor deze medewerker.

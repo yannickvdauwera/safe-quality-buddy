@@ -199,46 +199,30 @@ function EmployeesPage() {
                   <TableHead>Status</TableHead>
                 </TableRow>
                 <TableRow className="bg-muted/30">
-                  <TableHead className="py-2">
-                    <Input
-                      value={colFilters.name}
-                      onChange={(e) => setColFilters((f) => ({ ...f, name: e.target.value }))}
-                      placeholder="Filter…"
-                      className="h-8"
-                    />
-                  </TableHead>
-                  <TableHead className="py-2">
-                    <Input
-                      value={colFilters.employer}
-                      onChange={(e) => setColFilters((f) => ({ ...f, employer: e.target.value }))}
-                      placeholder="Filter…"
-                      className="h-8"
-                    />
-                  </TableHead>
-                  <TableHead className="py-2">
-                    <Input
-                      value={colFilters.email}
-                      onChange={(e) => setColFilters((f) => ({ ...f, email: e.target.value }))}
-                      placeholder="Filter…"
-                      className="h-8"
-                    />
-                  </TableHead>
-                  <TableHead className="py-2">
-                    <Input
-                      value={colFilters.phone}
-                      onChange={(e) => setColFilters((f) => ({ ...f, phone: e.target.value }))}
-                      placeholder="Filter…"
-                      className="h-8"
-                    />
-                  </TableHead>
-                  <TableHead className="py-2">
-                    <Input
-                      value={colFilters.function_title}
-                      onChange={(e) => setColFilters((f) => ({ ...f, function_title: e.target.value }))}
-                      placeholder="Filter…"
-                      className="h-8"
-                    />
-                  </TableHead>
+                  {([
+                    { key: "name", values: employees.map((e) => `${e.last_name ?? ""} ${e.first_name ?? ""}`.trim()) },
+                    { key: "employer", values: employees.map((e) => e.employer ?? "") },
+                    { key: "email", values: employees.map((e) => e.email ?? "") },
+                    { key: "phone", values: employees.map((e) => e.phone ?? "") },
+                    { key: "function_title", values: employees.flatMap((e) => parseFunctions(e.function_title)) },
+                  ] as const).map(({ key, values }) => {
+                    const listId = `filter-${key}`;
+                    const unique = Array.from(new Set(values.filter(Boolean))).sort();
+                    return (
+                      <TableHead key={key} className="py-2">
+                        <Input
+                          list={listId}
+                          value={colFilters[key]}
+                          onChange={(e) => setColFilters((f) => ({ ...f, [key]: e.target.value }))}
+                          placeholder="Filter…"
+                          className="h-8"
+                        />
+                        <datalist id={listId}>
+                          {unique.map((v) => <option key={v} value={v} />)}
+                        </datalist>
+                      </TableHead>
+                    );
+                  })}
                   <TableHead className="py-2">
                     <select
                       value={colFilters.status}

@@ -224,7 +224,7 @@ function EmployeeDetailPage() {
             Toolboxen{toolboxes.length > 0 && <span className="ml-1 text-xs text-muted-foreground">({toolboxes.length})</span>}
           </TabsTrigger>
           <TabsTrigger value="meldingen">
-            Meldingen{observations.length > 0 && <span className="ml-1 text-xs text-muted-foreground">({observations.length})</span>}
+            Meldingen{meldingen.length > 0 && <span className="ml-1 text-xs text-muted-foreground">({meldingen.length})</span>}
           </TabsTrigger>
         </TabsList>
 

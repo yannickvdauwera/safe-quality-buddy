@@ -61,6 +61,8 @@ export interface ReportsListProps {
     typeOptions: { value: string; label: string }[];
     defaultType: string;
   }>;
+  /** Extra action buttons rendered next to the "New" button (e.g. Import). */
+  extraActions?: React.ReactNode;
 }
 
 export function ReportsList({

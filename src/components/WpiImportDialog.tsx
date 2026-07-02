@@ -321,11 +321,40 @@ export function WpiImportDialog() {
                         <TableCell className="text-xs text-muted-foreground">{r.row}</TableCell>
                         <TableCell className="text-sm">{r.name || "—"}</TableCell>
                         <TableCell className="text-xs">
-                          {r.matched
-                            ? <span className="text-emerald-600 font-medium">✓ Gekoppeld</span>
-                            : autoCreate
-                              ? <span className="text-amber-600">Nieuw wordt aangemaakt</span>
-                              : <span className="text-destructive">Niet gevonden</span>}
+                          {r.matched ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-emerald-600 font-medium whitespace-nowrap">✓</span>
+                              <select
+                                value={r.employeeId ?? ""}
+                                onChange={(e) => setRowEmployee(r.row, e.target.value)}
+                                className="h-7 rounded-md border border-input bg-background px-1 text-xs max-w-[180px]"
+                              >
+                                {sortedEmployees.map((emp) => (
+                                  <option key={emp.id} value={emp.id}>
+                                    {emp.last_name} {emp.first_name}
+                                  </option>
+                                ))}
+                                <option value="">— ontkoppelen —</option>
+                              </select>
+                            </div>
+                          ) : (
+                            <div className="flex flex-col gap-1">
+                              <select
+                                value=""
+                                onChange={(e) => setRowEmployee(r.row, e.target.value)}
+                                className="h-7 rounded-md border border-input bg-background px-1 text-xs max-w-[200px]"
+                              >
+                                <option value="">
+                                  {autoCreate ? "Nieuw wordt aangemaakt…" : "Kies medewerker…"}
+                                </option>
+                                {sortedEmployees.map((emp) => (
+                                  <option key={emp.id} value={emp.id}>
+                                    {emp.last_name} {emp.first_name}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell className="text-xs">{r.date ? new Date(r.date).toLocaleDateString("nl-BE") : "—"}</TableCell>
                         <TableCell className="text-xs">{r.worksite || "—"}</TableCell>

@@ -61,6 +61,8 @@ export interface ReportsListProps {
     typeOptions: { value: string; label: string }[];
     defaultType: string;
   }>;
+  /** Extra action buttons rendered next to the "New" button (e.g. Import). */
+  extraActions?: React.ReactNode;
 }
 
 export function ReportsList({
@@ -75,6 +77,7 @@ export function ReportsList({
   showInvolvedFirm = true,
   locationLabel = "Locatie",
   CreateFormComponent,
+  extraActions,
 }: ReportsListProps) {
   const { user, hasAnyRole } = useAuth();
   const canManage = hasAnyRole(["admin", "hse_manager", "manager"]);
@@ -157,7 +160,9 @@ export function ReportsList({
           <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
           <p className="text-sm text-muted-foreground mt-1">{description}</p>
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
+        <div className="flex flex-wrap items-center gap-2">
+          {extraActions}
+          <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4" /> {newLabel}</Button>
           </DialogTrigger>
@@ -230,7 +235,8 @@ export function ReportsList({
             )}
           </DialogContent>
 
-        </Dialog>
+          </Dialog>
+        </div>
       </div>
 
       <div className="flex gap-2">

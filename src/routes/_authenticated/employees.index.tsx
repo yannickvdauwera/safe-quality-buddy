@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Search, UserPlus } from "lucide-react";
+import { EmployeesImportDialog } from "@/components/EmployeesImportDialog";
 
 export const Route = createFileRoute("/_authenticated/employees/")({
   head: () => ({ meta: [{ title: "Personeelsfiches — HSE & Kwaliteit" }] }),
@@ -96,7 +97,9 @@ function EmployeesPage() {
           </p>
         </div>
         {canEdit && (
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <div className="flex flex-wrap items-center gap-2">
+            <EmployeesImportDialog />
+            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button><Plus className="w-4 h-4" /> Nieuwe fiche</Button>
             </DialogTrigger>
@@ -146,7 +149,8 @@ function EmployeesPage() {
                 </DialogFooter>
               </form>
             </DialogContent>
-          </Dialog>
+            </Dialog>
+          </div>
         )}
       </div>
 

@@ -169,6 +169,22 @@ export function EvaluationForm({ open, onOpenChange, employeeId, employeeName, e
               rows={5}
             />
           </div>
+
+          <div className="space-y-2 rounded-lg border p-3">
+            <Label>Handtekening leidinggevende *</Label>
+            {signature ? (
+              <div className="space-y-2">
+                <div className="border rounded-md bg-white p-2 flex justify-center">
+                  <img src={signature} alt="Handtekening" className="max-h-40" />
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={() => setSignature(null)}>
+                  Opnieuw tekenen
+                </Button>
+              </div>
+            ) : (
+              <SignaturePad onSave={(dataUrl) => setSignature(dataUrl)} />
+            )}
+          </div>
         </div>
 
         <DialogFooter>

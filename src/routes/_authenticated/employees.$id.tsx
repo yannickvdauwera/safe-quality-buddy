@@ -192,6 +192,23 @@ function EmployeeDetailPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const saveFiche = useMutation({
+    mutationFn: async (payload: {
+      first_name: string; last_name: string; employer: string | null;
+      email: string | null; phone: string | null; function_title: string | null; active: boolean;
+    }) => {
+      const { error } = await supabase.from("employees").update(payload).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Fiche bijgewerkt");
+      qc.invalidateQueries({ queryKey: ["employee", id] });
+      qc.invalidateQueries({ queryKey: ["employees"] });
+      setEditFicheOpen(false);
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   if (isLoading) return <div className="text-muted-foreground">Laden…</div>;
   if (!employee) return <div className="text-muted-foreground">Fiche niet gevonden.</div>;
 

@@ -28,6 +28,12 @@ const json = (body: unknown, status = 200) =>
     headers: { "Content-Type": "application/json", ...CORS },
   });
 
+const text = (body: string, status = 200) =>
+  new Response(body, {
+    status,
+    headers: { "Content-Type": "text/plain; charset=utf-8", ...CORS },
+  });
+
 type MondayColumnValue = {
   id?: string;
   title?: string;
@@ -136,6 +142,10 @@ export const Route = createFileRoute("/api/public/monday-webhook")({
         // the configured query string. The challenge only proves reachability and
         // never writes data, so answer it before enforcing the shared secret.
         if (body.challenge) {
+          const accept = request.headers.get("accept") ?? "";
+          if (!accept.includes("application/json")) {
+            return text(body.challenge);
+          }
           return json({ challenge: body.challenge });
         }
 

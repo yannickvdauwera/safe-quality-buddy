@@ -339,15 +339,17 @@ function EmployeeDetailPage() {
 
         <TabsContent value="meldingen" className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            MOS-meldingen en STOP-reflexen ingediend door deze medewerker (koppeling via gebruikersaccount).
+            MOS-meldingen, STOP-reflexen, interne meldingen en (bijna)ongevallen ingediend door deze medewerker.
+            {" "}Elke melding behoudt zijn eigen datavelden — klik door om alle details te zien.
           </p>
+
           {!employee.user_id ? (
             <Card>
               <CardContent className="p-8 text-center text-sm text-muted-foreground">
                 Deze medewerker heeft nog geen gekoppeld gebruikersaccount. Meldingen worden pas zichtbaar zodra de fiche gekoppeld is aan een login.
               </CardContent>
             </Card>
-          ) : observations.length === 0 ? (
+          ) : meldingen.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center text-muted-foreground">
                 <MessageSquareWarning className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -355,26 +357,65 @@ function EmployeeDetailPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-2">
-              {observations.map((o) => (
-                <Card key={o.id}>
-                  <CardContent className="p-3 flex items-center justify-between gap-3">
+            <>
+              <div className="flex flex-wrap gap-2">
+                {([
+                  ["all", "Alle"],
+                  ["mos", "MOS"],
+                  ["stop", "STOP"],
+                  ["klacht", "Intern"],
+                  ["ao_ehbo", "(Bijna)ongevallen"],
+                ] as const).map(([key, label]) => (
+                  <Button
+                    key={key}
+                    size="sm"
+                    variant={meldingFilter === key ? "default" : "outline"}
+                    onClick={() => setMeldingFilter(key)}
+                  >
+                    {label} ({meldingCounts[key]})
+                  </Button>
+                ))}
+              </div>
 
-                    <div>
-                      <div className="text-sm font-medium capitalize">{o.type.replace(/_/g, " ")}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(o.observed_date).toLocaleDateString("nl-BE")}
-                        {o.plant ? ` · ${o.plant}` : ""}
-                        {o.area ? ` · ${o.area}` : ""}
-                      </div>
-                    </div>
-                    <Badge variant="secondary" className="text-xs">{o.status}</Badge>
+              {filteredMeldingen.length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center text-sm text-muted-foreground">
+                    Geen meldingen in deze filter.
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+              ) : (
+                <div className="space-y-2">
+                  {filteredMeldingen.map((m) => (
+                    <Card
+                      key={`${m.kind}-${m.id}`}
+                      className="cursor-pointer hover:bg-muted/40 transition"
+                      onClick={m.onOpen}
+                    >
+                      <CardContent className="p-3 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs shrink-0">{m.label}</Badge>
+                            <div className="text-sm font-medium truncate">{m.title}</div>
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            {new Date(m.date).toLocaleDateString("nl-BE")}
+                            {m.subtitle ? ` · ${m.subtitle}` : ""}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {m.severity && <Badge variant="outline" className="text-xs">{m.severity}</Badge>}
+                          <Badge variant="secondary" className="text-xs">{m.status}</Badge>
+                          <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </TabsContent>
+
 
         <TabsContent value="evaluaties" className="space-y-4">
 

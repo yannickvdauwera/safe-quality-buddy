@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ArrowLeft, FileSpreadsheet, FileText } from "lucide-react";
-import { STATUS_LABELS, SEVERITY_LABELS } from "@/components/ReportsList";
+import { STATUS_LABELS } from "@/components/ReportsList";
 import { exportReportPdf, exportReportExcel, type ReportExport } from "@/lib/reports-export";
 import { WPI_CONFIG, KWALITEIT_CONFIG } from "@/components/inspection-configs";
 import type { ChecklistConfig } from "@/components/ChecklistCreateForm";

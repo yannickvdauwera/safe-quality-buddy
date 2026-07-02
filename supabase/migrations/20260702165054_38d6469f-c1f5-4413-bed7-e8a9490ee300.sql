@@ -1,0 +1,1 @@
+ALTER TABLE public.employee_evaluations ADD COLUMN IF NOT EXISTS evaluator_signature TEXT;

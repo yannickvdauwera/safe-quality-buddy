@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SignaturePad } from "@/components/SignaturePad";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +20,19 @@ export interface ChecklistQuestion {
 export interface ChecklistSection {
   title: string;
   questions: ChecklistQuestion[];
+}
+export interface EmployeePickerConfig {
+  label: string;
+  required?: boolean;
+  /** header key to fill with full name */
+  fillNameKey?: string;
+  /** header keys to split first/last name into */
+  fillFirstNameKey?: string;
+  fillLastNameKey?: string;
+  /** header key to fill with employer */
+  fillEmployerKey?: string;
+  /** header key to fill with function/title (only overwrites if empty) */
+  fillFunctionKey?: string;
 }
 export interface ChecklistConfig {
   reportType: string;
@@ -30,6 +45,8 @@ export interface ChecklistConfig {
   extraTextFields?: Array<{ key: string; label: string; placeholder?: string; required?: boolean; rows?: number }>;
   /** Show signature pad for the executor at bottom of form */
   captureSignature?: boolean;
+  /** Employee dropdown that auto-fills header fields and stores the id */
+  employeePicker?: EmployeePickerConfig;
 }
 
 const ANSWERS: Array<{ value: "ok" | "nok" | "nvt"; label: string; cls: string }> = [
@@ -43,6 +60,7 @@ interface Props {
   onCreated: () => void;
   config: ChecklistConfig;
 }
+
 
 export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
   const { user } = useAuth();

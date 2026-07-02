@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Search, UserPlus } from "lucide-react";
+import { EmployeesImportDialog } from "@/components/EmployeesImportDialog";
 
 export const Route = createFileRoute("/_authenticated/employees/")({
   head: () => ({ meta: [{ title: "Personeelsfiches — HSE & Kwaliteit" }] }),

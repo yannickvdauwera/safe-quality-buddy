@@ -236,7 +236,11 @@ function EmployeeDetailPage() {
           ) : (
             <div className="space-y-2">
               {toolboxes.map((t) => {
-                const s = (t as { session: { id: string; title: string; session_date: string; location: string | null } | null }).session;
+                const s = (t as unknown as {
+                  session: { id: string; given_at: string | null; scheduled_at: string | null; location: string | null; toolbox: { title: string } | null } | null;
+                }).session;
+                const title = s?.toolbox?.title ?? "Toolbox-sessie";
+                const when = s?.given_at ?? s?.scheduled_at ?? null;
                 return (
                   <Card
                     key={t.id}
@@ -245,9 +249,9 @@ function EmployeeDetailPage() {
                   >
                     <CardContent className="p-3 flex items-center justify-between gap-3">
                       <div>
-                        <div className="text-sm font-medium">{s?.title ?? "Toolbox-sessie"}</div>
+                        <div className="text-sm font-medium">{title}</div>
                         <div className="text-xs text-muted-foreground">
-                          {s?.session_date ? new Date(s.session_date).toLocaleDateString("nl-BE") : "—"}
+                          {when ? new Date(when).toLocaleDateString("nl-BE") : "—"}
                           {s?.location ? ` · ${s.location}` : ""}
                         </div>
                       </div>
@@ -258,6 +262,7 @@ function EmployeeDetailPage() {
                   </Card>
                 );
               })}
+
             </div>
           )}
         </TabsContent>

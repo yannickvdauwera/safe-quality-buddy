@@ -77,6 +77,7 @@ export function ReportsList({
   showInvolvedFirm = true,
   locationLabel = "Locatie",
   CreateFormComponent,
+  extraActions,
 }: ReportsListProps) {
   const { user, hasAnyRole } = useAuth();
   const canManage = hasAnyRole(["admin", "hse_manager", "manager"]);

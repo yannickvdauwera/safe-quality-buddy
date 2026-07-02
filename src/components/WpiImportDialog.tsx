@@ -87,11 +87,12 @@ export function WpiImportDialog() {
       });
 
       // Preload all employees for name matching
-      const { data: employees = [] } = await supabase
+      const { data: employeesData = [] } = await supabase
         .from("employees")
         .select("id, first_name, last_name");
+      setEmployees(employeesData ?? []);
       const empMap = new Map<string, string>();
-      employees?.forEach((e) => {
+      employeesData?.forEach((e) => {
         empMap.set(nameKey(`${e.first_name ?? ""} ${e.last_name ?? ""}`), e.id);
       });
 

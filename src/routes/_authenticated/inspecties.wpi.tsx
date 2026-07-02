@@ -28,6 +28,7 @@ function WpiPage() {
       defaultType="werkplekinspectie"
       locationLabel="Werf / zone"
       hideStatus
+      hideSeverity
       extraActions={canImport ? <WpiImportDialog /> : null}
       CreateFormComponent={({ onClose, onCreated }) => (
         <ChecklistCreateForm onClose={onClose} onCreated={onCreated} config={WPI_CONFIG} />

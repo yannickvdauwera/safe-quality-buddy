@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ArrowLeft, Plus, Pencil, Trash2, ClipboardList } from "lucide-react";
+import { ArrowLeft, Plus, Pencil, Trash2, ClipboardList, ClipboardCheck, MessageSquareWarning, PresentationIcon, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { EvaluationForm } from "@/components/EvaluationForm";
 import { EVALUATION_SECTIONS, SCORE_OPTIONS, evaluationAverage } from "@/lib/evaluation-criteria";

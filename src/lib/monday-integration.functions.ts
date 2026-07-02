@@ -1,6 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { getRequestHost } from "@tanstack/react-start/server";
+import { getRequestHost, getRequestHeader } from "@tanstack/react-start/server";
+
+const getPublishedHost = (host: string) => {
+  const forwardedHost = getRequestHeader("x-forwarded-host") ?? getRequestHeader("host") ?? host;
+  if (forwardedHost && !forwardedHost.includes("localhost") && !forwardedHost.includes("id-preview--")) {
+    return forwardedHost;
+  }
+  if (host && !host.includes("localhost") && !host.includes("id-preview--")) {
+    return host;
+  }
+  return "safe-quality-buddy.lovable.app";
+};
 
 export const getMondayWebhookUrl = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -17,8 +28,6 @@ export const getMondayWebhookUrl = createServerFn({ method: "GET" })
       return { url: null as string | null, configured: false as const };
     }
 
-    // Build stable *.lovable.app URLs so Monday keeps working across renames/redeploys.
-    // id-preview--<id>.lovable.app → project--<id>.lovable.app (published) & -dev (preview).
     const host = getRequestHost();
     let projectId: string | null = null;
     const m = host.match(/^(?:id-preview--|project--)([0-9a-f-]+)(?:-dev)?\.lovable\.app$/i);
@@ -26,9 +35,8 @@ export const getMondayWebhookUrl = createServerFn({ method: "GET" })
 
     const scheme = host.startsWith("localhost") ? "http" : "https";
     const currentUrl = `${scheme}://${host}/api/public/monday-webhook?secret=${encodeURIComponent(secret)}`;
-    const publishedUrl = projectId
-      ? `https://project--${projectId}.lovable.app/api/public/monday-webhook?secret=${encodeURIComponent(secret)}`
-      : null;
+    const publishedHost = getPublishedHost(host);
+    const publishedUrl = `https://${publishedHost}/api/public/monday-webhook?secret=${encodeURIComponent(secret)}`;
     const previewUrl = projectId
       ? `https://project--${projectId}-dev.lovable.app/api/public/monday-webhook?secret=${encodeURIComponent(secret)}`
       : null;

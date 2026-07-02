@@ -78,6 +78,10 @@ function EmployeeDetailPage() {
   if (!employee) return <div className="text-muted-foreground">Fiche niet gevonden.</div>;
 
   const employeeName = `${employee.first_name ?? ""} ${employee.last_name ?? ""}`.trim();
+  const functies = (employee.function_title ?? "")
+    .split(",")
+    .map((s: string) => s.trim())
+    .filter(Boolean);
 
   return (
     <div className="space-y-6">
@@ -88,9 +92,7 @@ function EmployeeDetailPage() {
           </Button>
           <h1 className="text-2xl font-semibold tracking-tight">{employeeName}</h1>
           <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            {employee.function_title && <span>{employee.function_title}</span>}
-            {employee.department && <span>· {employee.department}</span>}
-            {employee.employee_number && <span>· Nr. {employee.employee_number}</span>}
+            {employee.employer && <span>{employee.employer}</span>}
             {employee.active ? <Badge variant="secondary">Actief</Badge> : <Badge variant="outline">Uit dienst</Badge>}
           </div>
         </div>
@@ -109,16 +111,25 @@ function EmployeeDetailPage() {
             <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
               <InfoRow label="Voornaam" value={employee.first_name} />
               <InfoRow label="Naam" value={employee.last_name} />
-              <InfoRow label="Personeelsnr." value={employee.employee_number} />
-              <InfoRow label="Functie" value={employee.function_title} />
-              <InfoRow label="Afdeling" value={employee.department} />
-              <InfoRow label="Contract" value={employee.contract_type} />
+              <InfoRow label="Werkgever" value={employee.employer} />
               <InfoRow label="E-mail" value={employee.email} />
               <InfoRow label="Telefoon" value={employee.phone} />
-              <InfoRow label="Indienst" value={employee.hire_date} />
+              <div>
+                <div className="text-xs uppercase tracking-wide text-muted-foreground">Functies</div>
+                {functies.length === 0 ? (
+                  <div>—</div>
+                ) : (
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {functies.map((f: string) => (
+                      <Badge key={f} variant="secondary" className="font-normal">{f}</Badge>
+                    ))}
+                  </div>
+                )}
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
+
 
         <TabsContent value="evaluaties" className="space-y-4">
           <div className="flex items-center justify-between">

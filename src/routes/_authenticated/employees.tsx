@@ -24,14 +24,16 @@ export const Route = createFileRoute("/_authenticated/employees")({
 const employeeSchema = z.object({
   first_name: z.string().trim().min(1, "Voornaam is verplicht").max(100),
   last_name: z.string().trim().min(1, "Naam is verplicht").max(100),
+  employer: z.string().trim().max(150).optional().or(z.literal("")),
   email: z.string().trim().email("Ongeldig e-mailadres").max(255).optional().or(z.literal("")),
   phone: z.string().trim().max(30).optional().or(z.literal("")),
-  employee_number: z.string().trim().max(50).optional().or(z.literal("")),
-  function_title: z.string().trim().max(100).optional().or(z.literal("")),
-  department: z.string().trim().max(100).optional().or(z.literal("")),
-  contract_type: z.string().trim().max(50).optional().or(z.literal("")),
-  hire_date: z.string().optional().or(z.literal("")),
+  function_title: z.string().trim().max(300).optional().or(z.literal("")),
 });
+
+function parseFunctions(v?: string | null): string[] {
+  if (!v) return [];
+  return v.split(",").map((s) => s.trim()).filter(Boolean);
+}
 
 function EmployeesPage() {
   const navigate = useNavigate();
@@ -60,8 +62,8 @@ function EmployeesPage() {
     return (
       e.first_name?.toLowerCase().includes(q) ||
       e.last_name?.toLowerCase().includes(q) ||
-      e.employee_number?.toLowerCase().includes(q) ||
-      e.department?.toLowerCase().includes(q) ||
+      e.employer?.toLowerCase().includes(q) ||
+      e.email?.toLowerCase().includes(q) ||
       e.function_title?.toLowerCase().includes(q)
     );
   });
@@ -114,25 +116,9 @@ function EmployeesPage() {
                     <Input id="last_name" name="last_name" required maxLength={100} />
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="employee_number">Personeelsnr.</Label>
-                    <Input id="employee_number" name="employee_number" maxLength={50} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="contract_type">Contracttype</Label>
-                    <Input id="contract_type" name="contract_type" placeholder="Vast / Uitzend / …" maxLength={50} />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="function_title">Functie</Label>
-                    <Input id="function_title" name="function_title" maxLength={100} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="department">Afdeling</Label>
-                    <Input id="department" name="department" maxLength={100} />
-                  </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="employer">Werkgever</Label>
+                  <Input id="employer" name="employer" maxLength={150} placeholder="TSA Safety, uitzendbureau, …" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1.5">
@@ -145,8 +131,14 @@ function EmployeesPage() {
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="hire_date">Indiensttreding</Label>
-                  <Input id="hire_date" name="hire_date" type="date" />
+                  <Label htmlFor="function_title">Functies</Label>
+                  <Input
+                    id="function_title"
+                    name="function_title"
+                    maxLength={300}
+                    placeholder="Brandwacht, Veiligheidswacht, Gasanalist"
+                  />
+                  <p className="text-xs text-muted-foreground">Meerdere functies scheiden met een komma.</p>
                 </div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Annuleren</Button>
@@ -164,7 +156,7 @@ function EmployeesPage() {
             <div className="relative max-w-sm">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Zoek op naam, nummer, afdeling…"
+                placeholder="Zoek op naam, werkgever, e-mail of functie…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -176,10 +168,10 @@ function EmployeesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Naam</TableHead>
-                  <TableHead>Nr.</TableHead>
-                  <TableHead>Functie</TableHead>
-                  <TableHead>Afdeling</TableHead>
-                  <TableHead>Contract</TableHead>
+                  <TableHead>Werkgever</TableHead>
+                  <TableHead>E-mail</TableHead>
+                  <TableHead>Telefoon</TableHead>
+                  <TableHead>Functies</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
@@ -190,22 +182,33 @@ function EmployeesPage() {
                   <TableRow><TableCell colSpan={6} className="text-center text-muted-foreground py-12">
                     {employees.length === 0 ? "Nog geen personeelsfiches. Maak er een aan om te starten." : "Geen resultaten voor je zoekopdracht."}
                   </TableCell></TableRow>
-                ) : filtered.map((e) => (
-                  <TableRow
-                    key={e.id}
-                    className="cursor-pointer hover:bg-muted/50"
-                    onClick={() => navigate({ to: "/employees/$id", params: { id: e.id } })}
-                  >
-                    <TableCell className="font-medium">{e.last_name} {e.first_name}</TableCell>
-                    <TableCell className="text-muted-foreground">{e.employee_number ?? "—"}</TableCell>
-                    <TableCell>{e.function_title ?? "—"}</TableCell>
-                    <TableCell>{e.department ?? "—"}</TableCell>
-                    <TableCell>{e.contract_type ?? "—"}</TableCell>
-                    <TableCell>
-                      {e.active ? <Badge variant="secondary">Actief</Badge> : <Badge variant="outline">Uit dienst</Badge>}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                ) : filtered.map((e) => {
+                  const functies = parseFunctions(e.function_title);
+                  return (
+                    <TableRow
+                      key={e.id}
+                      className="cursor-pointer hover:bg-muted/50"
+                      onClick={() => navigate({ to: "/employees/$id", params: { id: e.id } })}
+                    >
+                      <TableCell className="font-medium">{e.last_name} {e.first_name}</TableCell>
+                      <TableCell>{e.employer ?? "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{e.email ?? "—"}</TableCell>
+                      <TableCell className="text-muted-foreground">{e.phone ?? "—"}</TableCell>
+                      <TableCell>
+                        {functies.length === 0 ? "—" : (
+                          <div className="flex flex-wrap gap-1">
+                            {functies.map((f) => (
+                              <Badge key={f} variant="secondary" className="font-normal">{f}</Badge>
+                            ))}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {e.active ? <Badge variant="secondary">Actief</Badge> : <Badge variant="outline">Uit dienst</Badge>}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>

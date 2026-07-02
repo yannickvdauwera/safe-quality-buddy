@@ -34,6 +34,7 @@ const employeeSchema = z.object({
 });
 
 function EmployeesPage() {
+  const navigate = useNavigate();
   const { hasAnyRole } = useAuth();
   const canEdit = hasAnyRole(["admin", "hse_manager"]);
   const queryClient = useQueryClient();

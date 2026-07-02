@@ -23,6 +23,7 @@ function KwaliteitPage() {
       typeOptions={TYPES}
       defaultType="kwaliteitscontrole"
       locationLabel="Werf / locatie"
+      hideStatus
       CreateFormComponent={({ onClose, onCreated }) => (
         <ChecklistCreateForm onClose={onClose} onCreated={onCreated} config={KWALITEIT_CONFIG} />
       )}

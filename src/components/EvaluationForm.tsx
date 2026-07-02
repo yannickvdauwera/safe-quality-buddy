@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { EVALUATION_SECTIONS, SCORE_OPTIONS, ALL_CRITERIA } from "@/lib/evaluation-criteria";
+import { SignaturePad } from "@/components/SignaturePad";
 
 interface Props {
   open: boolean;
@@ -24,6 +25,7 @@ interface Props {
     scores: Record<string, string>;
     notes: string | null;
     evaluated_on: string;
+    evaluator_signature?: string | null;
   } | null;
 }
 
@@ -41,6 +43,7 @@ export function EvaluationForm({ open, onOpenChange, employeeId, employeeName, e
     notes: existing?.notes ?? "",
   });
   const [scores, setScores] = useState<Record<string, string>>(existing?.scores ?? {});
+  const [signature, setSignature] = useState<string | null>(existing?.evaluator_signature ?? null);
 
   const setScore = (k: string, v: string) => setScores((s) => ({ ...s, [k]: v }));
 
@@ -51,6 +54,7 @@ export function EvaluationForm({ open, onOpenChange, employeeId, employeeName, e
       if (!form.location.trim()) throw new Error("Locatie is verplicht");
       const missing = ALL_CRITERIA.filter((c) => !scores[c.key]);
       if (missing.length) throw new Error(`Nog ${missing.length} criteria niet gescoord`);
+      if (!signature) throw new Error("Handtekening leidinggevende ontbreekt");
 
       const payload = {
         employee_id: employeeId,
@@ -61,6 +65,7 @@ export function EvaluationForm({ open, onOpenChange, employeeId, employeeName, e
         evaluated_on: form.evaluated_on,
         notes: form.notes.trim() || null,
         scores,
+        evaluator_signature: signature,
       };
 
       if (existing) {
@@ -163,6 +168,22 @@ export function EvaluationForm({ open, onOpenChange, employeeId, employeeName, e
               maxLength={2000}
               rows={5}
             />
+          </div>
+
+          <div className="space-y-2 rounded-lg border p-3">
+            <Label>Handtekening leidinggevende *</Label>
+            {signature ? (
+              <div className="space-y-2">
+                <div className="border rounded-md bg-white p-2 flex justify-center">
+                  <img src={signature} alt="Handtekening" className="max-h-40" />
+                </div>
+                <Button type="button" variant="outline" size="sm" onClick={() => setSignature(null)}>
+                  Opnieuw tekenen
+                </Button>
+              </div>
+            ) : (
+              <SignaturePad onSave={(dataUrl) => setSignature(dataUrl)} />
+            )}
           </div>
         </div>
 

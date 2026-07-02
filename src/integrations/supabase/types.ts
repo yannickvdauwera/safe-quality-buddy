@@ -22,6 +22,7 @@ export type Database = {
           evaluated_on: string
           evaluator_id: string | null
           evaluator_name: string
+          evaluator_signature: string | null
           id: string
           location: string
           notes: string | null
@@ -35,6 +36,7 @@ export type Database = {
           evaluated_on?: string
           evaluator_id?: string | null
           evaluator_name: string
+          evaluator_signature?: string | null
           id?: string
           location: string
           notes?: string | null
@@ -48,6 +50,7 @@ export type Database = {
           evaluated_on?: string
           evaluator_id?: string | null
           evaluator_name?: string
+          evaluator_signature?: string | null
           id?: string
           location?: string
           notes?: string | null

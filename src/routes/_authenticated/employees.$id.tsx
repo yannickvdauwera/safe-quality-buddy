@@ -30,6 +30,7 @@ type Evaluation = {
   notes: string | null;
   evaluated_on: string;
   created_at: string;
+  evaluator_signature: string | null;
 };
 
 function EmployeeDetailPage() {
@@ -37,6 +38,7 @@ function EmployeeDetailPage() {
   const navigate = useNavigate();
   const { hasAnyRole } = useAuth();
   const canEvaluate = hasAnyRole(["admin", "hse_manager", "manager"]);
+  const canViewEvaluations = hasAnyRole(["admin", "hse_manager", "manager"]);
   const canEdit = hasAnyRole(["admin", "hse_manager", "manager"]);
   const canDelete = hasAnyRole(["admin"]);
   const qc = useQueryClient();
@@ -236,9 +238,11 @@ function EmployeeDetailPage() {
       <Tabs defaultValue="fiche" className="space-y-4">
         <TabsList className="flex-wrap h-auto">
           <TabsTrigger value="fiche">Fiche</TabsTrigger>
-          <TabsTrigger value="evaluaties">
-            Evaluaties{evaluations.length > 0 && <span className="ml-1 text-xs text-muted-foreground">({evaluations.length})</span>}
-          </TabsTrigger>
+          {canViewEvaluations && (
+            <TabsTrigger value="evaluaties">
+              Evaluaties{evaluations.length > 0 && <span className="ml-1 text-xs text-muted-foreground">({evaluations.length})</span>}
+            </TabsTrigger>
+          )}
           <TabsTrigger value="inspecties">
             Inspecties{subjectReports.length > 0 && <span className="ml-1 text-xs text-muted-foreground">({subjectReports.length})</span>}
           </TabsTrigger>
@@ -518,6 +522,7 @@ function EmployeeDetailPage() {
         </TabsContent>
 
 
+        {canViewEvaluations && (
         <TabsContent value="evaluaties" className="space-y-4">
 
           <div className="flex items-center justify-between">
@@ -607,6 +612,14 @@ function EmployeeDetailPage() {
                             <p className="text-sm whitespace-pre-wrap">{ev.notes}</p>
                           </div>
                         )}
+                        {ev.evaluator_signature && (
+                          <div>
+                            <div className="text-sm font-medium mb-1">Handtekening leidinggevende</div>
+                            <div className="border rounded-md bg-white p-2 inline-block">
+                              <img src={ev.evaluator_signature} alt="Handtekening" className="max-h-32" />
+                            </div>
+                          </div>
+                        )}
                       </CardContent>
                     )}
                   </Card>
@@ -615,6 +628,7 @@ function EmployeeDetailPage() {
             </div>
           )}
         </TabsContent>
+        )}
       </Tabs>
 
       {dialogOpen && (

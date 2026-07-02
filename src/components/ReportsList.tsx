@@ -402,6 +402,28 @@ export function ReportsList({
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Definitief verwijderen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Je staat op het punt om <strong>{selectedIds.size}</strong> item(s) permanent te verwijderen.
+              Deze actie kan niet ongedaan gemaakt worden en alle gekoppelde gegevens gaan verloren.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); bulkDelete(); }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Verwijderen…" : "Ja, definitief verwijderen"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

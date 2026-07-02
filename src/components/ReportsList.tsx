@@ -198,18 +198,6 @@ export function ReportsList({
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="severity">Ernst *</Label>
-                    <Select name="severity" defaultValue="middel" required>
-                      <SelectTrigger id="severity"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="laag">Laag</SelectItem>
-                        <SelectItem value="middel">Middel</SelectItem>
-                        <SelectItem value="hoog">Hoog</SelectItem>
-                        <SelectItem value="kritiek">Kritiek</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="title">Titel *</Label>

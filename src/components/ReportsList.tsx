@@ -378,7 +378,7 @@ export function ReportsList({
                     <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
                       {new Date(r.observed_at).toLocaleDateString("nl-BE")}
                     </TableCell>
-                    <TableCell><Badge variant="outline">{typeOptions.find((t) => t.value === r.type)?.label ?? r.type}</Badge></TableCell>
+                    <TableCell>{getSubjectName(r) ?? <span className="text-muted-foreground">—</span>}</TableCell>
                     <TableCell className="font-medium">{r.title}</TableCell>
                     <TableCell className="text-muted-foreground">{r.location ?? "—"}</TableCell>
                     {!hideSeverity && <TableCell><Badge variant={severityVariant(r.severity)}>{SEVERITY_LABELS[r.severity]}</Badge></TableCell>}

@@ -230,7 +230,7 @@ export async function exportReportPdf(r: ReportExport) {
   for (const section of sectionsFor(r)) {
     autoTable(doc, {
       startY: y,
-      head: [[section.title]],
+      head: [[{ content: section.title, colSpan: 2 }]],
       body: section.rows.map(([k, v]) => [k, v]),
       theme: "grid",
       styles: { fontSize: 9, cellPadding: 3, lineColor: [229, 229, 229], lineWidth: 0.1, textColor: TSA_DARK },

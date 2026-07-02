@@ -154,11 +154,10 @@ export async function exportToPdf(o: ObservationExport) {
   const logo = await loadLogo().catch(() => null);
 
   const drawHeader = () => {
-    // Red band
-    doc.setFillColor(...TSA_RED);
-    doc.rect(0, 0, pageW, 22, "F");
-    // Dark accent under
+    // Dark band with red accent stripe (so the red TSA logo stays visible)
     doc.setFillColor(...TSA_DARK);
+    doc.rect(0, 0, pageW, 22, "F");
+    doc.setFillColor(...TSA_RED);
     doc.rect(0, 22, pageW, 2, "F");
 
     if (logo) {

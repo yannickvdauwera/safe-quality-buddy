@@ -203,7 +203,7 @@ export async function exportToPdf(o: ObservationExport) {
   for (const section of sections(o)) {
     autoTable(doc, {
       startY: y,
-      head: [[section.title]],
+      head: [[{ content: section.title, colSpan: 2 }]],
       body: section.rows.map(([k, v]) => [k, v]),
       theme: "grid",
       styles: {

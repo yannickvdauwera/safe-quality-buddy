@@ -268,8 +268,8 @@ export function ReportsList({
                   <TableHead>Titel</TableHead>
                   <TableHead>{locationLabel}</TableHead>
                   <TableHead>Ernst</TableHead>
-                  <TableHead>Status</TableHead>
-                  {canManage && <TableHead className="w-10"></TableHead>}
+                  {!hideStatus && <TableHead>Status</TableHead>}
+                  {showActions && <TableHead className="w-10"></TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>

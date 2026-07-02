@@ -3,6 +3,8 @@ import { ClipboardCheck } from "lucide-react";
 import { ReportsList } from "@/components/ReportsList";
 import { ChecklistCreateForm } from "@/components/ChecklistCreateForm";
 import { WPI_CONFIG } from "@/components/inspection-configs";
+import { WpiImportDialog } from "@/components/WpiImportDialog";
+import { useAuth } from "@/hooks/useAuth";
 
 export const Route = createFileRoute("/_authenticated/inspecties/wpi")({
   head: () => ({ meta: [{ title: "Werkplekinspecties — HSE & Kwaliteit" }] }),
@@ -12,6 +14,8 @@ export const Route = createFileRoute("/_authenticated/inspecties/wpi")({
 const TYPES = [{ value: "werkplekinspectie", label: "Werkplekinspectie" }];
 
 function WpiPage() {
+  const { hasAnyRole } = useAuth();
+  const canImport = hasAnyRole(["admin", "hse_manager"]);
   return (
     <ReportsList
       queryKey="reports-wpi"
@@ -23,9 +27,11 @@ function WpiPage() {
       typeOptions={TYPES}
       defaultType="werkplekinspectie"
       locationLabel="Werf / zone"
+      extraActions={canImport ? <WpiImportDialog /> : null}
       CreateFormComponent={({ onClose, onCreated }) => (
         <ChecklistCreateForm onClose={onClose} onCreated={onCreated} config={WPI_CONFIG} />
       )}
     />
   );
 }
+

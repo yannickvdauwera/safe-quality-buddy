@@ -339,7 +339,7 @@ export function ReportsList({
                     </TableHead>
                   )}
                   <TableHead>Datum</TableHead>
-                  <TableHead>Type</TableHead>
+                  <TableHead>Medewerker</TableHead>
                   <TableHead>Titel</TableHead>
                   <TableHead>{locationLabel}</TableHead>
                   {!hideSeverity && <TableHead>Ernst</TableHead>}

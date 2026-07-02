@@ -30,6 +30,7 @@ type Evaluation = {
   notes: string | null;
   evaluated_on: string;
   created_at: string;
+  evaluator_signature: string | null;
 };
 
 function EmployeeDetailPage() {

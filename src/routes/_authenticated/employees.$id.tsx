@@ -80,13 +80,14 @@ function EmployeeDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("toolbox_signatures")
-        .select("id, signed_at, session:toolbox_sessions(id, title, session_date, location)")
+        .select("id, signed_at, session:toolbox_sessions(id, given_at, scheduled_at, location, toolbox:toolboxes(title))")
         .eq("employee_id", id)
         .order("signed_at", { ascending: false });
       if (error) throw error;
       return data;
     },
   });
+
 
   const { data: observations = [] } = useQuery({
     enabled: !!employee?.user_id,

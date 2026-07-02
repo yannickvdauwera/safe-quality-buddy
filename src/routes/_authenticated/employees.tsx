@@ -191,7 +191,11 @@ function EmployeesPage() {
                     {employees.length === 0 ? "Nog geen personeelsfiches. Maak er een aan om te starten." : "Geen resultaten voor je zoekopdracht."}
                   </TableCell></TableRow>
                 ) : filtered.map((e) => (
-                  <TableRow key={e.id}>
+                  <TableRow
+                    key={e.id}
+                    className="cursor-pointer hover:bg-muted/50"
+                    onClick={() => navigate({ to: "/employees/$id", params: { id: e.id } })}
+                  >
                     <TableCell className="font-medium">{e.last_name} {e.first_name}</TableCell>
                     <TableCell className="text-muted-foreground">{e.employee_number ?? "—"}</TableCell>
                     <TableCell>{e.function_title ?? "—"}</TableCell>

@@ -198,6 +198,59 @@ function EmployeesPage() {
                   <TableHead>Functies</TableHead>
                   <TableHead>Status</TableHead>
                 </TableRow>
+                <TableRow className="bg-muted/30">
+                  <TableHead className="py-2">
+                    <Input
+                      value={colFilters.name}
+                      onChange={(e) => setColFilters((f) => ({ ...f, name: e.target.value }))}
+                      placeholder="Filter…"
+                      className="h-8"
+                    />
+                  </TableHead>
+                  <TableHead className="py-2">
+                    <Input
+                      value={colFilters.employer}
+                      onChange={(e) => setColFilters((f) => ({ ...f, employer: e.target.value }))}
+                      placeholder="Filter…"
+                      className="h-8"
+                    />
+                  </TableHead>
+                  <TableHead className="py-2">
+                    <Input
+                      value={colFilters.email}
+                      onChange={(e) => setColFilters((f) => ({ ...f, email: e.target.value }))}
+                      placeholder="Filter…"
+                      className="h-8"
+                    />
+                  </TableHead>
+                  <TableHead className="py-2">
+                    <Input
+                      value={colFilters.phone}
+                      onChange={(e) => setColFilters((f) => ({ ...f, phone: e.target.value }))}
+                      placeholder="Filter…"
+                      className="h-8"
+                    />
+                  </TableHead>
+                  <TableHead className="py-2">
+                    <Input
+                      value={colFilters.function_title}
+                      onChange={(e) => setColFilters((f) => ({ ...f, function_title: e.target.value }))}
+                      placeholder="Filter…"
+                      className="h-8"
+                    />
+                  </TableHead>
+                  <TableHead className="py-2">
+                    <select
+                      value={colFilters.status}
+                      onChange={(e) => setColFilters((f) => ({ ...f, status: e.target.value as typeof f.status }))}
+                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm"
+                    >
+                      <option value="all">Alle</option>
+                      <option value="active">Actief</option>
+                      <option value="inactive">Uit dienst</option>
+                    </select>
+                  </TableHead>
+                </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (

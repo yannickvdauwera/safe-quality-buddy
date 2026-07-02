@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      employee_evaluations: {
+        Row: {
+          created_at: string
+          employee_id: string
+          employee_name: string
+          evaluated_on: string
+          evaluator_id: string | null
+          evaluator_name: string
+          id: string
+          location: string
+          notes: string | null
+          scores: Json
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          employee_id: string
+          employee_name: string
+          evaluated_on?: string
+          evaluator_id?: string | null
+          evaluator_name: string
+          id?: string
+          location: string
+          notes?: string | null
+          scores?: Json
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          employee_id?: string
+          employee_name?: string
+          evaluated_on?: string
+          evaluator_id?: string | null
+          evaluator_name?: string
+          id?: string
+          location?: string
+          notes?: string | null
+          scores?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_evaluations_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employees: {
         Row: {
           active: boolean

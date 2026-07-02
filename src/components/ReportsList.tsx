@@ -154,7 +154,8 @@ export function ReportsList({
     queryClient.invalidateQueries({ queryKey: ["dashboard-metrics"] });
   };
 
-  const colCount = canManage ? 7 : 6;
+  const showActions = canManage && !hideStatus;
+  const colCount = 5 + (hideStatus ? 0 : 1) + (showActions ? 1 : 0);
 
   return (
     <div className="space-y-6">

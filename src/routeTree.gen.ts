@@ -19,11 +19,11 @@ import { Route as AuthenticatedStopRouteImport } from './routes/_authenticated/s
 import { Route as AuthenticatedMosRouteImport } from './routes/_authenticated/mos'
 import { Route as AuthenticatedMeldingenRouteImport } from './routes/_authenticated/meldingen'
 import { Route as AuthenticatedInspectiesRouteImport } from './routes/_authenticated/inspecties'
-import { Route as AuthenticatedEmployeesRouteImport } from './routes/_authenticated/employees'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedToolboxesIndexRouteImport } from './routes/_authenticated/toolboxes.index'
 import { Route as AuthenticatedMeldingenIndexRouteImport } from './routes/_authenticated/meldingen.index'
 import { Route as AuthenticatedInspectiesIndexRouteImport } from './routes/_authenticated/inspecties.index'
+import { Route as AuthenticatedEmployeesIndexRouteImport } from './routes/_authenticated/employees.index'
 import { Route as ApiPublicToolboxSignRouteImport } from './routes/api/public/toolbox-sign'
 import { Route as ApiPublicMondayWebhookRouteImport } from './routes/api/public/monday-webhook'
 import { Route as AuthenticatedToolboxesNewRouteImport } from './routes/_authenticated/toolboxes.new'
@@ -86,11 +86,6 @@ const AuthenticatedInspectiesRoute = AuthenticatedInspectiesRouteImport.update({
   path: '/inspecties',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const AuthenticatedEmployeesRoute = AuthenticatedEmployeesRouteImport.update({
-  id: '/employees',
-  path: '/employees',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -113,6 +108,12 @@ const AuthenticatedInspectiesIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AuthenticatedInspectiesRoute,
+  } as any)
+const AuthenticatedEmployeesIndexRoute =
+  AuthenticatedEmployeesIndexRouteImport.update({
+    id: '/employees/',
+    path: '/employees/',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const ApiPublicToolboxSignRoute = ApiPublicToolboxSignRouteImport.update({
   id: '/api/public/toolbox-sign',
@@ -174,9 +175,9 @@ const AuthenticatedInspectiesKwaliteitRoute =
   } as any)
 const AuthenticatedEmployeesIdRoute =
   AuthenticatedEmployeesIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedEmployeesRoute,
+    id: '/employees/$id',
+    path: '/employees/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedToolboxesSessionsIdRoute =
   AuthenticatedToolboxesSessionsIdRouteImport.update({
@@ -189,7 +190,6 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/employees': typeof AuthenticatedEmployeesRouteWithChildren
   '/inspecties': typeof AuthenticatedInspectiesRouteWithChildren
   '/meldingen': typeof AuthenticatedMeldingenRouteWithChildren
   '/mos': typeof AuthenticatedMosRoute
@@ -208,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
   '/api/public/monday-webhook': typeof ApiPublicMondayWebhookRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
+  '/employees/': typeof AuthenticatedEmployeesIndexRoute
   '/inspecties/': typeof AuthenticatedInspectiesIndexRoute
   '/meldingen/': typeof AuthenticatedMeldingenIndexRoute
   '/toolboxes/': typeof AuthenticatedToolboxesIndexRoute
@@ -217,7 +218,6 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
-  '/employees': typeof AuthenticatedEmployeesRouteWithChildren
   '/mos': typeof AuthenticatedMosRoute
   '/stop': typeof AuthenticatedStopRoute
   '/users': typeof AuthenticatedUsersRoute
@@ -234,6 +234,7 @@ export interface FileRoutesByTo {
   '/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
   '/api/public/monday-webhook': typeof ApiPublicMondayWebhookRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
+  '/employees': typeof AuthenticatedEmployeesIndexRoute
   '/inspecties': typeof AuthenticatedInspectiesIndexRoute
   '/meldingen': typeof AuthenticatedMeldingenIndexRoute
   '/toolboxes': typeof AuthenticatedToolboxesIndexRoute
@@ -245,7 +246,6 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
-  '/_authenticated/employees': typeof AuthenticatedEmployeesRouteWithChildren
   '/_authenticated/inspecties': typeof AuthenticatedInspectiesRouteWithChildren
   '/_authenticated/meldingen': typeof AuthenticatedMeldingenRouteWithChildren
   '/_authenticated/mos': typeof AuthenticatedMosRoute
@@ -264,6 +264,7 @@ export interface FileRoutesById {
   '/_authenticated/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
   '/api/public/monday-webhook': typeof ApiPublicMondayWebhookRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
+  '/_authenticated/employees/': typeof AuthenticatedEmployeesIndexRoute
   '/_authenticated/inspecties/': typeof AuthenticatedInspectiesIndexRoute
   '/_authenticated/meldingen/': typeof AuthenticatedMeldingenIndexRoute
   '/_authenticated/toolboxes/': typeof AuthenticatedToolboxesIndexRoute
@@ -275,7 +276,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
-    | '/employees'
     | '/inspecties'
     | '/meldingen'
     | '/mos'
@@ -294,6 +294,7 @@ export interface FileRouteTypes {
     | '/toolboxes/new'
     | '/api/public/monday-webhook'
     | '/api/public/toolbox-sign'
+    | '/employees/'
     | '/inspecties/'
     | '/meldingen/'
     | '/toolboxes/'
@@ -303,7 +304,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
-    | '/employees'
     | '/mos'
     | '/stop'
     | '/users'
@@ -320,6 +320,7 @@ export interface FileRouteTypes {
     | '/toolboxes/new'
     | '/api/public/monday-webhook'
     | '/api/public/toolbox-sign'
+    | '/employees'
     | '/inspecties'
     | '/meldingen'
     | '/toolboxes'
@@ -330,7 +331,6 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/dashboard'
-    | '/_authenticated/employees'
     | '/_authenticated/inspecties'
     | '/_authenticated/meldingen'
     | '/_authenticated/mos'
@@ -349,6 +349,7 @@ export interface FileRouteTypes {
     | '/_authenticated/toolboxes/new'
     | '/api/public/monday-webhook'
     | '/api/public/toolbox-sign'
+    | '/_authenticated/employees/'
     | '/_authenticated/inspecties/'
     | '/_authenticated/meldingen/'
     | '/_authenticated/toolboxes/'
@@ -437,13 +438,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedInspectiesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/employees': {
-      id: '/_authenticated/employees'
-      path: '/employees'
-      fullPath: '/employees'
-      preLoaderRoute: typeof AuthenticatedEmployeesRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/dashboard': {
       id: '/_authenticated/dashboard'
       path: '/dashboard'
@@ -471,6 +465,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/inspecties/'
       preLoaderRoute: typeof AuthenticatedInspectiesIndexRouteImport
       parentRoute: typeof AuthenticatedInspectiesRoute
+    }
+    '/_authenticated/employees/': {
+      id: '/_authenticated/employees/'
+      path: '/employees'
+      fullPath: '/employees/'
+      preLoaderRoute: typeof AuthenticatedEmployeesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/public/toolbox-sign': {
       id: '/api/public/toolbox-sign'
@@ -544,10 +545,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/employees/$id': {
       id: '/_authenticated/employees/$id'
-      path: '/$id'
+      path: '/employees/$id'
       fullPath: '/employees/$id'
       preLoaderRoute: typeof AuthenticatedEmployeesIdRouteImport
-      parentRoute: typeof AuthenticatedEmployeesRoute
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/toolboxes/sessions/$id': {
       id: '/_authenticated/toolboxes/sessions/$id'
@@ -558,20 +559,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface AuthenticatedEmployeesRouteChildren {
-  AuthenticatedEmployeesIdRoute: typeof AuthenticatedEmployeesIdRoute
-}
-
-const AuthenticatedEmployeesRouteChildren: AuthenticatedEmployeesRouteChildren =
-  {
-    AuthenticatedEmployeesIdRoute: AuthenticatedEmployeesIdRoute,
-  }
-
-const AuthenticatedEmployeesRouteWithChildren =
-  AuthenticatedEmployeesRoute._addFileChildren(
-    AuthenticatedEmployeesRouteChildren,
-  )
 
 interface AuthenticatedInspectiesRouteChildren {
   AuthenticatedInspectiesKwaliteitRoute: typeof AuthenticatedInspectiesKwaliteitRoute
@@ -615,30 +602,32 @@ const AuthenticatedMeldingenRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedEmployeesRoute: typeof AuthenticatedEmployeesRouteWithChildren
   AuthenticatedInspectiesRoute: typeof AuthenticatedInspectiesRouteWithChildren
   AuthenticatedMeldingenRoute: typeof AuthenticatedMeldingenRouteWithChildren
   AuthenticatedMosRoute: typeof AuthenticatedMosRoute
   AuthenticatedStopRoute: typeof AuthenticatedStopRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
+  AuthenticatedEmployeesIdRoute: typeof AuthenticatedEmployeesIdRoute
   AuthenticatedIntegratiesMondayRoute: typeof AuthenticatedIntegratiesMondayRoute
   AuthenticatedToolboxesIdRoute: typeof AuthenticatedToolboxesIdRoute
   AuthenticatedToolboxesNewRoute: typeof AuthenticatedToolboxesNewRoute
+  AuthenticatedEmployeesIndexRoute: typeof AuthenticatedEmployeesIndexRoute
   AuthenticatedToolboxesIndexRoute: typeof AuthenticatedToolboxesIndexRoute
   AuthenticatedToolboxesSessionsIdRoute: typeof AuthenticatedToolboxesSessionsIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedEmployeesRoute: AuthenticatedEmployeesRouteWithChildren,
   AuthenticatedInspectiesRoute: AuthenticatedInspectiesRouteWithChildren,
   AuthenticatedMeldingenRoute: AuthenticatedMeldingenRouteWithChildren,
   AuthenticatedMosRoute: AuthenticatedMosRoute,
   AuthenticatedStopRoute: AuthenticatedStopRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
+  AuthenticatedEmployeesIdRoute: AuthenticatedEmployeesIdRoute,
   AuthenticatedIntegratiesMondayRoute: AuthenticatedIntegratiesMondayRoute,
   AuthenticatedToolboxesIdRoute: AuthenticatedToolboxesIdRoute,
   AuthenticatedToolboxesNewRoute: AuthenticatedToolboxesNewRoute,
+  AuthenticatedEmployeesIndexRoute: AuthenticatedEmployeesIndexRoute,
   AuthenticatedToolboxesIndexRoute: AuthenticatedToolboxesIndexRoute,
   AuthenticatedToolboxesSessionsIdRoute: AuthenticatedToolboxesSessionsIdRoute,
 }

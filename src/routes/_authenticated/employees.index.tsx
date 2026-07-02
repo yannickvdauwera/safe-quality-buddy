@@ -16,7 +16,7 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Plus, Search, UserPlus } from "lucide-react";
 
-export const Route = createFileRoute("/_authenticated/employees")({
+export const Route = createFileRoute("/_authenticated/employees/")({
   head: () => ({ meta: [{ title: "Personeelsfiches — HSE & Kwaliteit" }] }),
   component: EmployeesPage,
 });

@@ -628,6 +628,7 @@ function EmployeeDetailPage() {
             </div>
           )}
         </TabsContent>
+        )}
       </Tabs>
 
       {dialogOpen && (

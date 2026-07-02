@@ -48,6 +48,20 @@ const statusVariant = (s: string): "default" | "secondary" | "destructive" | "ou
 const severityVariant = (s: string): "default" | "secondary" | "destructive" | "outline" =>
   s === "kritiek" ? "destructive" : s === "hoog" ? "default" : s === "middel" ? "secondary" : "outline";
 
+function getSubjectName(r: { type: string; details?: unknown }): string | null {
+  const d = (r.details ?? {}) as Record<string, unknown>;
+  const h = (d.header ?? {}) as Record<string, unknown>;
+  const clean = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+  const candidates = [
+    clean(h.observed_name),
+    [clean(h.first_name), clean(h.last_name)].filter(Boolean).join(" "),
+    [clean(h.last_name), clean(h.first_name)].filter(Boolean).join(" "),
+    clean(d.victim_name),
+    clean(d.submitter_name),
+  ];
+  return candidates.find((v) => v.length > 0) || null;
+}
+
 export interface ReportsListProps {
   queryKey: string;
   title: string;

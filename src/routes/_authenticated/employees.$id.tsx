@@ -95,13 +95,83 @@ function EmployeeDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("safety_observations")
-        .select("id, type, observed_date, plant, area, location, status")
+        .select("id, type, observed_date, plant, area, location, status, description, function_title, severity")
         .eq("reporter_id", employee!.user_id!)
         .order("observed_date", { ascending: false });
       if (error) throw error;
       return data;
     },
   });
+
+  const { data: reporterReports = [] } = useQuery({
+    enabled: !!employee?.user_id,
+    queryKey: ["employee-reporter-reports", employee?.user_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reports")
+        .select("id, type, title, severity, status, observed_at, location, involved_firm")
+        .eq("reporter_id", employee!.user_id!)
+        .in("type", ["ao_ehbo", "klacht"])
+        .order("observed_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  type MeldingItem = {
+    id: string;
+    kind: "mos" | "stop" | "ao_ehbo" | "klacht";
+    label: string;
+    date: string;
+    title: string;
+    subtitle: string;
+    status: string;
+    severity?: string | null;
+    onOpen: () => void;
+  };
+
+  const KIND_LABEL: Record<MeldingItem["kind"], string> = {
+    mos: "MOS-melding",
+    stop: "STOP-reflex",
+    ao_ehbo: "(Bijna)ongeval",
+    klacht: "Interne melding",
+  };
+
+  const meldingen: MeldingItem[] = [
+    ...observations.map((o): MeldingItem => ({
+      id: o.id,
+      kind: (o.type === "stop" ? "stop" : "mos") as MeldingItem["kind"],
+      label: o.type === "stop" ? KIND_LABEL.stop : KIND_LABEL.mos,
+      date: o.observed_date,
+      title: (o.description ?? "").slice(0, 100) || (o.type === "stop" ? "STOP-reflex" : "MOS-melding"),
+      subtitle: [o.plant, o.area, o.location].filter(Boolean).join(" · "),
+      status: o.status ?? "open",
+      severity: o.severity,
+      onOpen: () => toast.message("Detailweergave voor MOS/STOP komt binnenkort."),
+    })),
+    ...reporterReports.map((r): MeldingItem => ({
+      id: r.id,
+      kind: (r.type as MeldingItem["kind"]),
+      label: KIND_LABEL[r.type as MeldingItem["kind"]] ?? r.type,
+      date: r.observed_at,
+      title: r.title,
+      subtitle: [r.location, r.involved_firm].filter(Boolean).join(" · "),
+      status: r.status,
+      severity: r.severity,
+      onOpen: () => navigate({ to: "/meldingen/$id", params: { id: r.id } }),
+    })),
+  ].sort((a, b) => (a.date < b.date ? 1 : -1));
+
+  const [meldingFilter, setMeldingFilter] = useState<"all" | MeldingItem["kind"]>("all");
+  const filteredMeldingen = meldingFilter === "all" ? meldingen : meldingen.filter((m) => m.kind === meldingFilter);
+  const meldingCounts = {
+    all: meldingen.length,
+    mos: meldingen.filter((m) => m.kind === "mos").length,
+    stop: meldingen.filter((m) => m.kind === "stop").length,
+    ao_ehbo: meldingen.filter((m) => m.kind === "ao_ehbo").length,
+    klacht: meldingen.filter((m) => m.kind === "klacht").length,
+  };
+
 
 
 

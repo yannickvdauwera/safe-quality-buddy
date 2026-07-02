@@ -51,18 +51,23 @@ export function nameKey(s: string): string {
   return normalizeName(s).split(" ").filter(Boolean).sort().join(" ");
 }
 
-/** Split "Voornaam Achternaam" or "Achternaam Voornaam" heuristically. */
+/** Split "Voornaam Achternaam", "Achternaam Voornaam" or "Achternaam, Voornaam" heuristically. */
 export function splitFullName(full: string): { first: string; last: string } {
-  const parts = full.trim().split(/\s+/);
+  const cleaned = full.trim();
+  if (!cleaned) return { first: "", last: "" };
+  // Explicit "Last, First" form.
+  if (cleaned.includes(",")) {
+    const [last, ...rest] = cleaned.split(",").map((s) => s.trim()).filter(Boolean);
+    return { first: rest.join(" ").replace(/,/g, "").trim(), last: (last ?? "").replace(/,/g, "").trim() };
+  }
+  const parts = cleaned.split(/\s+/).map((p) => p.replace(/,/g, "").trim()).filter(Boolean);
   if (parts.length === 0) return { first: "", last: "" };
   if (parts.length === 1) return { first: parts[0], last: "" };
-  // Heuristic: if the first token looks like ALL-CAPS or is fully uppercase, treat as last name.
+  // Heuristic: if the first token looks like ALL-CAPS, treat as last name.
   const first = parts[0];
-  const rest = parts.slice(1).join(" ");
   if (first === first.toUpperCase() && first.length > 1) {
-    return { first: rest, last: first };
+    return { first: parts.slice(1).join(" "), last: first };
   }
-  // Default: last token is last name, everything before is first name(s).
   return {
     first: parts.slice(0, -1).join(" "),
     last: parts[parts.length - 1],

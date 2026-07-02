@@ -38,6 +38,7 @@ function EmployeeDetailPage() {
   const navigate = useNavigate();
   const { hasAnyRole } = useAuth();
   const canEvaluate = hasAnyRole(["admin", "hse_manager", "manager"]);
+  const canViewEvaluations = hasAnyRole(["admin", "hse_manager", "manager"]);
   const canEdit = hasAnyRole(["admin", "hse_manager", "manager"]);
   const canDelete = hasAnyRole(["admin"]);
   const qc = useQueryClient();

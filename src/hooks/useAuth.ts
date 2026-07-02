@@ -4,6 +4,22 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type AppRole = "admin" | "hse_manager" | "manager" | "operator";
 
+const PREVIEW_KEY = "roles.preview";
+const PREVIEW_EVENT = "roles.preview.changed";
+
+function readPreview(): AppRole | null {
+  if (typeof window === "undefined") return null;
+  const v = window.localStorage.getItem(PREVIEW_KEY);
+  return v === "admin" || v === "hse_manager" || v === "manager" || v === "operator" ? v : null;
+}
+
+export function setPreviewRole(role: AppRole | null) {
+  if (typeof window === "undefined") return;
+  if (role) window.localStorage.setItem(PREVIEW_KEY, role);
+  else window.localStorage.removeItem(PREVIEW_KEY);
+  window.dispatchEvent(new Event(PREVIEW_EVENT));
+}
+
 export interface AuthState {
   session: Session | null;
   user: User | null;
@@ -14,6 +30,10 @@ export interface AuthState {
 export function useAuth(): AuthState & {
   hasRole: (r: AppRole) => boolean;
   hasAnyRole: (r: AppRole[]) => boolean;
+  realRoles: AppRole[];
+  previewRole: AppRole | null;
+  isPreviewing: boolean;
+  setPreviewRole: (r: AppRole | null) => void;
 } {
   const [state, setState] = useState<AuthState>({
     session: null,
@@ -21,6 +41,17 @@ export function useAuth(): AuthState & {
     roles: [],
     loading: true,
   });
+  const [previewRole, setPreviewState] = useState<AppRole | null>(() => readPreview());
+
+  useEffect(() => {
+    const onChange = () => setPreviewState(readPreview());
+    window.addEventListener(PREVIEW_EVENT, onChange);
+    window.addEventListener("storage", onChange);
+    return () => {
+      window.removeEventListener(PREVIEW_EVENT, onChange);
+      window.removeEventListener("storage", onChange);
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -59,9 +90,19 @@ export function useAuth(): AuthState & {
     };
   }, []);
 
+  const realRoles = state.roles;
+  const isAdmin = realRoles.includes("admin");
+  const activePreview = isAdmin ? previewRole : null;
+  const effectiveRoles: AppRole[] = activePreview ? [activePreview] : realRoles;
+
   return {
     ...state,
-    hasRole: (r) => state.roles.includes(r),
-    hasAnyRole: (rs) => rs.some((r) => state.roles.includes(r)),
+    roles: effectiveRoles,
+    hasRole: (r) => effectiveRoles.includes(r),
+    hasAnyRole: (rs) => rs.some((r) => effectiveRoles.includes(r)),
+    realRoles,
+    previewRole: activePreview,
+    isPreviewing: !!activePreview,
+    setPreviewRole,
   };
 }

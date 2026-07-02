@@ -162,7 +162,32 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
+      {config.employeePicker && (
+        <div className="space-y-1.5">
+          <Label>{config.employeePicker.label}{config.employeePicker.required ? " *" : ""}</Label>
+          <Select value={subjectEmployeeId} onValueChange={setSubjectEmployeeId}>
+            <SelectTrigger>
+              <SelectValue placeholder="Kies een medewerker uit de personeelsfiches…" />
+            </SelectTrigger>
+            <SelectContent>
+              {employees.length === 0 ? (
+                <div className="px-2 py-1.5 text-sm text-muted-foreground">Geen actieve medewerkers</div>
+              ) : employees.map((e) => (
+                <SelectItem key={e.id} value={e.id}>
+                  {e.last_name} {e.first_name}
+                  {e.employer ? ` — ${e.employer}` : ""}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            Vult automatisch naam, werkgever en functie in. Voeg medewerkers toe via Personeelsfiches.
+          </p>
+        </div>
+      )}
+
       {/* Header fields */}
+
       <div className="grid grid-cols-2 gap-3">
         {config.headerFields.map((f) => (
           <div key={f.key} className="space-y-1.5">

@@ -363,6 +363,15 @@ export function ReportsList({
                       });
                     }}
                   >
+                    {showSelect && (
+                      <TableCell onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                          checked={selectedIds.has(r.id)}
+                          onCheckedChange={(c) => toggleOne(r.id, !!c)}
+                          aria-label="Rij selecteren"
+                        />
+                      </TableCell>
+                    )}
                     <TableCell className="text-muted-foreground text-sm whitespace-nowrap">
                       {new Date(r.observed_at).toLocaleDateString("nl-BE")}
                     </TableCell>

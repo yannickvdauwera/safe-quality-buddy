@@ -99,7 +99,7 @@ export function ReportsList({
     description: z.string().trim().max(4000).optional().or(z.literal("")),
     location: z.string().trim().max(200).optional().or(z.literal("")),
     involved_firm: z.string().trim().max(200).optional().or(z.literal("")),
-    severity: z.enum(["laag", "middel", "hoog", "kritiek"]),
+    severity: z.enum(["laag", "middel", "hoog", "kritiek"]).optional().default("middel"),
   });
 
   const { data: reports = [], isLoading } = useQuery({

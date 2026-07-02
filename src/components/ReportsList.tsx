@@ -99,7 +99,7 @@ export function ReportsList({
     description: z.string().trim().max(4000).optional().or(z.literal("")),
     location: z.string().trim().max(200).optional().or(z.literal("")),
     involved_firm: z.string().trim().max(200).optional().or(z.literal("")),
-    severity: z.enum(["laag", "middel", "hoog", "kritiek"]),
+    severity: z.enum(["laag", "middel", "hoog", "kritiek"]).optional().default("middel"),
   });
 
   const { data: reports = [], isLoading } = useQuery({
@@ -195,18 +195,6 @@ export function ReportsList({
                       <SelectTrigger id="type"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {typeOptions.map((t) => (<SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="severity">Ernst *</Label>
-                    <Select name="severity" defaultValue="middel" required>
-                      <SelectTrigger id="severity"><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="laag">Laag</SelectItem>
-                        <SelectItem value="middel">Middel</SelectItem>
-                        <SelectItem value="hoog">Hoog</SelectItem>
-                        <SelectItem value="kritiek">Kritiek</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

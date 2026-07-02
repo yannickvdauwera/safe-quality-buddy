@@ -201,19 +201,6 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
             />
           </div>
         ))}
-        <div className="space-y-1.5">
-          <Label>Ernst *</Label>
-          <select
-            className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
-            value={severity}
-            onChange={(e) => setSeverity(e.target.value)}
-          >
-            <option value="laag">Laag</option>
-            <option value="middel">Middel</option>
-            <option value="hoog">Hoog</option>
-            <option value="kritiek">Kritiek</option>
-          </select>
-        </div>
       </div>
 
       {/* Progress banner */}

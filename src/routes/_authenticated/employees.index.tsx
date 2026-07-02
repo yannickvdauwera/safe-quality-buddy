@@ -14,7 +14,8 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Search, UserPlus } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Plus, Search, UserPlus, UserCheck, UserX } from "lucide-react";
 import { EmployeesImportDialog } from "@/components/EmployeesImportDialog";
 
 export const Route = createFileRoute("/_authenticated/employees/")({

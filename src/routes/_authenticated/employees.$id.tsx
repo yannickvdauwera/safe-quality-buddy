@@ -44,10 +44,6 @@ function EmployeeDetailPage() {
   const [editing, setEditing] = useState<Evaluation | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editFicheOpen, setEditFicheOpen] = useState(false);
-  const qc = useQueryClient();
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editing, setEditing] = useState<Evaluation | null>(null);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const { data: employee, isLoading } = useQuery({
     queryKey: ["employee", id],

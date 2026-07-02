@@ -78,7 +78,8 @@ const baseNav: NavItem[] = [
 
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { user, roles, hasRole } = useAuth();
+  const { user, roles, hasRole, realRoles, previewRole, isPreviewing, setPreviewRole } = useAuth();
+  const isRealAdmin = realRoles.includes("admin");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });

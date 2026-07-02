@@ -15,7 +15,7 @@ const TYPES = [{ value: "werkplekinspectie", label: "Werkplekinspectie" }];
 
 function WpiPage() {
   const { hasAnyRole } = useAuth();
-  const canImport = hasAnyRole(["admin", "hse_manager"]);
+  const canImport = hasAnyRole(["admin"]);
   return (
     <ReportsList
       queryKey="reports-wpi"

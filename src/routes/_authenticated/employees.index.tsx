@@ -154,7 +154,7 @@ function EmployeesPage() {
         </div>
         {canEdit && (
           <div className="flex flex-wrap items-center gap-2">
-            <EmployeesImportDialog />
+            {canImport && <EmployeesImportDialog />}
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
             <DialogTrigger asChild>
               <Button><Plus className="w-4 h-4" /> Nieuwe fiche</Button>

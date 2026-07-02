@@ -245,7 +245,7 @@ function EmployeeDetailPage() {
                   <Card
                     key={t.id}
                     className="cursor-pointer hover:bg-muted/40 transition"
-                    onClick={() => s && navigate({ to: "/toolboxen/sessies/$id", params: { id: s.id } }).catch(() => {})}
+                    onClick={() => s && navigate({ to: "/toolboxes/sessions/$id", params: { id: s.id } })}
                   >
                     <CardContent className="p-3 flex items-center justify-between gap-3">
                       <div>

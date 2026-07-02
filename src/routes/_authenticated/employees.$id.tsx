@@ -95,13 +95,83 @@ function EmployeeDetailPage() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("safety_observations")
-        .select("id, type, observed_date, plant, area, location, status")
+        .select("id, type, observed_date, plant, area, location, status, situation_description")
         .eq("reporter_id", employee!.user_id!)
         .order("observed_date", { ascending: false });
       if (error) throw error;
       return data;
     },
   });
+
+  const { data: reporterReports = [] } = useQuery({
+    enabled: !!employee?.user_id,
+    queryKey: ["employee-reporter-reports", employee?.user_id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("reports")
+        .select("id, type, title, severity, status, observed_at, location, involved_firm")
+        .eq("reporter_id", employee!.user_id!)
+        .in("type", ["ao_ehbo", "klacht"])
+        .order("observed_at", { ascending: false });
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  type MeldingItem = {
+    id: string;
+    kind: "mos" | "stop" | "ao_ehbo" | "klacht";
+    label: string;
+    date: string;
+    title: string;
+    subtitle: string;
+    status: string;
+    severity?: string | null;
+    onOpen: () => void;
+  };
+
+  const KIND_LABEL: Record<MeldingItem["kind"], string> = {
+    mos: "MOS-melding",
+    stop: "STOP-reflex",
+    ao_ehbo: "(Bijna)ongeval",
+    klacht: "Interne melding",
+  };
+
+  const meldingen: MeldingItem[] = [
+    ...observations.map((o): MeldingItem => ({
+      id: o.id,
+      kind: (o.type === "stop" ? "stop" : "mos") as MeldingItem["kind"],
+      label: o.type === "stop" ? KIND_LABEL.stop : KIND_LABEL.mos,
+      date: o.observed_date,
+      title: (o.situation_description ?? "").slice(0, 100) || (o.type === "stop" ? "STOP-reflex" : "MOS-melding"),
+      subtitle: [o.plant, o.area, o.location].filter(Boolean).join(" · "),
+      status: o.status ?? "open",
+      severity: null,
+      onOpen: () => toast.message("Detailweergave voor MOS/STOP komt binnenkort."),
+    })),
+    ...reporterReports.map((r): MeldingItem => ({
+      id: r.id,
+      kind: (r.type as MeldingItem["kind"]),
+      label: KIND_LABEL[r.type as MeldingItem["kind"]] ?? r.type,
+      date: r.observed_at,
+      title: r.title,
+      subtitle: [r.location, r.involved_firm].filter(Boolean).join(" · "),
+      status: r.status,
+      severity: r.severity,
+      onOpen: () => navigate({ to: "/meldingen/$id", params: { id: r.id } }),
+    })),
+  ].sort((a, b) => (a.date < b.date ? 1 : -1));
+
+  const [meldingFilter, setMeldingFilter] = useState<"all" | MeldingItem["kind"]>("all");
+  const filteredMeldingen = meldingFilter === "all" ? meldingen : meldingen.filter((m) => m.kind === meldingFilter);
+  const meldingCounts = {
+    all: meldingen.length,
+    mos: meldingen.filter((m) => m.kind === "mos").length,
+    stop: meldingen.filter((m) => m.kind === "stop").length,
+    ao_ehbo: meldingen.filter((m) => m.kind === "ao_ehbo").length,
+    klacht: meldingen.filter((m) => m.kind === "klacht").length,
+  };
+
 
 
 
@@ -154,7 +224,7 @@ function EmployeeDetailPage() {
             Toolboxen{toolboxes.length > 0 && <span className="ml-1 text-xs text-muted-foreground">({toolboxes.length})</span>}
           </TabsTrigger>
           <TabsTrigger value="meldingen">
-            Meldingen{observations.length > 0 && <span className="ml-1 text-xs text-muted-foreground">({observations.length})</span>}
+            Meldingen{meldingen.length > 0 && <span className="ml-1 text-xs text-muted-foreground">({meldingen.length})</span>}
           </TabsTrigger>
         </TabsList>
 
@@ -269,15 +339,17 @@ function EmployeeDetailPage() {
 
         <TabsContent value="meldingen" className="space-y-3">
           <p className="text-sm text-muted-foreground">
-            MOS-meldingen en STOP-reflexen ingediend door deze medewerker (koppeling via gebruikersaccount).
+            MOS-meldingen, STOP-reflexen, interne meldingen en (bijna)ongevallen ingediend door deze medewerker.
+            {" "}Elke melding behoudt zijn eigen datavelden — klik door om alle details te zien.
           </p>
+
           {!employee.user_id ? (
             <Card>
               <CardContent className="p-8 text-center text-sm text-muted-foreground">
                 Deze medewerker heeft nog geen gekoppeld gebruikersaccount. Meldingen worden pas zichtbaar zodra de fiche gekoppeld is aan een login.
               </CardContent>
             </Card>
-          ) : observations.length === 0 ? (
+          ) : meldingen.length === 0 ? (
             <Card>
               <CardContent className="p-12 text-center text-muted-foreground">
                 <MessageSquareWarning className="w-8 h-8 mx-auto mb-2 opacity-50" />
@@ -285,26 +357,65 @@ function EmployeeDetailPage() {
               </CardContent>
             </Card>
           ) : (
-            <div className="space-y-2">
-              {observations.map((o) => (
-                <Card key={o.id}>
-                  <CardContent className="p-3 flex items-center justify-between gap-3">
+            <>
+              <div className="flex flex-wrap gap-2">
+                {([
+                  ["all", "Alle"],
+                  ["mos", "MOS"],
+                  ["stop", "STOP"],
+                  ["klacht", "Intern"],
+                  ["ao_ehbo", "(Bijna)ongevallen"],
+                ] as const).map(([key, label]) => (
+                  <Button
+                    key={key}
+                    size="sm"
+                    variant={meldingFilter === key ? "default" : "outline"}
+                    onClick={() => setMeldingFilter(key)}
+                  >
+                    {label} ({meldingCounts[key]})
+                  </Button>
+                ))}
+              </div>
 
-                    <div>
-                      <div className="text-sm font-medium capitalize">{o.type.replace(/_/g, " ")}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {new Date(o.observed_date).toLocaleDateString("nl-BE")}
-                        {o.plant ? ` · ${o.plant}` : ""}
-                        {o.area ? ` · ${o.area}` : ""}
-                      </div>
-                    </div>
-                    <Badge variant="secondary" className="text-xs">{o.status}</Badge>
+              {filteredMeldingen.length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center text-sm text-muted-foreground">
+                    Geen meldingen in deze filter.
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+              ) : (
+                <div className="space-y-2">
+                  {filteredMeldingen.map((m) => (
+                    <Card
+                      key={`${m.kind}-${m.id}`}
+                      className="cursor-pointer hover:bg-muted/40 transition"
+                      onClick={m.onOpen}
+                    >
+                      <CardContent className="p-3 flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs shrink-0">{m.label}</Badge>
+                            <div className="text-sm font-medium truncate">{m.title}</div>
+                          </div>
+                          <div className="text-xs text-muted-foreground mt-0.5">
+                            {new Date(m.date).toLocaleDateString("nl-BE")}
+                            {m.subtitle ? ` · ${m.subtitle}` : ""}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          {m.severity && <Badge variant="outline" className="text-xs">{m.severity}</Badge>}
+                          <Badge variant="secondary" className="text-xs">{m.status}</Badge>
+                          <ExternalLink className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </TabsContent>
+
 
         <TabsContent value="evaluaties" className="space-y-4">
 

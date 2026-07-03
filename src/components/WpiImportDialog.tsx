@@ -508,15 +508,6 @@ export function WpiImportDialog() {
                 </div>
               );
             })()}
-                  })}
-                </TableBody>
-              </Table>
-              {rows.length > 500 && (
-                <p className="text-xs text-center text-muted-foreground py-2">
-                  Voorbeeld beperkt tot 500 rijen — alle {rows.length} worden geïmporteerd.
-                </p>
-              )}
-            </div>
 
           </>
         )}

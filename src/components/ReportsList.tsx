@@ -147,11 +147,58 @@ export function ReportsList({
     },
   });
 
-  const filtered = reports.filter((r) => {
-    if (filter === "mine") return r.reporter_id === user?.id;
-    if (filter === "assigned") return r.assigned_to === user?.id;
-    return true;
-  });
+  const severityOrder: Record<string, number> = { laag: 1, middel: 2, hoog: 3, kritiek: 4 };
+  const statusOrder: Record<string, number> = { open: 1, in_behandeling: 2, opgevolgd: 3, gesloten: 4 };
+
+  const filtered = useMemo(() => {
+    const base = reports.filter((r) => {
+      if (filter === "mine") return r.reporter_id === user?.id;
+      if (filter === "assigned") return r.assigned_to === user?.id;
+      return true;
+    });
+    const q = search.trim().toLowerCase();
+    const searched = q
+      ? base.filter((r) => {
+          const hay = [
+            r.title, r.location, r.involved_firm, r.description,
+            getSubjectName(r), STATUS_LABELS[r.status], SEVERITY_LABELS[r.severity],
+          ].filter(Boolean).join(" ").toLowerCase();
+          return hay.includes(q);
+        })
+      : base;
+    const dir = sortDir === "asc" ? 1 : -1;
+    const val = (r: typeof searched[number]): string | number => {
+      switch (sortKey) {
+        case "date": return new Date(r.observed_at).getTime();
+        case "subject": return (getSubjectName(r) ?? "").toLowerCase();
+        case "title": return (r.title ?? "").toLowerCase();
+        case "location": return (r.location ?? "").toLowerCase();
+        case "severity": return severityOrder[r.severity] ?? 0;
+        case "status": return statusOrder[r.status] ?? 0;
+      }
+    };
+    return [...searched].sort((a, b) => {
+      const av = val(a), bv = val(b);
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    });
+  }, [reports, filter, user?.id, search, sortKey, sortDir]);
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(key); setSortDir("asc"); }
+  };
+  const SortableHead = ({ k, children, className }: { k: SortKey; children: React.ReactNode; className?: string }) => {
+    const Icon = sortKey !== k ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown;
+    return (
+      <TableHead className={className}>
+        <button type="button" onClick={() => toggleSort(k)} className="inline-flex items-center gap-1 hover:text-foreground text-left">
+          {children}<Icon className="w-3 h-3 opacity-60" />
+        </button>
+      </TableHead>
+    );
+  };
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

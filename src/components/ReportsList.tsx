@@ -25,9 +25,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, MoreHorizontal, Trash2, Download, FileText, FileSpreadsheet, type LucideIcon } from "lucide-react";
+import { Plus, MoreHorizontal, Trash2, Download, FileText, FileSpreadsheet, FileType, type LucideIcon } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import { exportReportPdf, exportReportExcel, type ReportExport } from "@/lib/reports-export";
+import { exportReportPdf, exportReportExcel, exportReportWord, type ReportExport } from "@/lib/reports-export";
 
 
 export const STATUS_LABELS: Record<string, string> = {
@@ -237,6 +237,10 @@ export function ReportsList({
     try { exportReportExcel(r as ReportExport); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Export mislukt"); }
   };
+  const handleExportWord = async (r: unknown) => {
+    try { await exportReportWord(r as ReportExport); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Export mislukt"); }
+  };
 
   return (
     <div className="space-y-6">
@@ -417,6 +421,9 @@ export function ReportsList({
                           <DropdownMenuContent align="end">
                             <DropdownMenuItem onClick={() => handleExportPdf(r)}>
                               <FileText className="w-4 h-4" /> PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExportWord(r)}>
+                              <FileType className="w-4 h-4" /> Word (.docx)
                             </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleExportExcel(r)}>
                               <FileSpreadsheet className="w-4 h-4" /> Excel (.xlsx)

@@ -1,6 +1,10 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import {
+  Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+  WidthType, BorderStyle, AlignmentType, Header, Footer, PageNumber, ShadingType, ImageRun,
+} from "docx";
 import { saveAs } from "file-saver";
 import { supabase } from "@/integrations/supabase/client";
 import tsaLogoUrl from "@/assets/tsa-logo.png";
@@ -304,4 +308,159 @@ export function exportReportExcel(r: ReportExport) {
   XLSX.utils.book_append_sheet(wb, ws, "Melding");
   const out = XLSX.write(wb, { bookType: "xlsx", type: "array" });
   saveAs(new Blob([out], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), filename(r, "xlsx"));
+}
+
+// ---------------- Word ----------------
+const RED_HEX = "E30613";
+const DARK_HEX = "1A1A1A";
+const LIGHT_HEX = "F5F5F7";
+
+async function loadLogoBytes(): Promise<{ bytes: Uint8Array; width: number; height: number } | null> {
+  try {
+    const res = await fetch(tsaLogoUrl);
+    const blob = await res.blob();
+    const bytes = new Uint8Array(await blob.arrayBuffer());
+    const dataUrl: string = await new Promise((r) => {
+      const fr = new FileReader();
+      fr.onload = () => r(fr.result as string);
+      fr.readAsDataURL(blob);
+    });
+    const dims = await new Promise<{ width: number; height: number }>((r) => {
+      const img = new Image();
+      img.onload = () => r({ width: img.width, height: img.height });
+      img.src = dataUrl;
+    });
+    return { bytes, ...dims };
+  } catch {
+    return null;
+  }
+}
+
+function borderAll(color = "E5E5E5", size = 4) {
+  const b = { style: BorderStyle.SINGLE, size, color };
+  return { top: b, bottom: b, left: b, right: b };
+}
+
+function sectionTable(section: { title: string; rows: Array<[string, string]> }): Table {
+  const headerRow = new TableRow({
+    children: [
+      new TableCell({
+        columnSpan: 2,
+        width: { size: 9360, type: WidthType.DXA },
+        shading: { fill: DARK_HEX, type: ShadingType.CLEAR, color: "auto" },
+        margins: { top: 100, bottom: 100, left: 140, right: 140 },
+        borders: borderAll(DARK_HEX),
+        children: [new Paragraph({ children: [new TextRun({ text: section.title.toUpperCase(), bold: true, color: "FFFFFF", size: 20 })] })],
+      }),
+    ],
+  });
+  const bodyRows = section.rows.map(([k, v], idx) => new TableRow({
+    children: [
+      new TableCell({
+        width: { size: 3120, type: WidthType.DXA },
+        shading: { fill: LIGHT_HEX, type: ShadingType.CLEAR, color: "auto" },
+        margins: { top: 80, bottom: 80, left: 120, right: 120 },
+        borders: borderAll(),
+        children: [new Paragraph({ children: [new TextRun({ text: k, bold: true, size: 18 })] })],
+      }),
+      new TableCell({
+        width: { size: 6240, type: WidthType.DXA },
+        shading: idx % 2 === 1 ? { fill: LIGHT_HEX, type: ShadingType.CLEAR, color: "auto" } : undefined,
+        margins: { top: 80, bottom: 80, left: 120, right: 120 },
+        borders: borderAll(),
+        children: (v ?? "—").split("\n").map((line) => new Paragraph({ children: [new TextRun({ text: line, size: 18 })] })),
+      }),
+    ],
+  }));
+  return new Table({
+    width: { size: 9360, type: WidthType.DXA },
+    columnWidths: [3120, 6240],
+    rows: [headerRow, ...bodyRows],
+  });
+}
+
+export async function exportReportWord(r: ReportExport) {
+  const lab = label(r.type);
+  const logo = await loadLogoBytes();
+  const sections = sectionsFor(r);
+
+  const headerChildren: Paragraph[] = [];
+  if (logo) {
+    const h = 40;
+    const w = Math.round((logo.width / logo.height) * h);
+    headerChildren.push(new Paragraph({
+      children: [new ImageRun({
+        type: "png",
+        data: logo.bytes,
+        transformation: { width: w, height: h },
+        altText: { title: "TSA", description: "TSA logo", name: "tsa" },
+      })],
+    }));
+  }
+  headerChildren.push(new Paragraph({
+    alignment: AlignmentType.RIGHT,
+    children: [new TextRun({ text: lab.title.toUpperCase(), bold: true, color: RED_HEX, size: 24 })],
+  }));
+
+  const bodyChildren: (Paragraph | Table)[] = [
+    new Paragraph({ children: [new TextRun({ text: r.title, bold: true, size: 28 })], spacing: { after: 200 } }),
+  ];
+  for (const s of sections) {
+    bodyChildren.push(sectionTable(s));
+    bodyChildren.push(new Paragraph({ children: [new TextRun("")], spacing: { after: 120 } }));
+  }
+
+  // Attachments (images from reports-attachments bucket)
+  const atts = ((r.details as { attachments?: Array<{ path: string; name: string; type: string }> })?.attachments) ?? [];
+  const imageAtts = atts.filter((a) => a.type?.startsWith("image/"));
+  if (imageAtts.length) {
+    bodyChildren.push(new Paragraph({ children: [new TextRun({ text: "BIJLAGEN", bold: true, color: RED_HEX, size: 22 })], spacing: { before: 200, after: 120 } }));
+    for (const att of imageAtts) {
+      try {
+        const { data } = await supabase.storage.from("reports-attachments").createSignedUrl(att.path, 300);
+        if (!data?.signedUrl) continue;
+        const res = await fetch(data.signedUrl);
+        const blob = await res.blob();
+        const bytes = new Uint8Array(await blob.arrayBuffer());
+        const rawExt = (att.type.split("/")[1] || "png").toLowerCase();
+        const ext = rawExt === "jpeg" ? "jpg" : rawExt;
+        const type = (["png", "jpg", "gif", "bmp"].includes(ext) ? ext : "png") as "png" | "jpg" | "gif" | "bmp";
+        bodyChildren.push(new Paragraph({
+          children: [new ImageRun({
+            type,
+            data: bytes,
+            transformation: { width: 360, height: 270 },
+            altText: { title: att.name, description: att.name, name: att.name },
+          })],
+        }));
+        bodyChildren.push(new Paragraph({ children: [new TextRun({ text: att.name, italics: true, size: 16, color: "808080" })], spacing: { after: 120 } }));
+      } catch { /* skip */ }
+    }
+  }
+
+  const doc = new Document({
+    styles: { default: { document: { run: { font: "Arial", size: 20 } } } },
+    sections: [{
+      properties: { page: { size: { width: 11906, height: 16838 }, margin: { top: 1440, right: 1080, bottom: 1440, left: 1080 } } },
+      headers: { default: new Header({ children: headerChildren }) },
+      footers: {
+        default: new Footer({
+          children: [new Paragraph({
+            alignment: AlignmentType.CENTER,
+            border: { top: { style: BorderStyle.SINGLE, size: 6, color: RED_HEX, space: 4 } },
+            children: [
+              new TextRun({ text: "TSA Safety Services  •  tsa-safety.be  •  Pagina ", size: 16, color: "808080" }),
+              new TextRun({ children: [PageNumber.CURRENT], size: 16, color: "808080" }),
+              new TextRun({ text: " / ", size: 16, color: "808080" }),
+              new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 16, color: "808080" }),
+            ],
+          })],
+        }),
+      },
+      children: bodyChildren,
+    }],
+  });
+
+  const blob = await Packer.toBlob(doc);
+  saveAs(blob, filename(r, "docx"));
 }

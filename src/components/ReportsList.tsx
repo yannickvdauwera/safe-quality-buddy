@@ -422,6 +422,9 @@ export function ReportsList({
                             <DropdownMenuItem onClick={() => handleExportPdf(r)}>
                               <FileText className="w-4 h-4" /> PDF
                             </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExportWord(r)}>
+                              <FileType className="w-4 h-4" /> Word (.docx)
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => handleExportExcel(r)}>
                               <FileSpreadsheet className="w-4 h-4" /> Excel (.xlsx)
                             </DropdownMenuItem>

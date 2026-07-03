@@ -13,7 +13,8 @@ import {
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
-import { Upload, FileSpreadsheet, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Upload, FileSpreadsheet, Loader2, ArrowUpDown, ArrowUp, ArrowDown, Users, Ban } from "lucide-react";
 import {
   readSheetAsMatrix, findHeaderRow, matrixToRecords, splitFullName, cellString, nameKey,
 } from "@/lib/import-utils";

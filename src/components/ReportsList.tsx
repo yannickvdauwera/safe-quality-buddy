@@ -25,9 +25,9 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, MoreHorizontal, Trash2, Download, FileText, FileSpreadsheet, type LucideIcon } from "lucide-react";
+import { Plus, MoreHorizontal, Trash2, Download, FileText, FileSpreadsheet, FileType, type LucideIcon } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
-import { exportReportPdf, exportReportExcel, type ReportExport } from "@/lib/reports-export";
+import { exportReportPdf, exportReportExcel, exportReportWord, type ReportExport } from "@/lib/reports-export";
 
 
 export const STATUS_LABELS: Record<string, string> = {

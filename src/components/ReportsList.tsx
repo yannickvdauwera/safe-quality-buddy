@@ -367,18 +367,29 @@ export function ReportsList({
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <Button variant={filter === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("all")}>
-          Alle ({reports.length})
-        </Button>
-        <Button variant={filter === "mine" ? "default" : "outline"} size="sm" onClick={() => setFilter("mine")}>
-          Van mij ({reports.filter((r) => r.reporter_id === user?.id).length})
-        </Button>
-        {canManage && (
-          <Button variant={filter === "assigned" ? "default" : "outline"} size="sm" onClick={() => setFilter("assigned")}>
-            Toegewezen aan mij ({reports.filter((r) => r.assigned_to === user?.id).length})
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          <Button variant={filter === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("all")}>
+            Alle ({reports.length})
           </Button>
-        )}
+          <Button variant={filter === "mine" ? "default" : "outline"} size="sm" onClick={() => setFilter("mine")}>
+            Van mij ({reports.filter((r) => r.reporter_id === user?.id).length})
+          </Button>
+          {canManage && (
+            <Button variant={filter === "assigned" ? "default" : "outline"} size="sm" onClick={() => setFilter("assigned")}>
+              Toegewezen aan mij ({reports.filter((r) => r.assigned_to === user?.id).length})
+            </Button>
+          )}
+        </div>
+        <div className="relative sm:w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Zoek op titel, medewerker, locatie…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-9"
+          />
+        </div>
       </div>
 
       {selectedIds.size > 0 && (

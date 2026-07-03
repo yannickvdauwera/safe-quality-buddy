@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EmployeePicker } from "@/components/EmployeePicker";
 import { SignaturePad } from "@/components/SignaturePad";
 import { cn } from "@/lib/utils";
 import { useDraftForm } from "@/hooks/useDraftForm";

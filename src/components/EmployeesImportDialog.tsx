@@ -356,6 +356,29 @@ export function EmployeesImportDialog() {
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <AlertDialog open={confirmCloseOpen} onOpenChange={setConfirmCloseOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Importeren afbreken?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Je hebt {rows.length} rij(en) geladen die nog niet zijn geïmporteerd. Als je dit venster sluit, gaan deze gegevens verloren.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmCloseOpen(false)}>Nee, blijf open</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setConfirmCloseOpen(false);
+              setOpen(false);
+              setRows([]);
+              setFileName("");
+              setSearch("");
+            }}>
+              Ja, sluit venster
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

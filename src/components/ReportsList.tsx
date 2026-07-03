@@ -429,12 +429,12 @@ export function ReportsList({
                       />
                     </TableHead>
                   )}
-                  <TableHead>Datum</TableHead>
-                  <TableHead>Medewerker</TableHead>
-                  <TableHead>Titel</TableHead>
-                  <TableHead>{locationLabel}</TableHead>
-                  {!hideSeverity && <TableHead>Ernst</TableHead>}
-                  {!hideStatus && <TableHead>Status</TableHead>}
+                  <SortableHead k="date">Datum</SortableHead>
+                  <SortableHead k="subject">Medewerker</SortableHead>
+                  <SortableHead k="title">Titel</SortableHead>
+                  <SortableHead k="location">{locationLabel}</SortableHead>
+                  {!hideSeverity && <SortableHead k="severity">Ernst</SortableHead>}
+                  {!hideStatus && <SortableHead k="status">Status</SortableHead>}
                   <TableHead className="text-right">Export</TableHead>
                 </TableRow>
               </TableHeader>

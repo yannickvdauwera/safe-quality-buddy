@@ -135,7 +135,7 @@ export function WpiImportDialog() {
     }
   };
 
-
+  const handleFile = async (file: File) => {
     setParsing(true);
     setFileName(file.name);
     try {

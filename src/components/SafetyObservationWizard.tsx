@@ -84,6 +84,7 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
   const [uploading, setUploading] = useState(false);
   const sigRef = useRef<SignatureCanvas>(null);
   const [sigEmpty, setSigEmpty] = useState(true);
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const upd = <K extends keyof typeof form>(k: K, v: string) =>

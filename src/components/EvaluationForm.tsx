@@ -110,7 +110,9 @@ export function EvaluationForm({ open, onOpenChange, employeeId, employeeName, e
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      setSubmitted(true);
+      if (!existing) await draft.deleteDraft();
       toast.success(existing ? "Evaluatie bijgewerkt" : "Evaluatie opgeslagen");
       qc.invalidateQueries({ queryKey: ["employee-evaluations", employeeId] });
       onOpenChange(false);
@@ -119,7 +121,7 @@ export function EvaluationForm({ open, onOpenChange, employeeId, employeeName, e
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{existing ? "Evaluatie bewerken" : "Nieuwe evaluatie"}</DialogTitle>

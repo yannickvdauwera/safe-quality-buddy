@@ -225,9 +225,18 @@ export function ReportsList({
     setSelectedIds(() => (checked ? new Set(filtered.map((r) => r.id)) : new Set()));
   };
 
-  const showActions = canManage && !hideStatus;
+  const showStatusActions = canManage && !hideStatus;
   const showSelect = canManage || canDelete;
-  const colCount = 4 + (hideSeverity ? 0 : 1) + (hideStatus ? 0 : 1) + (showActions ? 1 : 0) + (showSelect ? 1 : 0);
+  const colCount = 4 + (hideSeverity ? 0 : 1) + (hideStatus ? 0 : 1) + 1 + (showSelect ? 1 : 0);
+
+  const handleExportPdf = async (r: unknown) => {
+    try { await exportReportPdf(r as ReportExport); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Export mislukt"); }
+  };
+  const handleExportExcel = (r: unknown) => {
+    try { exportReportExcel(r as ReportExport); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Export mislukt"); }
+  };
 
   return (
     <div className="space-y-6">

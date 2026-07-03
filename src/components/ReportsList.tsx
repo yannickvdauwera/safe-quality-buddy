@@ -408,21 +408,36 @@ export function ReportsList({
                     <TableCell className="text-muted-foreground">{r.location ?? "—"}</TableCell>
                     {!hideSeverity && <TableCell><Badge variant={severityVariant(r.severity)}>{SEVERITY_LABELS[r.severity]}</Badge></TableCell>}
                     {!hideStatus && <TableCell><Badge variant={statusVariant(r.status)}>{STATUS_LABELS[r.status]}</Badge></TableCell>}
-                    {showActions && (
-                      <TableCell onClick={(e) => e.stopPropagation()}>
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="w-8 h-8"><MoreHorizontal className="w-4 h-4" /></Button>
+                            <Button variant="outline" size="sm"><Download className="w-4 h-4" /> Export</Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => updateStatus(r.id, "in_behandeling")}>In behandeling nemen</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateStatus(r.id, "opgevolgd")}>Markeren als opgevolgd</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateStatus(r.id, "gesloten")}>Sluiten</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateStatus(r.id, "open")}>Heropenen</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExportPdf(r)}>
+                              <FileText className="w-4 h-4" /> PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExportExcel(r)}>
+                              <FileSpreadsheet className="w-4 h-4" /> Excel (.xlsx)
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </TableCell>
-                    )}
+                        {showStatusActions && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="w-8 h-8"><MoreHorizontal className="w-4 h-4" /></Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => updateStatus(r.id, "in_behandeling")}>In behandeling nemen</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => updateStatus(r.id, "opgevolgd")}>Markeren als opgevolgd</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => updateStatus(r.id, "gesloten")}>Sluiten</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => updateStatus(r.id, "open")}>Heropenen</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

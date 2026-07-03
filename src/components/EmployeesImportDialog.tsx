@@ -347,7 +347,10 @@ export function EmployeesImportDialog() {
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Annuleren</Button>
+          <Button variant="outline" onClick={() => {
+            if (rows.length > 0) { setConfirmCloseOpen(true); }
+            else { setOpen(false); }
+          }}>Annuleren</Button>
           <Button onClick={doImport} disabled={importing || counts.new === 0}>
             {importing ? <><Loader2 className="w-4 h-4 animate-spin" /> Importeren…</> : `Importeer ${counts.new} nieuwe`}
           </Button>

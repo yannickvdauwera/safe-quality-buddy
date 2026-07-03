@@ -257,7 +257,9 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      setSubmitted(true);
+      await draft.deleteDraft();
       toast.success(`${label.title} succesvol ingediend`);
       qc.invalidateQueries({ queryKey: ["safety_observations", type] });
       onDone();

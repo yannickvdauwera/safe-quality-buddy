@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,8 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SignaturePad } from "@/components/SignaturePad";
 import { cn } from "@/lib/utils";
+import { useDraftForm } from "@/hooks/useDraftForm";
+import { RestoreDraftDialog, UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 
 export interface ChecklistQuestion {
   key: string;   // stable key stored in details.answers

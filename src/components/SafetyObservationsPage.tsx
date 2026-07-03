@@ -90,9 +90,6 @@ export function SafetyObservationsPage({ type }: { type: SafetyObservationType }
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={copyPublicLink}>
-            <LinkIcon className="w-4 h-4" /> Publieke link
-          </Button>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button><Plus className="w-4 h-4" /> Nieuwe {label.short}</Button>

@@ -227,7 +227,10 @@ export function EmployeesImportDialog() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setRows([]); setFileName(""); setSearch(""); } }}>
+    <Dialog open={open} onOpenChange={(v) => {
+      if (!v && rows.length > 0) { setConfirmCloseOpen(true); return; }
+      setOpen(v); if (!v) { setRows([]); setFileName(""); setSearch(""); }
+    }}>
       <DialogTrigger asChild>
         <Button variant="outline"><Upload className="w-4 h-4" /> Importeer Excel</Button>
       </DialogTrigger>

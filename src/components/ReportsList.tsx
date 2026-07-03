@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { z } from "zod";
 import { toast } from "sonner";
@@ -25,7 +25,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, MoreHorizontal, Trash2, Download, FileText, FileSpreadsheet, FileType, type LucideIcon } from "lucide-react";
+import { Plus, MoreHorizontal, Trash2, Download, FileText, FileSpreadsheet, FileType, ArrowUpDown, ArrowUp, ArrowDown, Search, type LucideIcon } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
 import { exportReportPdf, exportReportExcel, exportReportWord, type ReportExport } from "@/lib/reports-export";
 
@@ -117,6 +117,10 @@ export function ReportsList({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [search, setSearch] = useState("");
+  type SortKey = "date" | "subject" | "title" | "location" | "severity" | "status";
+  const [sortKey, setSortKey] = useState<SortKey>("date");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
 
   const allowedTypes = typeOptions.map((t) => t.value);
@@ -143,11 +147,58 @@ export function ReportsList({
     },
   });
 
-  const filtered = reports.filter((r) => {
-    if (filter === "mine") return r.reporter_id === user?.id;
-    if (filter === "assigned") return r.assigned_to === user?.id;
-    return true;
-  });
+  const severityOrder: Record<string, number> = { laag: 1, middel: 2, hoog: 3, kritiek: 4 };
+  const statusOrder: Record<string, number> = { open: 1, in_behandeling: 2, opgevolgd: 3, gesloten: 4 };
+
+  const filtered = useMemo(() => {
+    const base = reports.filter((r) => {
+      if (filter === "mine") return r.reporter_id === user?.id;
+      if (filter === "assigned") return r.assigned_to === user?.id;
+      return true;
+    });
+    const q = search.trim().toLowerCase();
+    const searched = q
+      ? base.filter((r) => {
+          const hay = [
+            r.title, r.location, r.involved_firm, r.description,
+            getSubjectName(r), STATUS_LABELS[r.status], SEVERITY_LABELS[r.severity],
+          ].filter(Boolean).join(" ").toLowerCase();
+          return hay.includes(q);
+        })
+      : base;
+    const dir = sortDir === "asc" ? 1 : -1;
+    const val = (r: typeof searched[number]): string | number => {
+      switch (sortKey) {
+        case "date": return new Date(r.observed_at).getTime();
+        case "subject": return (getSubjectName(r) ?? "").toLowerCase();
+        case "title": return (r.title ?? "").toLowerCase();
+        case "location": return (r.location ?? "").toLowerCase();
+        case "severity": return severityOrder[r.severity] ?? 0;
+        case "status": return statusOrder[r.status] ?? 0;
+      }
+    };
+    return [...searched].sort((a, b) => {
+      const av = val(a), bv = val(b);
+      if (av < bv) return -1 * dir;
+      if (av > bv) return 1 * dir;
+      return 0;
+    });
+  }, [reports, filter, user?.id, search, sortKey, sortDir]);
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(key); setSortDir("asc"); }
+  };
+  const SortableHead = ({ k, children, className }: { k: SortKey; children: React.ReactNode; className?: string }) => {
+    const Icon = sortKey !== k ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown;
+    return (
+      <TableHead className={className}>
+        <button type="button" onClick={() => toggleSort(k)} className="inline-flex items-center gap-1 hover:text-foreground text-left">
+          {children}<Icon className="w-3 h-3 opacity-60" />
+        </button>
+      </TableHead>
+    );
+  };
 
   const handleCreate = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -316,18 +367,29 @@ export function ReportsList({
         </div>
       </div>
 
-      <div className="flex gap-2">
-        <Button variant={filter === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("all")}>
-          Alle ({reports.length})
-        </Button>
-        <Button variant={filter === "mine" ? "default" : "outline"} size="sm" onClick={() => setFilter("mine")}>
-          Van mij ({reports.filter((r) => r.reporter_id === user?.id).length})
-        </Button>
-        {canManage && (
-          <Button variant={filter === "assigned" ? "default" : "outline"} size="sm" onClick={() => setFilter("assigned")}>
-            Toegewezen aan mij ({reports.filter((r) => r.assigned_to === user?.id).length})
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-wrap gap-2">
+          <Button variant={filter === "all" ? "default" : "outline"} size="sm" onClick={() => setFilter("all")}>
+            Alle ({reports.length})
           </Button>
-        )}
+          <Button variant={filter === "mine" ? "default" : "outline"} size="sm" onClick={() => setFilter("mine")}>
+            Van mij ({reports.filter((r) => r.reporter_id === user?.id).length})
+          </Button>
+          {canManage && (
+            <Button variant={filter === "assigned" ? "default" : "outline"} size="sm" onClick={() => setFilter("assigned")}>
+              Toegewezen aan mij ({reports.filter((r) => r.assigned_to === user?.id).length})
+            </Button>
+          )}
+        </div>
+        <div className="relative sm:w-72">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <Input
+            placeholder="Zoek op titel, medewerker, locatie…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="pl-9 h-9"
+          />
+        </div>
       </div>
 
       {selectedIds.size > 0 && (
@@ -367,12 +429,12 @@ export function ReportsList({
                       />
                     </TableHead>
                   )}
-                  <TableHead>Datum</TableHead>
-                  <TableHead>Medewerker</TableHead>
-                  <TableHead>Titel</TableHead>
-                  <TableHead>{locationLabel}</TableHead>
-                  {!hideSeverity && <TableHead>Ernst</TableHead>}
-                  {!hideStatus && <TableHead>Status</TableHead>}
+                  <SortableHead k="date">Datum</SortableHead>
+                  <SortableHead k="subject">Medewerker</SortableHead>
+                  <SortableHead k="title">Titel</SortableHead>
+                  <SortableHead k="location">{locationLabel}</SortableHead>
+                  {!hideSeverity && <SortableHead k="severity">Ernst</SortableHead>}
+                  {!hideStatus && <SortableHead k="status">Status</SortableHead>}
                   <TableHead className="text-right">Export</TableHead>
                 </TableRow>
               </TableHeader>

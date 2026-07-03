@@ -49,6 +49,35 @@ export function EvaluationForm({ open, onOpenChange, employeeId, employeeName, e
 
   const setScore = (k: string, v: string) => setScores((s) => ({ ...s, [k]: v }));
 
+  // ---------- Concept / draft ----------
+  const [submitted, setSubmitted] = useState(false);
+  const [showCloseGuard, setShowCloseGuard] = useState(false);
+  const values = { form, scores, signature };
+  const initialRef = useRef(JSON.stringify(values));
+  const isDirty = useMemo(() => JSON.stringify(values) !== initialRef.current, [values]);
+  const draft = useDraftForm({
+    formType: "evaluation",
+    formKey: employeeId,
+    values,
+    isDirty,
+    isSubmitted: submitted,
+    title: `Evaluatie — ${employeeName}`,
+    enabled: !existing && open,
+  });
+  const applyDraft = (p: typeof values) => {
+    if (p.form) setForm(p.form);
+    if (p.scores) setScores(p.scores);
+    if (typeof p.signature !== "undefined") setSignature(p.signature);
+  };
+  const handleClose = (next: boolean) => {
+    if (!next && isDirty && !submitted && !existing) {
+      setShowCloseGuard(true);
+      return;
+    }
+    onOpenChange(next);
+  };
+
+
   const save = useMutation({
     mutationFn: async () => {
       if (!form.evaluator_name.trim()) throw new Error("Ingediend door is verplicht");

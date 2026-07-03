@@ -139,6 +139,42 @@ export type Database = {
         }
         Relationships: []
       }
+      form_drafts: {
+        Row: {
+          created_at: string
+          form_key: string
+          form_type: string
+          id: string
+          last_saved_at: string
+          payload: Json
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          form_key?: string
+          form_type: string
+          id?: string
+          last_saved_at?: string
+          payload?: Json
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          form_key?: string
+          form_type?: string
+          id?: string
+          last_saved_at?: string
+          payload?: Json
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       monday_sync_events: {
         Row: {
           employee_id: string | null

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { EVALUATION_SECTIONS, SCORE_OPTIONS, ALL_CRITERIA } from "@/lib/evaluation-criteria";
 import { SignaturePad } from "@/components/SignaturePad";
+import { useDraftForm } from "@/hooks/useDraftForm";
+import { RestoreDraftDialog, UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 
 interface Props {
   open: boolean;
@@ -47,6 +49,35 @@ export function EvaluationForm({ open, onOpenChange, employeeId, employeeName, e
 
   const setScore = (k: string, v: string) => setScores((s) => ({ ...s, [k]: v }));
 
+  // ---------- Concept / draft ----------
+  const [submitted, setSubmitted] = useState(false);
+  const [showCloseGuard, setShowCloseGuard] = useState(false);
+  const values = { form, scores, signature };
+  const initialRef = useRef(JSON.stringify(values));
+  const isDirty = useMemo(() => JSON.stringify(values) !== initialRef.current, [values]);
+  const draft = useDraftForm({
+    formType: "evaluation",
+    formKey: employeeId,
+    values,
+    isDirty,
+    isSubmitted: submitted,
+    title: `Evaluatie — ${employeeName}`,
+    enabled: !existing && open,
+  });
+  const applyDraft = (p: typeof values) => {
+    if (p.form) setForm(p.form);
+    if (p.scores) setScores(p.scores);
+    if (typeof p.signature !== "undefined") setSignature(p.signature);
+  };
+  const handleClose = (next: boolean) => {
+    if (!next && isDirty && !submitted && !existing) {
+      setShowCloseGuard(true);
+      return;
+    }
+    onOpenChange(next);
+  };
+
+
   const save = useMutation({
     mutationFn: async () => {
       if (!form.evaluator_name.trim()) throw new Error("Ingediend door is verplicht");
@@ -79,7 +110,9 @@ export function EvaluationForm({ open, onOpenChange, employeeId, employeeName, e
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      setSubmitted(true);
+      if (!existing) await draft.deleteDraft();
       toast.success(existing ? "Evaluatie bijgewerkt" : "Evaluatie opgeslagen");
       qc.invalidateQueries({ queryKey: ["employee-evaluations", employeeId] });
       onOpenChange(false);
@@ -88,7 +121,7 @@ export function EvaluationForm({ open, onOpenChange, employeeId, employeeName, e
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{existing ? "Evaluatie bewerken" : "Nieuwe evaluatie"}</DialogTitle>
@@ -187,13 +220,59 @@ export function EvaluationForm({ open, onOpenChange, employeeId, employeeName, e
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Annuleren</Button>
+        <DialogFooter className="gap-2">
+          {!existing && draft.lastSavedAt && !submitted && (
+            <span className="text-xs text-muted-foreground mr-auto self-center">
+              Concept opgeslagen · {new Date(draft.lastSavedAt).toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
+          <Button variant="outline" onClick={() => handleClose(false)}>Annuleren</Button>
+          {!existing && (
+            <Button
+              variant="secondary"
+              disabled={!isDirty || draft.saving || submitted}
+              onClick={() => draft.saveNow()}
+            >
+              {draft.saving ? "Opslaan…" : "Concept opslaan"}
+            </Button>
+          )}
           <Button onClick={() => save.mutate()} disabled={save.isPending}>
             {save.isPending ? "Opslaan…" : "Opslaan"}
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <UnsavedChangesDialog
+        open={showCloseGuard}
+        onOpenChange={setShowCloseGuard}
+        saving={draft.saving}
+        onSaveDraft={async () => {
+          await draft.saveNow();
+          setShowCloseGuard(false);
+          onOpenChange(false);
+        }}
+        onDiscard={async () => {
+          await draft.deleteDraft();
+          setShowCloseGuard(false);
+          onOpenChange(false);
+        }}
+      />
+      <RestoreDraftDialog
+        open={!existing && !!draft.existingDraft && draft.checkedForDraft}
+        lastSavedAt={draft.existingDraft?.last_saved_at}
+        onRestore={() => {
+          if (draft.existingDraft) {
+            applyDraft(draft.existingDraft.payload as typeof values);
+            initialRef.current = JSON.stringify(draft.existingDraft.payload);
+          }
+          draft.dismissRestore();
+        }}
+        onDiscard={async () => {
+          await draft.deleteDraft();
+          draft.dismissRestore();
+        }}
+      />
     </Dialog>
   );
 }
+

@@ -19,6 +19,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { useDraftForm } from "@/hooks/useDraftForm";
+import { RestoreDraftDialog, UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 
 const FUNCTION_OPTIONS_USER = ["Brandwacht", "Veiligheidswacht", "Gasanalist"] as const;
 const FUNCTION_OPTIONS_ALL = [
@@ -82,7 +84,46 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
   const [uploading, setUploading] = useState(false);
   const sigRef = useRef<SignatureCanvas>(null);
   const [sigEmpty, setSigEmpty] = useState(true);
+  const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // -------- Draft / concept support (internal only) --------
+  const [submitted, setSubmitted] = useState(false);
+  const [showCloseGuard, setShowCloseGuard] = useState(false);
+  const draftValues = { form, hazards, risks, photos, signatureDataUrl, step };
+  const initialRef = useRef(JSON.stringify(draftValues));
+  const isDirty = useMemo(
+    () => JSON.stringify(draftValues) !== initialRef.current,
+    [draftValues],
+  );
+  const draft = useDraftForm({
+    formType: `melding:${type}`,
+    formKey: user?.id ?? "anonymous",
+    values: draftValues,
+    isDirty,
+    isSubmitted: submitted,
+    title: `${label.title} — concept`,
+    enabled: mode === "internal" && !!user,
+  });
+  const applyDraft = (p: typeof draftValues) => {
+    if (p.form) setForm(p.form);
+    if (Array.isArray(p.hazards)) setHazards(p.hazards);
+    if (Array.isArray(p.risks)) setRisks(p.risks);
+    if (Array.isArray(p.photos)) setPhotos(p.photos);
+    if (typeof p.step === "number") setStep(p.step);
+    if (p.signatureDataUrl) {
+      setSignatureDataUrl(p.signatureDataUrl);
+      setSigEmpty(false);
+    }
+  };
+  const requestClose = () => {
+    if (mode === "internal" && isDirty && !submitted) {
+      setShowCloseGuard(true);
+    } else {
+      onDone();
+    }
+  };
+
 
   const upd = <K extends keyof typeof form>(k: K, v: string) =>
     setForm((f) => ({ ...f, [k]: v }));
@@ -181,7 +222,7 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
   const create = useMutation({
     mutationFn: async () => {
       if (!form.reporter_name.trim()) throw new Error("Naam melder is verplicht");
-      let signature_data_url: string | null = null;
+      let signature_data_url: string | null = signatureDataUrl;
       if (sigRef.current && !sigRef.current.isEmpty()) {
         signature_data_url = sigRef.current.getCanvas().toDataURL("image/png");
       }
@@ -216,7 +257,9 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      setSubmitted(true);
+      await draft.deleteDraft();
       toast.success(`${label.title} succesvol ingediend`);
       qc.invalidateQueries({ queryKey: ["safety_observations", type] });
       onDone();
@@ -554,10 +597,33 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
       )}
 
       {/* Navigation */}
-      <div className="flex items-center justify-between gap-2 pt-4 border-t">
-        <Button type="button" variant="ghost" onClick={onDone}>
-          <X className="w-4 h-4" /> Annuleren
-        </Button>
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t">
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="ghost" onClick={requestClose}>
+            <X className="w-4 h-4" /> Annuleren
+          </Button>
+          {mode === "internal" && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!isDirty || draft.saving || submitted}
+              onClick={async () => {
+                if (sigRef.current && !sigRef.current.isEmpty()) {
+                  setSignatureDataUrl(sigRef.current.getCanvas().toDataURL("image/png"));
+                }
+                await draft.saveNow();
+              }}
+            >
+              {draft.saving ? "Opslaan…" : "Concept opslaan"}
+            </Button>
+          )}
+          {mode === "internal" && draft.lastSavedAt && !submitted && (
+            <span className="text-xs text-muted-foreground">
+              · {new Date(draft.lastSavedAt).toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
+        </div>
         <div className="flex gap-2">
           {step > 0 && (
             <Button type="button" variant="outline" onClick={prev}>
@@ -583,6 +649,40 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
       {sigEmpty === false && step === 5 && (
         <p className="text-xs text-muted-foreground">Handtekening geregistreerd.</p>
       )}
+
+      <UnsavedChangesDialog
+        open={showCloseGuard}
+        onOpenChange={setShowCloseGuard}
+        saving={draft.saving}
+        onSaveDraft={async () => {
+          if (sigRef.current && !sigRef.current.isEmpty()) {
+            setSignatureDataUrl(sigRef.current.getCanvas().toDataURL("image/png"));
+          }
+          await draft.saveNow();
+          setShowCloseGuard(false);
+          onDone();
+        }}
+        onDiscard={async () => {
+          await draft.deleteDraft();
+          setShowCloseGuard(false);
+          onDone();
+        }}
+      />
+      <RestoreDraftDialog
+        open={mode === "internal" && !!draft.existingDraft && draft.checkedForDraft}
+        lastSavedAt={draft.existingDraft?.last_saved_at}
+        onRestore={() => {
+          if (draft.existingDraft) {
+            applyDraft(draft.existingDraft.payload as typeof draftValues);
+            initialRef.current = JSON.stringify(draft.existingDraft.payload);
+          }
+          draft.dismissRestore();
+        }}
+        onDiscard={async () => {
+          await draft.deleteDraft();
+          draft.dismissRestore();
+        }}
+      />
     </div>
   );
 }

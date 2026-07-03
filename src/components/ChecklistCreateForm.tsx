@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +12,8 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SignaturePad } from "@/components/SignaturePad";
 import { cn } from "@/lib/utils";
+import { useDraftForm } from "@/hooks/useDraftForm";
+import { RestoreDraftDialog, UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 
 export interface ChecklistQuestion {
   key: string;   // stable key stored in details.answers
@@ -116,6 +118,33 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
   const answered = Object.keys(answers).length;
   const nokCount = Object.values(answers).filter((v) => v === "nok").length;
 
+  // ---------- Concept / draft ----------
+  const [submitted, setSubmitted] = useState(false);
+  const [showCloseGuard, setShowCloseGuard] = useState(false);
+  const values = { header, answers, extras, signature, subjectEmployeeId, severity };
+  const initialRef = useRef(JSON.stringify(values));
+  const isDirty = useMemo(() => JSON.stringify(values) !== initialRef.current, [values]);
+  const draft = useDraftForm({
+    formType: `inspectie:${config.reportType}`,
+    values,
+    isDirty,
+    isSubmitted: submitted,
+    title: config.titleTemplate(header) || `Inspectie (concept)`,
+  });
+  const applyDraft = (p: typeof values) => {
+    setHeader(p.header ?? {});
+    setAnswers(p.answers ?? {});
+    setExtras(p.extras ?? {});
+    setSignature(p.signature ?? null);
+    setSubjectEmployeeId(p.subjectEmployeeId ?? "");
+    setSeverity(p.severity ?? "middel");
+  };
+  const handleCancel = () => {
+    if (isDirty && !submitted) setShowCloseGuard(true);
+    else onClose();
+  };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
@@ -155,6 +184,8 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
     const { error } = await supabase.from("reports").insert(payload as never);
     setSaving(false);
     if (error) return toast.error(error.message);
+    setSubmitted(true);
+    await draft.deleteDraft();
     toast.success("Inspectie geregistreerd");
     onCreated();
   };
@@ -279,10 +310,55 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
         </div>
       )}
 
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={onClose}>Annuleren</Button>
+      <DialogFooter className="gap-2">
+        {draft.lastSavedAt && !submitted && (
+          <span className="text-xs text-muted-foreground mr-auto self-center">
+            Concept opgeslagen · {new Date(draft.lastSavedAt).toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" })}
+          </span>
+        )}
+        <Button type="button" variant="outline" onClick={handleCancel}>Annuleren</Button>
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={!isDirty || draft.saving || submitted}
+          onClick={() => draft.saveNow()}
+        >
+          {draft.saving ? "Opslaan…" : "Concept opslaan"}
+        </Button>
         <Button type="submit" disabled={saving}>Registreren</Button>
       </DialogFooter>
+
+      <UnsavedChangesDialog
+        open={showCloseGuard}
+        onOpenChange={setShowCloseGuard}
+        saving={draft.saving}
+        onSaveDraft={async () => {
+          await draft.saveNow();
+          setShowCloseGuard(false);
+          onClose();
+        }}
+        onDiscard={async () => {
+          await draft.deleteDraft();
+          setShowCloseGuard(false);
+          onClose();
+        }}
+      />
+      <RestoreDraftDialog
+        open={!!draft.existingDraft && draft.checkedForDraft}
+        lastSavedAt={draft.existingDraft?.last_saved_at}
+        onRestore={() => {
+          if (draft.existingDraft) {
+            applyDraft(draft.existingDraft.payload as typeof values);
+            initialRef.current = JSON.stringify(draft.existingDraft.payload);
+          }
+          draft.dismissRestore();
+        }}
+        onDiscard={async () => {
+          await draft.deleteDraft();
+          draft.dismissRestore();
+        }}
+      />
     </form>
   );
 }
+

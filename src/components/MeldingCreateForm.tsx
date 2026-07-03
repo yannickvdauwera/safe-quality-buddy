@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +11,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { useDraftForm } from "@/hooks/useDraftForm";
+import { RestoreDraftDialog, UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 
 interface Props {
   onClose: () => void;
@@ -79,6 +81,56 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
   const [klWorksite, setKlWorksite] = useState("");
   const [klDate, setKlDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [klCategory, setKlCategory] = useState<string>("");
+
+  // ---------- Concept / draft ----------
+  const [submitted, setSubmitted] = useState(false);
+  const [showCloseGuard, setShowCloseGuard] = useState(false);
+  const values = {
+    type, severity, title, description, location, involvedFirm,
+    aoIncidentDate, aoIncidentType, aoFirstAider, aoVictimName, aoContractType,
+    aoBodyPart, aoBodyDetail, aoRelaas, aoInvestigation,
+    klSubmitterName, klSubmitter, klEmail, klWorksite, klDate, klCategory,
+  };
+  const initialRef = useRef(JSON.stringify(values));
+  const isDirty = useMemo(() => JSON.stringify(values) !== initialRef.current, [values]);
+  const draftTitle = title || (type === "ao_ehbo" ? aoVictimName : type === "klacht" ? klSubmitterName : null) || "Melding (concept)";
+  const draft = useDraftForm({
+    formType: `melding:${defaultType}`,
+    values,
+    isDirty,
+    isSubmitted: submitted,
+    title: draftTitle,
+  });
+
+  const applyDraft = (p: typeof values) => {
+    setType(p.type ?? defaultType);
+    setSeverity(p.severity ?? "middel");
+    setTitle(p.title ?? "");
+    setDescription(p.description ?? "");
+    setLocation(p.location ?? "");
+    setInvolvedFirm(p.involvedFirm ?? "");
+    setAoIncidentDate(p.aoIncidentDate ?? new Date().toISOString().slice(0, 10));
+    setAoIncidentType(p.aoIncidentType ?? "");
+    setAoFirstAider(p.aoFirstAider ?? "");
+    setAoVictimName(p.aoVictimName ?? "");
+    setAoContractType(p.aoContractType ?? "");
+    setAoBodyPart(p.aoBodyPart ?? "");
+    setAoBodyDetail(p.aoBodyDetail ?? "");
+    setAoRelaas(p.aoRelaas ?? "");
+    setAoInvestigation(p.aoInvestigation ?? "");
+    setKlSubmitterName(p.klSubmitterName ?? "");
+    setKlSubmitter(p.klSubmitter ?? "");
+    setKlEmail(p.klEmail ?? "");
+    setKlWorksite(p.klWorksite ?? "");
+    setKlDate(p.klDate ?? new Date().toISOString().slice(0, 10));
+    setKlCategory(p.klCategory ?? "");
+  };
+
+  const handleCancel = () => {
+    if (isDirty && !submitted) setShowCloseGuard(true);
+    else onClose();
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -178,6 +230,8 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
     }
 
     setSaving(false);
+    setSubmitted(true);
+    await draft.deleteDraft();
     toast.success("Melding aangemaakt");
     onCreated();
   };
@@ -363,10 +417,55 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
         </>
       )}
 
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={onClose}>Annuleren</Button>
+      <DialogFooter className="gap-2">
+        {draft.lastSavedAt && !submitted && (
+          <span className="text-xs text-muted-foreground mr-auto self-center">
+            Concept opgeslagen · {new Date(draft.lastSavedAt).toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" })}
+          </span>
+        )}
+        <Button type="button" variant="outline" onClick={handleCancel}>Annuleren</Button>
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={!isDirty || draft.saving || submitted}
+          onClick={() => draft.saveNow()}
+        >
+          {draft.saving ? "Opslaan…" : "Concept opslaan"}
+        </Button>
         <Button type="submit" disabled={saving}>Registreren</Button>
       </DialogFooter>
+
+      <UnsavedChangesDialog
+        open={showCloseGuard}
+        onOpenChange={setShowCloseGuard}
+        saving={draft.saving}
+        onSaveDraft={async () => {
+          await draft.saveNow();
+          setShowCloseGuard(false);
+          onClose();
+        }}
+        onDiscard={async () => {
+          await draft.deleteDraft();
+          setShowCloseGuard(false);
+          onClose();
+        }}
+      />
+      <RestoreDraftDialog
+        open={!!draft.existingDraft && draft.checkedForDraft}
+        lastSavedAt={draft.existingDraft?.last_saved_at}
+        onRestore={() => {
+          if (draft.existingDraft) {
+            applyDraft(draft.existingDraft.payload as typeof values);
+            initialRef.current = JSON.stringify(draft.existingDraft.payload);
+          }
+          draft.dismissRestore();
+        }}
+        onDiscard={async () => {
+          await draft.deleteDraft();
+          draft.dismissRestore();
+        }}
+      />
     </form>
   );
 }
+

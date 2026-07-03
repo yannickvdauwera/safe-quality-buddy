@@ -337,7 +337,7 @@ function EmployeesPage() {
                   <TableRow><TableCell colSpan={canEdit ? 7 : 6} className="text-center text-muted-foreground py-12">
                     {employees.length === 0 ? "Nog geen personeelsfiches. Maak er een aan om te starten." : "Geen resultaten voor je zoekopdracht."}
                   </TableCell></TableRow>
-                ) : filtered.map((e) => {
+                ) : sorted.map((e) => {
                   const functies = parseFunctions(e.function_title);
                   const isChecked = selected.has(e.id);
                   return (

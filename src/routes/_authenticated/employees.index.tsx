@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, UserPlus, UserCheck, UserX } from "lucide-react";
+import { Plus, Search, UserPlus, UserCheck, UserX, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { EmployeesImportDialog } from "@/components/EmployeesImportDialog";
 
 export const Route = createFileRoute("/_authenticated/employees/")({
@@ -56,6 +56,15 @@ function EmployeesPage() {
     function_title: "",
     status: "all" as "all" | "active" | "inactive",
   });
+  const [sort, setSort] = useState<{ column: string; dir: "asc" | "desc" } | null>(null);
+
+  const toggleSort = (column: string) => {
+    setSort((prev) => {
+      if (!prev || prev.column !== column) return { column, dir: "asc" };
+      if (prev.dir === "asc") return { column, dir: "desc" };
+      return null;
+    });
+  };
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ["employees"],
@@ -93,7 +102,21 @@ function EmployeesPage() {
     return true;
   });
 
-  const filteredIds = filtered.map((e) => e.id);
+  const sorted = [...filtered].sort((a, b) => {
+    if (!sort) return 0;
+    const dir = sort.dir === "asc" ? 1 : -1;
+    const av = sort.column === "name" ? `${a.last_name ?? ""} ${a.first_name ?? ""}`.trim().toLowerCase()
+      : sort.column === "status" ? (a.active ? "actief" : "uit dienst")
+      : (a[sort.column as keyof typeof a] ?? "").toString().toLowerCase();
+    const bv = sort.column === "name" ? `${b.last_name ?? ""} ${b.first_name ?? ""}`.trim().toLowerCase()
+      : sort.column === "status" ? (b.active ? "actief" : "uit dienst")
+      : (b[sort.column as keyof typeof b] ?? "").toString().toLowerCase();
+    if (av < bv) return -1 * dir;
+    if (av > bv) return 1 * dir;
+    return 0;
+  });
+
+  const filteredIds = sorted.map((e) => e.id);
   const allSelected = filteredIds.length > 0 && filteredIds.every((id) => selected.has(id));
   const someSelected = selected.size > 0 && !allSelected;
   const toggleAll = () => {
@@ -248,12 +271,25 @@ function EmployeesPage() {
                       />
                     </TableHead>
                   )}
-                  <TableHead>Naam</TableHead>
-                  <TableHead>Werkgever</TableHead>
-                  <TableHead>E-mail</TableHead>
-                  <TableHead>Telefoon</TableHead>
-                  <TableHead>Functies</TableHead>
-                  <TableHead>Status</TableHead>
+                  {([
+                    { key: "name", label: "Naam" },
+                    { key: "employer", label: "Werkgever" },
+                    { key: "email", label: "E-mail" },
+                    { key: "phone", label: "Telefoon" },
+                    { key: "function_title", label: "Functies" },
+                    { key: "status", label: "Status" },
+                  ] as const).map(({ key, label }) => {
+                    const active = sort?.column === key;
+                    const Icon = active ? (sort.dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
+                    return (
+                      <TableHead key={key} className="cursor-pointer select-none" onClick={() => toggleSort(key)}>
+                        <div className="flex items-center gap-1">
+                          {label}
+                          <Icon className={`w-3.5 h-3.5 ${active ? "text-foreground" : "text-muted-foreground/50"}`} />
+                        </div>
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
                 <TableRow className="bg-muted/30">
                   {canEdit && <TableHead className="py-2" />}
@@ -301,7 +337,7 @@ function EmployeesPage() {
                   <TableRow><TableCell colSpan={canEdit ? 7 : 6} className="text-center text-muted-foreground py-12">
                     {employees.length === 0 ? "Nog geen personeelsfiches. Maak er een aan om te starten." : "Geen resultaten voor je zoekopdracht."}
                   </TableCell></TableRow>
-                ) : filtered.map((e) => {
+                ) : sorted.map((e) => {
                   const functies = parseFunctions(e.function_title);
                   const isChecked = selected.has(e.id);
                   return (

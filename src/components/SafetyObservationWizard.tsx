@@ -597,10 +597,33 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
       )}
 
       {/* Navigation */}
-      <div className="flex items-center justify-between gap-2 pt-4 border-t">
-        <Button type="button" variant="ghost" onClick={onDone}>
-          <X className="w-4 h-4" /> Annuleren
-        </Button>
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-4 border-t">
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="ghost" onClick={requestClose}>
+            <X className="w-4 h-4" /> Annuleren
+          </Button>
+          {mode === "internal" && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={!isDirty || draft.saving || submitted}
+              onClick={async () => {
+                if (sigRef.current && !sigRef.current.isEmpty()) {
+                  setSignatureDataUrl(sigRef.current.getCanvas().toDataURL("image/png"));
+                }
+                await draft.saveNow();
+              }}
+            >
+              {draft.saving ? "Opslaan…" : "Concept opslaan"}
+            </Button>
+          )}
+          {mode === "internal" && draft.lastSavedAt && !submitted && (
+            <span className="text-xs text-muted-foreground">
+              · {new Date(draft.lastSavedAt).toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
+        </div>
         <div className="flex gap-2">
           {step > 0 && (
             <Button type="button" variant="outline" onClick={prev}>
@@ -626,6 +649,40 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
       {sigEmpty === false && step === 5 && (
         <p className="text-xs text-muted-foreground">Handtekening geregistreerd.</p>
       )}
+
+      <UnsavedChangesDialog
+        open={showCloseGuard}
+        onOpenChange={setShowCloseGuard}
+        saving={draft.saving}
+        onSaveDraft={async () => {
+          if (sigRef.current && !sigRef.current.isEmpty()) {
+            setSignatureDataUrl(sigRef.current.getCanvas().toDataURL("image/png"));
+          }
+          await draft.saveNow();
+          setShowCloseGuard(false);
+          onDone();
+        }}
+        onDiscard={async () => {
+          await draft.deleteDraft();
+          setShowCloseGuard(false);
+          onDone();
+        }}
+      />
+      <RestoreDraftDialog
+        open={mode === "internal" && !!draft.existingDraft && draft.checkedForDraft}
+        lastSavedAt={draft.existingDraft?.last_saved_at}
+        onRestore={() => {
+          if (draft.existingDraft) {
+            applyDraft(draft.existingDraft.payload as typeof draftValues);
+            initialRef.current = JSON.stringify(draft.existingDraft.payload);
+          }
+          draft.dismissRestore();
+        }}
+        onDiscard={async () => {
+          await draft.deleteDraft();
+          draft.dismissRestore();
+        }}
+      />
     </div>
   );
 }

@@ -1,6 +1,10 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import * as XLSX from "xlsx";
+import {
+  Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+  WidthType, BorderStyle, AlignmentType, Header, Footer, PageNumber, ShadingType, ImageRun,
+} from "docx";
 import { saveAs } from "file-saver";
 import { supabase } from "@/integrations/supabase/client";
 import tsaLogoUrl from "@/assets/tsa-logo.png";

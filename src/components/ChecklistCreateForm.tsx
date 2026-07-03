@@ -310,10 +310,55 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
         </div>
       )}
 
-      <DialogFooter>
-        <Button type="button" variant="outline" onClick={onClose}>Annuleren</Button>
+      <DialogFooter className="gap-2">
+        {draft.lastSavedAt && !submitted && (
+          <span className="text-xs text-muted-foreground mr-auto self-center">
+            Concept opgeslagen · {new Date(draft.lastSavedAt).toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" })}
+          </span>
+        )}
+        <Button type="button" variant="outline" onClick={handleCancel}>Annuleren</Button>
+        <Button
+          type="button"
+          variant="secondary"
+          disabled={!isDirty || draft.saving || submitted}
+          onClick={() => draft.saveNow()}
+        >
+          {draft.saving ? "Opslaan…" : "Concept opslaan"}
+        </Button>
         <Button type="submit" disabled={saving}>Registreren</Button>
       </DialogFooter>
+
+      <UnsavedChangesDialog
+        open={showCloseGuard}
+        onOpenChange={setShowCloseGuard}
+        saving={draft.saving}
+        onSaveDraft={async () => {
+          await draft.saveNow();
+          setShowCloseGuard(false);
+          onClose();
+        }}
+        onDiscard={async () => {
+          await draft.deleteDraft();
+          setShowCloseGuard(false);
+          onClose();
+        }}
+      />
+      <RestoreDraftDialog
+        open={!!draft.existingDraft && draft.checkedForDraft}
+        lastSavedAt={draft.existingDraft?.last_saved_at}
+        onRestore={() => {
+          if (draft.existingDraft) {
+            applyDraft(draft.existingDraft.payload as typeof values);
+            initialRef.current = JSON.stringify(draft.existingDraft.payload);
+          }
+          draft.dismissRestore();
+        }}
+        onDiscard={async () => {
+          await draft.deleteDraft();
+          draft.dismissRestore();
+        }}
+      />
     </form>
   );
 }
+

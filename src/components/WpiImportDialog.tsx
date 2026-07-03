@@ -185,8 +185,9 @@ export function WpiImportDialog() {
             last_name: last || "—",
             employer: e.employer || null,
             function_title: e.func || null,
-            active: false,
-            notes: "Automatisch aangemaakt via WPI-import",
+            active: newEmployeeActive,
+            notes: `Automatisch aangemaakt via WPI-import (${newEmployeeActive ? "actief" : "inactief"})`,
+
           };
         });
         const { data: created, error } = await supabase

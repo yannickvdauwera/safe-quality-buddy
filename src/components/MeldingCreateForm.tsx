@@ -230,6 +230,8 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
     }
 
     setSaving(false);
+    setSubmitted(true);
+    await draft.deleteDraft();
     toast.success("Melding aangemaakt");
     onCreated();
   };

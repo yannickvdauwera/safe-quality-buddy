@@ -169,13 +169,15 @@ export function EmployeesImportDialog() {
     new: rows.filter((r) => r.status === "new").length,
     dup: rows.filter((r) => r.status === "duplicate").length,
     inv: rows.filter((r) => r.status === "invalid").length,
+    skip: rows.filter((r) => r.status === "skip").length,
   };
 
   const filteredSortedRows = useMemo(() => {
     const q = search.trim().toLowerCase();
-    let list = rows;
+    let list: Array<{ row: ImportRow; idx: number }> = rows.map((row, idx) => ({ row, idx }));
+    if (statusFilter !== "all") list = list.filter(({ row }) => row.status === statusFilter);
     if (q) {
-      list = list.filter((r) => {
+      list = list.filter(({ row: r }) => {
         const d = r.data;
         const hay = [
           d?.first_name, d?.last_name, d?.nickname, d?.employer, d?.email,
@@ -197,14 +199,14 @@ export function EmployeesImportDialog() {
         }
       };
       list = [...list].sort((a, b) => {
-        const av = val(a), bv = val(b);
+        const av = val(a.row), bv = val(b.row);
         if (av < bv) return -1 * dir;
         if (av > bv) return 1 * dir;
         return 0;
       });
     }
     return list;
-  }, [rows, search, sortKey, sortDir]);
+  }, [rows, search, statusFilter, sortKey, sortDir]);
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {

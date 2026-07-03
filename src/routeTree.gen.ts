@@ -19,6 +19,7 @@ import { Route as AuthenticatedStopRouteImport } from './routes/_authenticated/s
 import { Route as AuthenticatedMosRouteImport } from './routes/_authenticated/mos'
 import { Route as AuthenticatedMeldingenRouteImport } from './routes/_authenticated/meldingen'
 import { Route as AuthenticatedInspectiesRouteImport } from './routes/_authenticated/inspecties'
+import { Route as AuthenticatedDraftsRouteImport } from './routes/_authenticated/drafts'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedToolboxesIndexRouteImport } from './routes/_authenticated/toolboxes.index'
 import { Route as AuthenticatedMeldingenIndexRouteImport } from './routes/_authenticated/meldingen.index'
@@ -83,6 +84,11 @@ const AuthenticatedMeldingenRoute = AuthenticatedMeldingenRouteImport.update({
 const AuthenticatedInspectiesRoute = AuthenticatedInspectiesRouteImport.update({
   id: '/inspecties',
   path: '/inspecties',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedDraftsRoute = AuthenticatedDraftsRouteImport.update({
+  id: '/drafts',
+  path: '/drafts',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
@@ -184,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/drafts': typeof AuthenticatedDraftsRoute
   '/inspecties': typeof AuthenticatedInspectiesRouteWithChildren
   '/meldingen': typeof AuthenticatedMeldingenRouteWithChildren
   '/mos': typeof AuthenticatedMosRoute
@@ -211,6 +218,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/drafts': typeof AuthenticatedDraftsRoute
   '/mos': typeof AuthenticatedMosRoute
   '/stop': typeof AuthenticatedStopRoute
   '/users': typeof AuthenticatedUsersRoute
@@ -238,6 +246,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/drafts': typeof AuthenticatedDraftsRoute
   '/_authenticated/inspecties': typeof AuthenticatedInspectiesRouteWithChildren
   '/_authenticated/meldingen': typeof AuthenticatedMeldingenRouteWithChildren
   '/_authenticated/mos': typeof AuthenticatedMosRoute
@@ -267,6 +276,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/drafts'
     | '/inspecties'
     | '/meldingen'
     | '/mos'
@@ -294,6 +304,7 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/dashboard'
+    | '/drafts'
     | '/mos'
     | '/stop'
     | '/users'
@@ -320,6 +331,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/_authenticated/dashboard'
+    | '/_authenticated/drafts'
     | '/_authenticated/inspecties'
     | '/_authenticated/meldingen'
     | '/_authenticated/mos'
@@ -423,6 +435,13 @@ declare module '@tanstack/react-router' {
       path: '/inspecties'
       fullPath: '/inspecties'
       preLoaderRoute: typeof AuthenticatedInspectiesRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/drafts': {
+      id: '/_authenticated/drafts'
+      path: '/drafts'
+      fullPath: '/drafts'
+      preLoaderRoute: typeof AuthenticatedDraftsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/dashboard': {
@@ -584,6 +603,7 @@ const AuthenticatedMeldingenRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDraftsRoute: typeof AuthenticatedDraftsRoute
   AuthenticatedInspectiesRoute: typeof AuthenticatedInspectiesRouteWithChildren
   AuthenticatedMeldingenRoute: typeof AuthenticatedMeldingenRouteWithChildren
   AuthenticatedMosRoute: typeof AuthenticatedMosRoute
@@ -599,6 +619,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDraftsRoute: AuthenticatedDraftsRoute,
   AuthenticatedInspectiesRoute: AuthenticatedInspectiesRouteWithChildren,
   AuthenticatedMeldingenRoute: AuthenticatedMeldingenRouteWithChildren,
   AuthenticatedMosRoute: AuthenticatedMosRoute,

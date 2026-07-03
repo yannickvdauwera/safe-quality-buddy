@@ -359,10 +359,58 @@ export function EmployeesImportDialog() {
               />
             </div>
 
+            <div className="flex items-center gap-2 text-xs flex-wrap">
+              <span className="text-muted-foreground">Filter:</span>
+              {(["all","new","duplicate","invalid","skip"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setStatusFilter(s)}
+                  className={`px-2 py-1 rounded border ${statusFilter === s ? "bg-primary text-primary-foreground border-primary" : "hover:bg-muted"}`}
+                >
+                  {s === "all" ? `Alle (${counts.total})`
+                    : s === "new" ? `Nieuw (${counts.new})`
+                    : s === "duplicate" ? `Duplicaat (${counts.dup})`
+                    : s === "invalid" ? `Ongeldig (${counts.inv})`
+                    : `Uitgesloten (${counts.skip})`}
+                </button>
+              ))}
+            </div>
+
+            {selected.size > 0 && (
+              <div className="flex flex-wrap items-center gap-2 p-2 border rounded-md bg-muted/30">
+                <span className="text-sm font-medium">{selected.size} geselecteerd</span>
+                <div className="flex items-center gap-1">
+                  <Input
+                    placeholder="Werkgever…"
+                    value={bulkEmployer}
+                    onChange={(e) => setBulkEmployer(e.target.value)}
+                    className="h-8 w-40"
+                  />
+                  <Button size="sm" variant="secondary" onClick={applyBulkEmployer}>
+                    <Users className="w-3 h-3" /> Werkgever
+                  </Button>
+                </div>
+                <Button size="sm" variant="outline" onClick={() => applyBulkActive(true)}>Actief</Button>
+                <Button size="sm" variant="outline" onClick={() => applyBulkActive(false)}>Inactief</Button>
+                <Button size="sm" variant="outline" onClick={() => applyBulkSkip(true)}>
+                  <Ban className="w-3 h-3" /> Uitsluiten
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => applyBulkSkip(false)}>Weer opnemen</Button>
+                <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Wis selectie</Button>
+              </div>
+            )}
+
             <div className="border rounded-md max-h-[45vh] overflow-y-auto">
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
+                    <TableHead className="w-8">
+                      <Checkbox
+                        checked={filteredSortedRows.length > 0 && filteredSortedRows.every(({ idx }) => selected.has(idx))}
+                        onCheckedChange={toggleAllVisible}
+                      />
+                    </TableHead>
                     <SortableHead k="status">Status</SortableHead>
                     <SortableHead k="name">Naam</SortableHead>
                     <SortableHead k="employer">Werkgever</SortableHead>
@@ -372,14 +420,22 @@ export function EmployeesImportDialog() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredSortedRows.map((r, i) => {
+                  {filteredSortedRows.map(({ row: r, idx }) => {
                     const effActive = r.data ? applyActive(r.data.active) : false;
+                    const dimmed = r.status === "duplicate" ? "opacity-50" : r.status === "invalid" ? "opacity-40" : r.status === "skip" ? "opacity-40" : "";
                     return (
-                      <TableRow key={i} className={r.status === "duplicate" ? "opacity-50" : r.status === "invalid" ? "opacity-40" : ""}>
+                      <TableRow key={idx} className={dimmed}>
+                        <TableCell>
+                          <Checkbox
+                            checked={selected.has(idx)}
+                            onCheckedChange={() => toggleOne(idx)}
+                          />
+                        </TableCell>
                         <TableCell className="text-xs">
                           {r.status === "new" && <span className="text-emerald-600 font-medium">Nieuw</span>}
                           {r.status === "duplicate" && <span className="text-muted-foreground">{r.reason}</span>}
                           {r.status === "invalid" && <span className="text-destructive">{r.reason}</span>}
+                          {r.status === "skip" && <span className="text-amber-600">Uitgesloten</span>}
                         </TableCell>
                         <TableCell>{r.data ? `${r.data.last_name} ${r.data.first_name}` : "—"}</TableCell>
                         <TableCell>{r.data?.employer ?? "—"}</TableCell>
@@ -391,8 +447,8 @@ export function EmployeesImportDialog() {
                   })}
                   {filteredSortedRows.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-6">
-                        Geen resultaten voor "{search}".
+                      <TableCell colSpan={7} className="text-center text-sm text-muted-foreground py-6">
+                        Geen resultaten.
                       </TableCell>
                     </TableRow>
                   )}

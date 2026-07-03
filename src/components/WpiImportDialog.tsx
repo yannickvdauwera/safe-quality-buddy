@@ -52,6 +52,13 @@ export function WpiImportDialog() {
   const [autoCreate, setAutoCreate] = useState(true);
   const [newEmployeeActive, setNewEmployeeActive] = useState(false);
   const [employees, setEmployees] = useState<{ id: string; first_name: string | null; last_name: string | null }[]>([]);
+  const [sortKey, setSortKey] = useState<"row" | "name" | "matched" | "date" | "worksite" | "answered" | "nok">("row");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const toggleSort = (key: typeof sortKey) => {
+    if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    else { setSortKey(key); setSortDir("asc"); }
+  };
+  const sortArrow = (key: typeof sortKey) => (sortKey === key ? (sortDir === "asc" ? " ▲" : " ▼") : "");
 
 
   const allQuestionKeys = WPI_CONFIG.sections.flatMap((s) => s.questions.map((q) => ({ key: q.key, label: q.label })));
@@ -329,17 +336,44 @@ export function WpiImportDialog() {
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
-                    <TableHead>#</TableHead>
-                    <TableHead>Naam</TableHead>
-                    <TableHead>Match</TableHead>
-                    <TableHead>Datum</TableHead>
-                    <TableHead>Werflocatie</TableHead>
-                    <TableHead>Antw.</TableHead>
-                    <TableHead>NOK</TableHead>
+                    <TableHead onClick={() => toggleSort("row")} className="cursor-pointer select-none">#{sortArrow("row")}</TableHead>
+                    <TableHead onClick={() => toggleSort("name")} className="cursor-pointer select-none">Naam{sortArrow("name")}</TableHead>
+                    <TableHead onClick={() => toggleSort("matched")} className="cursor-pointer select-none">Match{sortArrow("matched")}</TableHead>
+                    <TableHead onClick={() => toggleSort("date")} className="cursor-pointer select-none">Datum{sortArrow("date")}</TableHead>
+                    <TableHead onClick={() => toggleSort("worksite")} className="cursor-pointer select-none">Werflocatie{sortArrow("worksite")}</TableHead>
+                    <TableHead onClick={() => toggleSort("answered")} className="cursor-pointer select-none">Antw.{sortArrow("answered")}</TableHead>
+                    <TableHead onClick={() => toggleSort("nok")} className="cursor-pointer select-none">NOK{sortArrow("nok")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rows.slice(0, 500).map((r) => {
+                  {[...rows].sort((a, b) => {
+                    const dir = sortDir === "asc" ? 1 : -1;
+                    const av = (() => {
+                      switch (sortKey) {
+                        case "row": return a.row;
+                        case "name": return (a.name || "").toLowerCase();
+                        case "matched": return a.matched ? 1 : 0;
+                        case "date": return a.date ?? "";
+                        case "worksite": return (a.worksite || "").toLowerCase();
+                        case "answered": return Object.keys(a.answers).length;
+                        case "nok": return Object.values(a.answers).filter((v) => v === "nok").length;
+                      }
+                    })();
+                    const bv = (() => {
+                      switch (sortKey) {
+                        case "row": return b.row;
+                        case "name": return (b.name || "").toLowerCase();
+                        case "matched": return b.matched ? 1 : 0;
+                        case "date": return b.date ?? "";
+                        case "worksite": return (b.worksite || "").toLowerCase();
+                        case "answered": return Object.keys(b.answers).length;
+                        case "nok": return Object.values(b.answers).filter((v) => v === "nok").length;
+                      }
+                    })();
+                    if (av! < bv!) return -1 * dir;
+                    if (av! > bv!) return 1 * dir;
+                    return 0;
+                  }).slice(0, 500).map((r) => {
                     const answered = Object.keys(r.answers).length;
                     const nok = Object.values(r.answers).filter((v) => v === "nok").length;
                     const currentEmp = r.employeeId ? employees.find((e) => e.id === r.employeeId) : null;

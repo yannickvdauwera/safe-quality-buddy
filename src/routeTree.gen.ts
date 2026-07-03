@@ -25,13 +25,11 @@ import { Route as AuthenticatedMeldingenIndexRouteImport } from './routes/_authe
 import { Route as AuthenticatedInspectiesIndexRouteImport } from './routes/_authenticated/inspecties.index'
 import { Route as AuthenticatedEmployeesIndexRouteImport } from './routes/_authenticated/employees.index'
 import { Route as ApiPublicToolboxSignRouteImport } from './routes/api/public/toolbox-sign'
-import { Route as ApiPublicMondayWebhookRouteImport } from './routes/api/public/monday-webhook'
 import { Route as AuthenticatedToolboxesNewRouteImport } from './routes/_authenticated/toolboxes.new'
 import { Route as AuthenticatedToolboxesIdRouteImport } from './routes/_authenticated/toolboxes.$id'
 import { Route as AuthenticatedMeldingenOngevallenRouteImport } from './routes/_authenticated/meldingen.ongevallen'
 import { Route as AuthenticatedMeldingenInternRouteImport } from './routes/_authenticated/meldingen.intern'
 import { Route as AuthenticatedMeldingenIdRouteImport } from './routes/_authenticated/meldingen.$id'
-import { Route as AuthenticatedIntegratiesMondayRouteImport } from './routes/_authenticated/integraties.monday'
 import { Route as AuthenticatedInspectiesWpiRouteImport } from './routes/_authenticated/inspecties.wpi'
 import { Route as AuthenticatedInspectiesKwaliteitRouteImport } from './routes/_authenticated/inspecties.kwaliteit'
 import { Route as AuthenticatedInspectiesIdRouteImport } from './routes/_authenticated/inspecties.$id'
@@ -121,11 +119,6 @@ const ApiPublicToolboxSignRoute = ApiPublicToolboxSignRouteImport.update({
   path: '/api/public/toolbox-sign',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiPublicMondayWebhookRoute = ApiPublicMondayWebhookRouteImport.update({
-  id: '/api/public/monday-webhook',
-  path: '/api/public/monday-webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedToolboxesNewRoute =
   AuthenticatedToolboxesNewRouteImport.update({
     id: '/toolboxes/new',
@@ -155,12 +148,6 @@ const AuthenticatedMeldingenIdRoute =
     id: '/$id',
     path: '/$id',
     getParentRoute: () => AuthenticatedMeldingenRoute,
-  } as any)
-const AuthenticatedIntegratiesMondayRoute =
-  AuthenticatedIntegratiesMondayRouteImport.update({
-    id: '/integraties/monday',
-    path: '/integraties/monday',
-    getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedInspectiesWpiRoute =
   AuthenticatedInspectiesWpiRouteImport.update({
@@ -208,13 +195,11 @@ export interface FileRoutesByFullPath {
   '/inspecties/$id': typeof AuthenticatedInspectiesIdRoute
   '/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
   '/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
-  '/integraties/monday': typeof AuthenticatedIntegratiesMondayRoute
   '/meldingen/$id': typeof AuthenticatedMeldingenIdRoute
   '/meldingen/intern': typeof AuthenticatedMeldingenInternRoute
   '/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
   '/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
-  '/api/public/monday-webhook': typeof ApiPublicMondayWebhookRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
   '/employees/': typeof AuthenticatedEmployeesIndexRoute
   '/inspecties/': typeof AuthenticatedInspectiesIndexRoute
@@ -235,13 +220,11 @@ export interface FileRoutesByTo {
   '/inspecties/$id': typeof AuthenticatedInspectiesIdRoute
   '/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
   '/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
-  '/integraties/monday': typeof AuthenticatedIntegratiesMondayRoute
   '/meldingen/$id': typeof AuthenticatedMeldingenIdRoute
   '/meldingen/intern': typeof AuthenticatedMeldingenInternRoute
   '/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
   '/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
-  '/api/public/monday-webhook': typeof ApiPublicMondayWebhookRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
   '/employees': typeof AuthenticatedEmployeesIndexRoute
   '/inspecties': typeof AuthenticatedInspectiesIndexRoute
@@ -266,13 +249,11 @@ export interface FileRoutesById {
   '/_authenticated/inspecties/$id': typeof AuthenticatedInspectiesIdRoute
   '/_authenticated/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
   '/_authenticated/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
-  '/_authenticated/integraties/monday': typeof AuthenticatedIntegratiesMondayRoute
   '/_authenticated/meldingen/$id': typeof AuthenticatedMeldingenIdRoute
   '/_authenticated/meldingen/intern': typeof AuthenticatedMeldingenInternRoute
   '/_authenticated/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
   '/_authenticated/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/_authenticated/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
-  '/api/public/monday-webhook': typeof ApiPublicMondayWebhookRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
   '/_authenticated/employees/': typeof AuthenticatedEmployeesIndexRoute
   '/_authenticated/inspecties/': typeof AuthenticatedInspectiesIndexRoute
@@ -297,13 +278,11 @@ export interface FileRouteTypes {
     | '/inspecties/$id'
     | '/inspecties/kwaliteit'
     | '/inspecties/wpi'
-    | '/integraties/monday'
     | '/meldingen/$id'
     | '/meldingen/intern'
     | '/meldingen/ongevallen'
     | '/toolboxes/$id'
     | '/toolboxes/new'
-    | '/api/public/monday-webhook'
     | '/api/public/toolbox-sign'
     | '/employees/'
     | '/inspecties/'
@@ -324,13 +303,11 @@ export interface FileRouteTypes {
     | '/inspecties/$id'
     | '/inspecties/kwaliteit'
     | '/inspecties/wpi'
-    | '/integraties/monday'
     | '/meldingen/$id'
     | '/meldingen/intern'
     | '/meldingen/ongevallen'
     | '/toolboxes/$id'
     | '/toolboxes/new'
-    | '/api/public/monday-webhook'
     | '/api/public/toolbox-sign'
     | '/employees'
     | '/inspecties'
@@ -354,13 +331,11 @@ export interface FileRouteTypes {
     | '/_authenticated/inspecties/$id'
     | '/_authenticated/inspecties/kwaliteit'
     | '/_authenticated/inspecties/wpi'
-    | '/_authenticated/integraties/monday'
     | '/_authenticated/meldingen/$id'
     | '/_authenticated/meldingen/intern'
     | '/_authenticated/meldingen/ongevallen'
     | '/_authenticated/toolboxes/$id'
     | '/_authenticated/toolboxes/new'
-    | '/api/public/monday-webhook'
     | '/api/public/toolbox-sign'
     | '/_authenticated/employees/'
     | '/_authenticated/inspecties/'
@@ -375,7 +350,6 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   ReportTypeRoute: typeof ReportTypeRoute
   SignTokenRoute: typeof SignTokenRoute
-  ApiPublicMondayWebhookRoute: typeof ApiPublicMondayWebhookRoute
   ApiPublicToolboxSignRoute: typeof ApiPublicToolboxSignRoute
 }
 
@@ -493,13 +467,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicToolboxSignRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/public/monday-webhook': {
-      id: '/api/public/monday-webhook'
-      path: '/api/public/monday-webhook'
-      fullPath: '/api/public/monday-webhook'
-      preLoaderRoute: typeof ApiPublicMondayWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/toolboxes/new': {
       id: '/_authenticated/toolboxes/new'
       path: '/toolboxes/new'
@@ -534,13 +501,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/meldingen/$id'
       preLoaderRoute: typeof AuthenticatedMeldingenIdRouteImport
       parentRoute: typeof AuthenticatedMeldingenRoute
-    }
-    '/_authenticated/integraties/monday': {
-      id: '/_authenticated/integraties/monday'
-      path: '/integraties/monday'
-      fullPath: '/integraties/monday'
-      preLoaderRoute: typeof AuthenticatedIntegratiesMondayRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/inspecties/wpi': {
       id: '/_authenticated/inspecties/wpi'
@@ -630,7 +590,6 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedStopRoute: typeof AuthenticatedStopRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedEmployeesIdRoute: typeof AuthenticatedEmployeesIdRoute
-  AuthenticatedIntegratiesMondayRoute: typeof AuthenticatedIntegratiesMondayRoute
   AuthenticatedToolboxesIdRoute: typeof AuthenticatedToolboxesIdRoute
   AuthenticatedToolboxesNewRoute: typeof AuthenticatedToolboxesNewRoute
   AuthenticatedEmployeesIndexRoute: typeof AuthenticatedEmployeesIndexRoute
@@ -646,7 +605,6 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedStopRoute: AuthenticatedStopRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedEmployeesIdRoute: AuthenticatedEmployeesIdRoute,
-  AuthenticatedIntegratiesMondayRoute: AuthenticatedIntegratiesMondayRoute,
   AuthenticatedToolboxesIdRoute: AuthenticatedToolboxesIdRoute,
   AuthenticatedToolboxesNewRoute: AuthenticatedToolboxesNewRoute,
   AuthenticatedEmployeesIndexRoute: AuthenticatedEmployeesIndexRoute,
@@ -663,7 +621,6 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   ReportTypeRoute: ReportTypeRoute,
   SignTokenRoute: SignTokenRoute,
-  ApiPublicMondayWebhookRoute: ApiPublicMondayWebhookRoute,
   ApiPublicToolboxSignRoute: ApiPublicToolboxSignRoute,
 }
 export const routeTree = rootRouteImport

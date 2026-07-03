@@ -338,7 +338,10 @@ export function WpiImportDialog() {
   const unmatched = rows.length - matched;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setRows([]); setFileName(""); } }}>
+    <Dialog open={open} onOpenChange={(v) => {
+      if (!v && rows.length > 0) { setConfirmCloseOpen(true); return; }
+      setOpen(v); if (!v) { setRows([]); setFileName(""); }
+    }}>
       <DialogTrigger asChild>
         <Button variant="outline"><Upload className="w-4 h-4" /> Importeer Excel</Button>
       </DialogTrigger>

@@ -433,8 +433,8 @@ export function WpiImportDialog() {
                     // Prefill from first selected row (name split)
                     const first = rows.find((r) => selected.has(r.row));
                     if (first?.name) {
-                      const { first_name, last_name } = splitFullName(first.name);
-                      setNewEmpForm((f) => ({ ...f, first_name: first_name || "", last_name: last_name || "" }));
+                      const { first, last } = splitFullName(first.name);
+                      setNewEmpForm((f) => ({ ...f, first_name: first || "", last_name: last || "" }));
                     }
                     setNewEmpOpen(true);
                   }}

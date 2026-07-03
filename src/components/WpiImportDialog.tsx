@@ -9,7 +9,9 @@ import {
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, FileSpreadsheet, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Upload, FileSpreadsheet, Loader2, UserPlus } from "lucide-react";
 import {
   readSheetAsMatrix, findHeaderRow, matrixToRecords, splitFullName, cellString,
   nameKey, parseDateCell,
@@ -54,6 +56,10 @@ export function WpiImportDialog() {
   const [employees, setEmployees] = useState<{ id: string; first_name: string | null; last_name: string | null }[]>([]);
   const [sortKey, setSortKey] = useState<"row" | "name" | "matched" | "date" | "worksite" | "answered" | "nok">("row");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "matched" | "unmatched">("all");
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [bulkEmployee, setBulkEmployee] = useState("");
   const toggleSort = (key: typeof sortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortKey(key); setSortDir("asc"); }
@@ -73,6 +79,21 @@ export function WpiImportDialog() {
       return { ...r, employeeId, matched: true };
     }));
   };
+
+  const applyBulkAssign = () => {
+    const v = bulkEmployee.trim().toLowerCase();
+    if (!v) return toast.error("Kies eerst een medewerker");
+    if (selected.size === 0) return toast.error("Selecteer eerst rijen");
+    const found = employees.find(
+      (e) => `${e.last_name ?? ""} ${e.first_name ?? ""}`.trim().toLowerCase() === v,
+    );
+    if (!found) return toast.error("Onbekende medewerker");
+    setRows((prev) => prev.map((r) => (selected.has(r.row) ? { ...r, employeeId: found.id, matched: true } : r)));
+    toast.success(`${selected.size} rij(en) toegewezen aan ${found.last_name ?? ""} ${found.first_name ?? ""}`);
+    setSelected(new Set());
+  };
+
+
 
   const handleFile = async (file: File) => {
     setParsing(true);
@@ -332,95 +353,161 @@ export function WpiImportDialog() {
                 return <option key={emp.id} value={label} />;
               })}
             </datalist>
-            <div className="border rounded-md max-h-[45vh] overflow-y-auto">
-              <Table>
-                <TableHeader className="sticky top-0 bg-background z-10">
-                  <TableRow>
-                    <TableHead onClick={() => toggleSort("row")} className="cursor-pointer select-none">#{sortArrow("row")}</TableHead>
-                    <TableHead onClick={() => toggleSort("name")} className="cursor-pointer select-none">Naam{sortArrow("name")}</TableHead>
-                    <TableHead onClick={() => toggleSort("matched")} className="cursor-pointer select-none">Match{sortArrow("matched")}</TableHead>
-                    <TableHead onClick={() => toggleSort("date")} className="cursor-pointer select-none">Datum{sortArrow("date")}</TableHead>
-                    <TableHead onClick={() => toggleSort("worksite")} className="cursor-pointer select-none">Werflocatie{sortArrow("worksite")}</TableHead>
-                    <TableHead onClick={() => toggleSort("answered")} className="cursor-pointer select-none">Antw.{sortArrow("answered")}</TableHead>
-                    <TableHead onClick={() => toggleSort("nok")} className="cursor-pointer select-none">NOK{sortArrow("nok")}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {[...rows].sort((a, b) => {
-                    const dir = sortDir === "asc" ? 1 : -1;
-                    const av = (() => {
-                      switch (sortKey) {
-                        case "row": return a.row;
-                        case "name": return (a.name || "").toLowerCase();
-                        case "matched": return a.matched ? 1 : 0;
-                        case "date": return a.date ?? "";
-                        case "worksite": return (a.worksite || "").toLowerCase();
-                        case "answered": return Object.keys(a.answers).length;
-                        case "nok": return Object.values(a.answers).filter((v) => v === "nok").length;
-                      }
-                    })();
-                    const bv = (() => {
-                      switch (sortKey) {
-                        case "row": return b.row;
-                        case "name": return (b.name || "").toLowerCase();
-                        case "matched": return b.matched ? 1 : 0;
-                        case "date": return b.date ?? "";
-                        case "worksite": return (b.worksite || "").toLowerCase();
-                        case "answered": return Object.keys(b.answers).length;
-                        case "nok": return Object.values(b.answers).filter((v) => v === "nok").length;
-                      }
-                    })();
-                    if (av! < bv!) return -1 * dir;
-                    if (av! > bv!) return 1 * dir;
-                    return 0;
-                  }).slice(0, 500).map((r) => {
-                    const answered = Object.keys(r.answers).length;
-                    const nok = Object.values(r.answers).filter((v) => v === "nok").length;
-                    const currentEmp = r.employeeId ? employees.find((e) => e.id === r.employeeId) : null;
-                    const currentLabel = currentEmp
-                      ? `${currentEmp.last_name ?? ""} ${currentEmp.first_name ?? ""}`.trim()
-                      : "";
-                    const onPick = (val: string) => {
-                      const v = val.trim().toLowerCase();
-                      if (!v) return setRowEmployee(r.row, "");
-                      const found = employees.find(
-                        (e) => `${e.last_name ?? ""} ${e.first_name ?? ""}`.trim().toLowerCase() === v,
-                      );
-                      if (found) setRowEmployee(r.row, found.id);
-                    };
-                    return (
-                      <TableRow key={r.row}>
-                        <TableCell className="text-xs text-muted-foreground">{r.row}</TableCell>
-                        <TableCell className="text-sm">{r.name || "—"}</TableCell>
-                        <TableCell className="text-xs">
-                          <div className="flex items-center gap-2">
-                            {r.matched && <span className="text-emerald-600 font-medium">✓</span>}
-                            <input
-                              type="text"
-                              list="wpi-emp-options"
-                              defaultValue={currentLabel}
-                              placeholder={r.matched ? "" : autoCreate ? "Nieuw wordt aangemaakt…" : "Zoek medewerker…"}
-                              onChange={(e) => onPick(e.target.value)}
-                              onBlur={(e) => onPick(e.target.value)}
-                              className="h-7 rounded-md border border-input bg-background px-2 text-xs w-[200px]"
-                            />
-                          </div>
-                        </TableCell>
-                        <TableCell className="text-xs">{r.date ? new Date(r.date).toLocaleDateString("nl-BE") : "—"}</TableCell>
-                        <TableCell className="text-xs">{r.worksite || "—"}</TableCell>
-                        <TableCell className="text-xs">{answered}</TableCell>
-                        <TableCell className={`text-xs ${nok > 0 ? "text-destructive font-medium" : ""}`}>{nok}</TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-              {rows.length > 500 && (
-                <p className="text-xs text-center text-muted-foreground py-2">
-                  Voorbeeld beperkt tot 500 rijen — alle {rows.length} worden geïmporteerd.
-                </p>
-              )}
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-2 flex-wrap">
+                <Input
+                  placeholder="Zoek op naam of werflocatie…"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="h-9 sm:w-64"
+                />
+                <div className="flex items-center gap-2 text-sm">
+                  {(["all", "matched", "unmatched"] as const).map((s) => (
+                    <label key={s} className="flex items-center gap-1">
+                      <input type="radio" name="wpi-status-filter" checked={statusFilter === s}
+                        onChange={() => setStatusFilter(s)} />
+                      {s === "all" ? "Alle" : s === "matched" ? "Gekoppeld" : "Niet gekoppeld"}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">{selected.size} geselecteerd</span>
+                <input
+                  type="text"
+                  list="wpi-emp-options"
+                  value={bulkEmployee}
+                  onChange={(e) => setBulkEmployee(e.target.value)}
+                  placeholder="Wijs toe aan medewerker…"
+                  className="h-9 rounded-md border border-input bg-background px-2 text-sm w-[220px]"
+                />
+                <Button size="sm" variant="secondary" onClick={applyBulkAssign} disabled={selected.size === 0 || !bulkEmployee.trim()}>
+                  <UserPlus className="w-4 h-4" /> Toewijzen
+                </Button>
+              </div>
             </div>
+
+            {(() => {
+              const q = search.trim().toLowerCase();
+              const filtered = rows.filter((r) => {
+                if (statusFilter === "matched" && !r.matched) return false;
+                if (statusFilter === "unmatched" && r.matched) return false;
+                if (!q) return true;
+                return (r.name || "").toLowerCase().includes(q) || (r.worksite || "").toLowerCase().includes(q);
+              });
+              const sorted = [...filtered].sort((a, b) => {
+                const dir = sortDir === "asc" ? 1 : -1;
+                const pick = (r: RowResult) => {
+                  switch (sortKey) {
+                    case "row": return r.row;
+                    case "name": return (r.name || "").toLowerCase();
+                    case "matched": return r.matched ? 1 : 0;
+                    case "date": return r.date ?? "";
+                    case "worksite": return (r.worksite || "").toLowerCase();
+                    case "answered": return Object.keys(r.answers).length;
+                    case "nok": return Object.values(r.answers).filter((v) => v === "nok").length;
+                  }
+                };
+                const av = pick(a), bv = pick(b);
+                if (av! < bv!) return -1 * dir;
+                if (av! > bv!) return 1 * dir;
+                return 0;
+              });
+              const visible = sorted.slice(0, 500);
+              const allVisibleSelected = visible.length > 0 && visible.every((r) => selected.has(r.row));
+              const toggleAllVisible = (checked: boolean) => {
+                setSelected((prev) => {
+                  const next = new Set(prev);
+                  visible.forEach((r) => { if (checked) next.add(r.row); else next.delete(r.row); });
+                  return next;
+                });
+              };
+              const toggleOne = (rowNum: number, checked: boolean) => {
+                setSelected((prev) => {
+                  const next = new Set(prev);
+                  if (checked) next.add(rowNum); else next.delete(rowNum);
+                  return next;
+                });
+              };
+              return (
+                <div className="border rounded-md max-h-[45vh] overflow-y-auto">
+                  <Table>
+                    <TableHeader className="sticky top-0 bg-background z-10">
+                      <TableRow>
+                        <TableHead className="w-8">
+                          <Checkbox checked={allVisibleSelected} onCheckedChange={(c) => toggleAllVisible(!!c)} />
+                        </TableHead>
+                        <TableHead onClick={() => toggleSort("row")} className="cursor-pointer select-none">#{sortArrow("row")}</TableHead>
+                        <TableHead onClick={() => toggleSort("name")} className="cursor-pointer select-none">Naam{sortArrow("name")}</TableHead>
+                        <TableHead onClick={() => toggleSort("matched")} className="cursor-pointer select-none">Match{sortArrow("matched")}</TableHead>
+                        <TableHead onClick={() => toggleSort("date")} className="cursor-pointer select-none">Datum{sortArrow("date")}</TableHead>
+                        <TableHead onClick={() => toggleSort("worksite")} className="cursor-pointer select-none">Werflocatie{sortArrow("worksite")}</TableHead>
+                        <TableHead onClick={() => toggleSort("answered")} className="cursor-pointer select-none">Antw.{sortArrow("answered")}</TableHead>
+                        <TableHead onClick={() => toggleSort("nok")} className="cursor-pointer select-none">NOK{sortArrow("nok")}</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {visible.map((r) => {
+                        const answered = Object.keys(r.answers).length;
+                        const nok = Object.values(r.answers).filter((v) => v === "nok").length;
+                        const currentEmp = r.employeeId ? employees.find((e) => e.id === r.employeeId) : null;
+                        const currentLabel = currentEmp
+                          ? `${currentEmp.last_name ?? ""} ${currentEmp.first_name ?? ""}`.trim()
+                          : "";
+                        const onPick = (val: string) => {
+                          const v = val.trim().toLowerCase();
+                          if (!v) return setRowEmployee(r.row, "");
+                          const found = employees.find(
+                            (e) => `${e.last_name ?? ""} ${e.first_name ?? ""}`.trim().toLowerCase() === v,
+                          );
+                          if (found) setRowEmployee(r.row, found.id);
+                        };
+                        return (
+                          <TableRow key={r.row}>
+                            <TableCell>
+                              <Checkbox checked={selected.has(r.row)} onCheckedChange={(c) => toggleOne(r.row, !!c)} />
+                            </TableCell>
+                            <TableCell className="text-xs text-muted-foreground">{r.row}</TableCell>
+                            <TableCell className="text-sm">{r.name || "—"}</TableCell>
+                            <TableCell className="text-xs">
+                              <div className="flex items-center gap-2">
+                                {r.matched && <span className="text-emerald-600 font-medium">✓</span>}
+                                <input
+                                  type="text"
+                                  list="wpi-emp-options"
+                                  defaultValue={currentLabel}
+                                  placeholder={r.matched ? "" : autoCreate ? "Nieuw wordt aangemaakt…" : "Zoek medewerker…"}
+                                  onChange={(e) => onPick(e.target.value)}
+                                  onBlur={(e) => onPick(e.target.value)}
+                                  className="h-7 rounded-md border border-input bg-background px-2 text-xs w-[200px]"
+                                />
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-xs">{r.date ? new Date(r.date).toLocaleDateString("nl-BE") : "—"}</TableCell>
+                            <TableCell className="text-xs">{r.worksite || "—"}</TableCell>
+                            <TableCell className="text-xs">{answered}</TableCell>
+                            <TableCell className={`text-xs ${nok > 0 ? "text-destructive font-medium" : ""}`}>{nok}</TableCell>
+                          </TableRow>
+                        );
+                      })}
+                      {visible.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={8} className="text-center text-sm text-muted-foreground py-6">
+                            Geen rijen voor deze filter.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                  {filtered.length > 500 && (
+                    <p className="text-xs text-center text-muted-foreground py-2">
+                      Voorbeeld beperkt tot 500 rijen — alle {filtered.length} filtresultaten worden meegenomen bij import/toewijzing.
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
 
           </>
         )}

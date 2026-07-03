@@ -125,6 +125,7 @@ export function EmployeesImportDialog() {
       });
       setRows(parsed);
       setSelected(new Set());
+    } catch (err: unknown) {
       toast.error((err as Error).message || "Excel kon niet gelezen worden");
     } finally {
       setParsing(false);

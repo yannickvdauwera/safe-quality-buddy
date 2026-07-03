@@ -18,7 +18,7 @@ import {
   Hand,
   ChevronDown,
   ChevronRight,
-  Plug,
+  
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -96,7 +96,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           icon: Wrench,
           children: [
             { to: "/users", label: "Gebruikers & rollen", icon: Shield },
-            { to: "/integraties/monday", label: "Monday-integratie", icon: Plug },
           ],
         },
       ]

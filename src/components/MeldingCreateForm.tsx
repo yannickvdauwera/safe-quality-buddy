@@ -290,7 +290,32 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Slachtoffernaam *</Label>
-              <Input value={aoVictimName} onChange={(e) => setAoVictimName(e.target.value)} placeholder="Achternaam, Voornaam" required />
+              <Input
+                list="employees-datalist"
+                value={aoVictimName}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setAoVictimName(v);
+                  const match = employees.find(
+                    (emp) => `${emp.last_name}, ${emp.first_name}` === v,
+                  );
+                  if (match) {
+                    if (!involvedFirm && match.employer) setInvolvedFirm(match.employer);
+                  }
+                }}
+                placeholder="Achternaam, Voornaam (kies uit lijst of typ zelf)"
+                required
+              />
+              <datalist id="employees-datalist">
+                {employees.map((emp) => (
+                  <option
+                    key={emp.id}
+                    value={`${emp.last_name}, ${emp.first_name}`}
+                  >
+                    {emp.function_title ?? ""}{emp.employer ? ` — ${emp.employer}` : ""}
+                  </option>
+                ))}
+              </datalist>
             </div>
             <div className="space-y-1.5">
               <Label>Hulpverlener *</Label>

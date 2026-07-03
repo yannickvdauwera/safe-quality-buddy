@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
@@ -65,6 +69,7 @@ export function WpiImportDialog() {
     first_name: "", last_name: "", email: "", phone: "", function_title: "", employer: "", active: true,
   });
   const [creatingEmp, setCreatingEmp] = useState(false);
+  const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
   const toggleSort = (key: typeof sortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortKey(key); setSortDir("asc"); }
@@ -333,7 +338,10 @@ export function WpiImportDialog() {
   const unmatched = rows.length - matched;
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setRows([]); setFileName(""); } }}>
+    <Dialog open={open} onOpenChange={(v) => {
+      if (!v && rows.length > 0) { setConfirmCloseOpen(true); return; }
+      setOpen(v); if (!v) { setRows([]); setFileName(""); }
+    }}>
       <DialogTrigger asChild>
         <Button variant="outline"><Upload className="w-4 h-4" /> Importeer Excel</Button>
       </DialogTrigger>
@@ -570,7 +578,10 @@ export function WpiImportDialog() {
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Annuleren</Button>
+          <Button variant="outline" onClick={() => {
+            if (rows.length > 0) { setConfirmCloseOpen(true); }
+            else { setOpen(false); }
+          }}>Annuleren</Button>
           <Button onClick={doImport} disabled={importing || rows.length === 0}>
             {importing
               ? <><Loader2 className="w-4 h-4 animate-spin" /> Importeren…</>
@@ -631,6 +642,31 @@ export function WpiImportDialog() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={confirmCloseOpen} onOpenChange={setConfirmCloseOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Importeren afbreken?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Je hebt {rows.length} rij(en) geladen die nog niet zijn geïmporteerd. Als je dit venster sluit, gaan deze gegevens verloren.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmCloseOpen(false)}>Nee, blijf open</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setConfirmCloseOpen(false);
+              setOpen(false);
+              setRows([]);
+              setFileName("");
+              setSearch("");
+              setSelected(new Set());
+              setStatusFilter("all");
+            }}>
+              Ja, sluit venster
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

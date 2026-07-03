@@ -6,6 +6,10 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel,
+} from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
@@ -82,6 +86,7 @@ export function EmployeesImportDialog() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [statusOverride, setStatusOverride] = useState<StatusOverride>("excel");
   const queryClient = useQueryClient();
+  const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
 
   const handleFile = async (file: File) => {
     setParsing(true);
@@ -222,7 +227,10 @@ export function EmployeesImportDialog() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setRows([]); setFileName(""); setSearch(""); } }}>
+    <Dialog open={open} onOpenChange={(v) => {
+      if (!v && rows.length > 0) { setConfirmCloseOpen(true); return; }
+      setOpen(v); if (!v) { setRows([]); setFileName(""); setSearch(""); }
+    }}>
       <DialogTrigger asChild>
         <Button variant="outline"><Upload className="w-4 h-4" /> Importeer Excel</Button>
       </DialogTrigger>
@@ -339,12 +347,38 @@ export function EmployeesImportDialog() {
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Annuleren</Button>
+          <Button variant="outline" onClick={() => {
+            if (rows.length > 0) { setConfirmCloseOpen(true); }
+            else { setOpen(false); }
+          }}>Annuleren</Button>
           <Button onClick={doImport} disabled={importing || counts.new === 0}>
             {importing ? <><Loader2 className="w-4 h-4 animate-spin" /> Importeren…</> : `Importeer ${counts.new} nieuwe`}
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <AlertDialog open={confirmCloseOpen} onOpenChange={setConfirmCloseOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Importeren afbreken?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Je hebt {rows.length} rij(en) geladen die nog niet zijn geïmporteerd. Als je dit venster sluit, gaan deze gegevens verloren.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setConfirmCloseOpen(false)}>Nee, blijf open</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              setConfirmCloseOpen(false);
+              setOpen(false);
+              setRows([]);
+              setFileName("");
+              setSearch("");
+            }}>
+              Ja, sluit venster
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }

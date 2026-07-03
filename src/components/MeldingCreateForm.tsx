@@ -82,6 +82,56 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
   const [klDate, setKlDate] = useState<string>(new Date().toISOString().slice(0, 10));
   const [klCategory, setKlCategory] = useState<string>("");
 
+  // ---------- Concept / draft ----------
+  const [submitted, setSubmitted] = useState(false);
+  const [showCloseGuard, setShowCloseGuard] = useState(false);
+  const values = {
+    type, severity, title, description, location, involvedFirm,
+    aoIncidentDate, aoIncidentType, aoFirstAider, aoVictimName, aoContractType,
+    aoBodyPart, aoBodyDetail, aoRelaas, aoInvestigation,
+    klSubmitterName, klSubmitter, klEmail, klWorksite, klDate, klCategory,
+  };
+  const initialRef = useRef(JSON.stringify(values));
+  const isDirty = useMemo(() => JSON.stringify(values) !== initialRef.current, [values]);
+  const draftTitle = title || (type === "ao_ehbo" ? aoVictimName : type === "klacht" ? klSubmitterName : null) || "Melding (concept)";
+  const draft = useDraftForm({
+    formType: `melding:${defaultType}`,
+    values,
+    isDirty,
+    isSubmitted: submitted,
+    title: draftTitle,
+  });
+
+  const applyDraft = (p: typeof values) => {
+    setType(p.type ?? defaultType);
+    setSeverity(p.severity ?? "middel");
+    setTitle(p.title ?? "");
+    setDescription(p.description ?? "");
+    setLocation(p.location ?? "");
+    setInvolvedFirm(p.involvedFirm ?? "");
+    setAoIncidentDate(p.aoIncidentDate ?? new Date().toISOString().slice(0, 10));
+    setAoIncidentType(p.aoIncidentType ?? "");
+    setAoFirstAider(p.aoFirstAider ?? "");
+    setAoVictimName(p.aoVictimName ?? "");
+    setAoContractType(p.aoContractType ?? "");
+    setAoBodyPart(p.aoBodyPart ?? "");
+    setAoBodyDetail(p.aoBodyDetail ?? "");
+    setAoRelaas(p.aoRelaas ?? "");
+    setAoInvestigation(p.aoInvestigation ?? "");
+    setKlSubmitterName(p.klSubmitterName ?? "");
+    setKlSubmitter(p.klSubmitter ?? "");
+    setKlEmail(p.klEmail ?? "");
+    setKlWorksite(p.klWorksite ?? "");
+    setKlDate(p.klDate ?? new Date().toISOString().slice(0, 10));
+    setKlCategory(p.klCategory ?? "");
+  };
+
+  const handleCancel = () => {
+    if (isDirty && !submitted) setShowCloseGuard(true);
+    else onClose();
+  };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;

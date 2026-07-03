@@ -1,0 +1,1 @@
+REVOKE ALL ON FUNCTION public.sanitize_public_safety_observation() FROM PUBLIC, anon, authenticated;

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -11,6 +11,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { useDraftForm } from "@/hooks/useDraftForm";
+import { RestoreDraftDialog, UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 
 interface Props {
   onClose: () => void;

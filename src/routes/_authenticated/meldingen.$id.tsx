@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Download, FileSpreadsheet, FileText, Pencil, Save, X } from "lucide-react";
 import { STATUS_LABELS, SEVERITY_LABELS } from "@/components/ReportsList";
+import { EmployeePicker } from "@/components/EmployeePicker";
 import { exportReportPdf, exportReportExcel, type ReportExport } from "@/lib/reports-export";
 
 export const Route = createFileRoute("/_authenticated/meldingen/$id")({

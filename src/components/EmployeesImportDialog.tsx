@@ -233,6 +233,55 @@ export function EmployeesImportDialog() {
     );
   };
 
+  const toggleOne = (idx: number) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx); else next.add(idx);
+      return next;
+    });
+  };
+  const toggleAllVisible = () => {
+    const visible = filteredSortedRows.map((r) => r.idx);
+    const allSelected = visible.length > 0 && visible.every((i) => selected.has(i));
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allSelected) visible.forEach((i) => next.delete(i));
+      else visible.forEach((i) => next.add(i));
+      return next;
+    });
+  };
+
+  const applyBulkEmployer = () => {
+    const name = bulkEmployer.trim();
+    if (!name) return toast.error("Vul een werkgever in");
+    if (selected.size === 0) return toast.error("Selecteer eerst rijen");
+    setRows((prev) => prev.map((r, i) => {
+      if (!selected.has(i) || !r.data) return r;
+      return { ...r, data: { ...r.data, employer: name } };
+    }));
+    toast.success(`Werkgever "${name}" ingesteld op ${selected.size} rij(en)`);
+  };
+
+  const applyBulkActive = (active: boolean) => {
+    if (selected.size === 0) return toast.error("Selecteer eerst rijen");
+    setRows((prev) => prev.map((r, i) => {
+      if (!selected.has(i) || !r.data) return r;
+      return { ...r, data: { ...r.data, active } };
+    }));
+    toast.success(`${selected.size} rij(en) gemarkeerd als ${active ? "actief" : "inactief"}`);
+  };
+
+  const applyBulkSkip = (skip: boolean) => {
+    if (selected.size === 0) return toast.error("Selecteer eerst rijen");
+    setRows((prev) => prev.map((r, i) => {
+      if (!selected.has(i)) return r;
+      if (skip && r.status === "new") return { ...r, status: "skip", reason: "Uitgesloten" };
+      if (!skip && r.status === "skip") return { ...r, status: "new", reason: undefined };
+      return r;
+    }));
+    setSelected(new Set());
+  };
+
   return (
     <Dialog open={open} onOpenChange={(v) => {
       if (!v && rows.length > 0) { setConfirmCloseOpen(true); return; }

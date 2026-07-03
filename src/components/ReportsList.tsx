@@ -25,8 +25,10 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, MoreHorizontal, Trash2, type LucideIcon } from "lucide-react";
+import { Plus, MoreHorizontal, Trash2, Download, FileText, FileSpreadsheet, type LucideIcon } from "lucide-react";
 import { useNavigate } from "@tanstack/react-router";
+import { exportReportPdf, exportReportExcel, type ReportExport } from "@/lib/reports-export";
+
 
 export const STATUS_LABELS: Record<string, string> = {
   open: "Open",
@@ -223,9 +225,18 @@ export function ReportsList({
     setSelectedIds(() => (checked ? new Set(filtered.map((r) => r.id)) : new Set()));
   };
 
-  const showActions = canManage && !hideStatus;
+  const showStatusActions = canManage && !hideStatus;
   const showSelect = canManage || canDelete;
-  const colCount = 4 + (hideSeverity ? 0 : 1) + (hideStatus ? 0 : 1) + (showActions ? 1 : 0) + (showSelect ? 1 : 0);
+  const colCount = 4 + (hideSeverity ? 0 : 1) + (hideStatus ? 0 : 1) + 1 + (showSelect ? 1 : 0);
+
+  const handleExportPdf = async (r: unknown) => {
+    try { await exportReportPdf(r as ReportExport); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Export mislukt"); }
+  };
+  const handleExportExcel = (r: unknown) => {
+    try { exportReportExcel(r as ReportExport); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Export mislukt"); }
+  };
 
   return (
     <div className="space-y-6">
@@ -358,7 +369,7 @@ export function ReportsList({
                   <TableHead>{locationLabel}</TableHead>
                   {!hideSeverity && <TableHead>Ernst</TableHead>}
                   {!hideStatus && <TableHead>Status</TableHead>}
-                  {showActions && <TableHead className="w-10"></TableHead>}
+                  <TableHead className="text-right">Export</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -397,21 +408,36 @@ export function ReportsList({
                     <TableCell className="text-muted-foreground">{r.location ?? "—"}</TableCell>
                     {!hideSeverity && <TableCell><Badge variant={severityVariant(r.severity)}>{SEVERITY_LABELS[r.severity]}</Badge></TableCell>}
                     {!hideStatus && <TableCell><Badge variant={statusVariant(r.status)}>{STATUS_LABELS[r.status]}</Badge></TableCell>}
-                    {showActions && (
-                      <TableCell onClick={(e) => e.stopPropagation()}>
+                    <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex items-center justify-end gap-1">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="w-8 h-8"><MoreHorizontal className="w-4 h-4" /></Button>
+                            <Button variant="outline" size="sm"><Download className="w-4 h-4" /> Export</Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => updateStatus(r.id, "in_behandeling")}>In behandeling nemen</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateStatus(r.id, "opgevolgd")}>Markeren als opgevolgd</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateStatus(r.id, "gesloten")}>Sluiten</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => updateStatus(r.id, "open")}>Heropenen</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExportPdf(r)}>
+                              <FileText className="w-4 h-4" /> PDF
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleExportExcel(r)}>
+                              <FileSpreadsheet className="w-4 h-4" /> Excel (.xlsx)
+                            </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </TableCell>
-                    )}
+                        {showStatusActions && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="w-8 h-8"><MoreHorizontal className="w-4 h-4" /></Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => updateStatus(r.id, "in_behandeling")}>In behandeling nemen</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => updateStatus(r.id, "opgevolgd")}>Markeren als opgevolgd</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => updateStatus(r.id, "gesloten")}>Sluiten</DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => updateStatus(r.id, "open")}>Heropenen</DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

@@ -102,7 +102,21 @@ function EmployeesPage() {
     return true;
   });
 
-  const filteredIds = filtered.map((e) => e.id);
+  const sorted = [...filtered].sort((a, b) => {
+    if (!sort) return 0;
+    const dir = sort.dir === "asc" ? 1 : -1;
+    const av = sort.column === "name" ? `${a.last_name ?? ""} ${a.first_name ?? ""}`.trim().toLowerCase()
+      : sort.column === "status" ? (a.active ? "actief" : "uit dienst")
+      : (a[sort.column as keyof typeof a] ?? "").toString().toLowerCase();
+    const bv = sort.column === "name" ? `${b.last_name ?? ""} ${b.first_name ?? ""}`.trim().toLowerCase()
+      : sort.column === "status" ? (b.active ? "actief" : "uit dienst")
+      : (b[sort.column as keyof typeof b] ?? "").toString().toLowerCase();
+    if (av < bv) return -1 * dir;
+    if (av > bv) return 1 * dir;
+    return 0;
+  });
+
+  const filteredIds = sorted.map((e) => e.id);
   const allSelected = filteredIds.length > 0 && filteredIds.every((id) => selected.has(id));
   const someSelected = selected.size > 0 && !allSelected;
   const toggleAll = () => {

@@ -9,7 +9,9 @@ import {
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, FileSpreadsheet, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Upload, FileSpreadsheet, Loader2, UserPlus } from "lucide-react";
 import {
   readSheetAsMatrix, findHeaderRow, matrixToRecords, splitFullName, cellString,
   nameKey, parseDateCell,

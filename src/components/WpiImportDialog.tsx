@@ -425,6 +425,23 @@ export function WpiImportDialog() {
                 <Button size="sm" variant="secondary" onClick={applyBulkAssign} disabled={selected.size === 0 || !bulkEmployee.trim()}>
                   <UserPlus className="w-4 h-4" /> Toewijzen
                 </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    if (selected.size === 0) return toast.error("Selecteer eerst rijen");
+                    // Prefill from first selected row (name split)
+                    const first = rows.find((r) => selected.has(r.row));
+                    if (first?.name) {
+                      const { first_name, last_name } = splitFullName(first.name);
+                      setNewEmpForm((f) => ({ ...f, first_name: first_name || "", last_name: last_name || "" }));
+                    }
+                    setNewEmpOpen(true);
+                  }}
+                  disabled={selected.size === 0}
+                >
+                  <UserPlus className="w-4 h-4" /> Nieuwe medewerker
+                </Button>
               </div>
             </div>
 

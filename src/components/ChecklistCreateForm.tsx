@@ -184,6 +184,8 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
     const { error } = await supabase.from("reports").insert(payload as never);
     setSaving(false);
     if (error) return toast.error(error.message);
+    setSubmitted(true);
+    await draft.deleteDraft();
     toast.success("Inspectie geregistreerd");
     onCreated();
   };

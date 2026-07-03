@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/select";
 import { useDraftForm } from "@/hooks/useDraftForm";
 import { RestoreDraftDialog, UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
+import { EmployeePicker } from "@/components/EmployeePicker";
 
 const FUNCTION_OPTIONS_USER = ["Brandwacht", "Veiligheidswacht", "Gasanalist"] as const;
 const FUNCTION_OPTIONS_ALL = [
@@ -313,12 +314,29 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label>Naam *</Label>
-            <Input
-              value={form.reporter_name}
-              onChange={(e) => upd("reporter_name", e.target.value)}
-              required
-              maxLength={120}
-            />
+            {mode === "internal" ? (
+              <EmployeePicker
+                value={form.reporter_name}
+                onSelect={(emp) => {
+                  const name = `${emp.first_name ?? ""} ${emp.last_name ?? ""}`.trim();
+                  setForm((f) => ({
+                    ...f,
+                    reporter_name: name,
+                    reporter_function: f.reporter_function || emp.function_title || "",
+                    signer_name: f.signer_name || name,
+                    signer_function: f.signer_function || emp.function_title || "",
+                  }));
+                }}
+                placeholder="Kies medewerker uit personeelsfiches…"
+              />
+            ) : (
+              <Input
+                value={form.reporter_name}
+                onChange={(e) => upd("reporter_name", e.target.value)}
+                required
+                maxLength={120}
+              />
+            )}
           </div>
           <div className="space-y-1.5">
             <Label>Functie</Label>

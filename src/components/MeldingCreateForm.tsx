@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -12,6 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { EmployeePicker } from "@/components/EmployeePicker";
 import { useDraftForm } from "@/hooks/useDraftForm";
 import { RestoreDraftDialog, UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 
@@ -53,20 +54,6 @@ const KLACHT_OPTIONS = [
 
 export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType }: Props) {
   const { user } = useAuth();
-  const employeesQuery = useQuery({
-    queryKey: ["employees-picker"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("employees")
-        .select("id,first_name,last_name,function_title,employer,active")
-        .eq("active", true)
-        .order("last_name", { ascending: true })
-        .limit(2000);
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-  const employees = employeesQuery.data ?? [];
   const [saving, setSaving] = useState(false);
   const [type, setType] = useState<string>(defaultType);
   const [severity, setSeverity] = useState<string>("middel");
@@ -289,33 +276,19 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Slachtoffernaam *</Label>
-              <Input
-                list="employees-datalist"
+              <Label>Slachtoffer (medewerker) *</Label>
+              <EmployeePicker
                 value={aoVictimName}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setAoVictimName(v);
-                  const match = employees.find(
-                    (emp) => `${emp.last_name}, ${emp.first_name}` === v,
-                  );
-                  if (match) {
-                    if (!involvedFirm && match.employer) setInvolvedFirm(match.employer);
-                  }
+                onSelect={(emp) => {
+                  const label = `${emp.last_name ?? ""}, ${emp.first_name ?? ""}`.trim();
+                  setAoVictimName(label);
+                  if (emp.employer) setInvolvedFirm(emp.employer);
                 }}
-                placeholder="Achternaam, Voornaam (kies uit lijst of typ zelf)"
-                required
+                placeholder="Kies slachtoffer uit personeelsfiches…"
               />
-              <datalist id="employees-datalist">
-                {employees.map((emp) => (
-                  <option
-                    key={emp.id}
-                    value={`${emp.last_name}, ${emp.first_name}`}
-                  >
-                    {emp.function_title ?? ""}{emp.employer ? ` — ${emp.employer}` : ""}
-                  </option>
-                ))}
-              </datalist>
+              <p className="text-xs text-muted-foreground">
+                Vult automatisch de betrokken firma in. Voeg medewerkers toe via Personeelsfiches.
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label>Hulpverlener *</Label>
@@ -389,8 +362,17 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
           <Separator />
           <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Interne klacht / incident</p>
           <div className="space-y-1.5">
-            <Label>Achternaam, Voornaam *</Label>
-            <Input value={klSubmitterName} onChange={(e) => setKlSubmitterName(e.target.value)} placeholder="bv. Peeters, Jos" required />
+            <Label>Indiener (medewerker) *</Label>
+            <EmployeePicker
+              value={klSubmitterName}
+              onSelect={(emp) => {
+                const label = `${emp.last_name ?? ""}, ${emp.first_name ?? ""}`.trim();
+                setKlSubmitterName(label);
+                if (emp.function_title && !klSubmitter) setKlSubmitter(emp.function_title);
+                if (emp.employer && !involvedFirm) setInvolvedFirm(emp.employer);
+              }}
+              placeholder="Kies indiener uit personeelsfiches…"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">

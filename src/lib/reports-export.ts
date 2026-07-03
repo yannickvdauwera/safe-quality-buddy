@@ -422,8 +422,9 @@ export async function exportReportWord(r: ReportExport) {
         const res = await fetch(data.signedUrl);
         const blob = await res.blob();
         const bytes = new Uint8Array(await blob.arrayBuffer());
-        const ext = (att.type.split("/")[1] || "png").toLowerCase();
-        const type = (["png", "jpg", "jpeg", "gif", "bmp"].includes(ext) ? ext : "png") as "png" | "jpg" | "jpeg" | "gif" | "bmp";
+        const rawExt = (att.type.split("/")[1] || "png").toLowerCase();
+        const ext = rawExt === "jpeg" ? "jpg" : rawExt;
+        const type = (["png", "jpg", "gif", "bmp"].includes(ext) ? ext : "png") as "png" | "jpg" | "gif" | "bmp";
         bodyChildren.push(new Paragraph({
           children: [new ImageRun({
             type,

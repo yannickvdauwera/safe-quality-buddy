@@ -117,6 +117,10 @@ export function ReportsList({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [search, setSearch] = useState("");
+  type SortKey = "date" | "subject" | "title" | "location" | "severity" | "status";
+  const [sortKey, setSortKey] = useState<SortKey>("date");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
 
   const allowedTypes = typeOptions.map((t) => t.value);

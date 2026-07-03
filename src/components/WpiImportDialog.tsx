@@ -431,9 +431,9 @@ export function WpiImportDialog() {
                   onClick={() => {
                     if (selected.size === 0) return toast.error("Selecteer eerst rijen");
                     // Prefill from first selected row (name split)
-                    const first = rows.find((r) => selected.has(r.row));
-                    if (first?.name) {
-                      const { first, last } = splitFullName(first.name);
+                    const firstRow = rows.find((r) => selected.has(r.row));
+                    if (firstRow?.name) {
+                      const { first, last } = splitFullName(firstRow.name);
                       setNewEmpForm((f) => ({ ...f, first_name: first || "", last_name: last || "" }));
                     }
                     setNewEmpOpen(true);

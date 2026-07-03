@@ -332,8 +332,16 @@ function EditForm({
         </div>
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label>Slachtoffernaam</Label>
-            <Input value={state.victim_name} onChange={(e) => set("victim_name", e.target.value)} />
+            <Label>Slachtoffer (medewerker)</Label>
+            <EmployeePicker
+              value={state.victim_name}
+              onSelect={(emp) => {
+                const label = `${emp.last_name ?? ""}, ${emp.first_name ?? ""}`.trim();
+                set("victim_name", label);
+                if (emp.employer && !state.involved_firm) set("involved_firm", emp.employer);
+              }}
+              placeholder="Zoek en kies uit personeelsfiches…"
+            />
           </div>
           <div className="space-y-1.5">
             <Label>Hulpverlener</Label>

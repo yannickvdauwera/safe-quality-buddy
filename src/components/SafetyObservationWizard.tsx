@@ -222,7 +222,7 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
   const create = useMutation({
     mutationFn: async () => {
       if (!form.reporter_name.trim()) throw new Error("Naam melder is verplicht");
-      let signature_data_url: string | null = null;
+      let signature_data_url: string | null = signatureDataUrl;
       if (sigRef.current && !sigRef.current.isEmpty()) {
         signature_data_url = sigRef.current.getCanvas().toDataURL("image/png");
       }

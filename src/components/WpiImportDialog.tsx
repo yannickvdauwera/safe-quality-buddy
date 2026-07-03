@@ -50,7 +50,9 @@ export function WpiImportDialog() {
   const [fileName, setFileName] = useState("");
   const [rows, setRows] = useState<RowResult[]>([]);
   const [autoCreate, setAutoCreate] = useState(true);
+  const [newEmployeeActive, setNewEmployeeActive] = useState(false);
   const [employees, setEmployees] = useState<{ id: string; first_name: string | null; last_name: string | null }[]>([]);
+
 
   const allQuestionKeys = WPI_CONFIG.sections.flatMap((s) => s.questions.map((q) => ({ key: q.key, label: q.label })));
   const sortedEmployees = [...employees].sort((a, b) =>

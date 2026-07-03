@@ -48,13 +48,6 @@ export function SafetyObservationsPage({ type }: { type: SafetyObservationType }
     },
   });
 
-  const copyPublicLink = async () => {
-    const url = `${window.location.origin}/report/${type}`;
-    await navigator.clipboard.writeText(url);
-    toast.success("Publieke link gekopieerd", {
-      description: "Deel deze via QR of e-mail. Werkt zonder login.",
-    });
-  };
 
   const bulkDelete = async () => {
     if (selectedIds.size === 0) return;

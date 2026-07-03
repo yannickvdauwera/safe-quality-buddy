@@ -96,7 +96,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           icon: Wrench,
           children: [
             { to: "/users", label: "Gebruikers & rollen", icon: Shield },
-            { to: "/integraties/monday", label: "Monday-integratie", icon: Plug },
           ],
         },
       ]

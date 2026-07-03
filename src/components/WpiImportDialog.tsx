@@ -578,6 +578,59 @@ export function WpiImportDialog() {
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <Dialog open={newEmpOpen} onOpenChange={(o) => !creatingEmp && setNewEmpOpen(o)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nieuwe medewerker aanmaken</DialogTitle>
+            <DialogDescription>
+              Vul de gegevens in. De {selected.size} geselecteerde rij(en) worden aan deze nieuwe medewerker gekoppeld.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-1">
+              <label className="text-xs font-medium">Voornaam *</label>
+              <Input value={newEmpForm.first_name} onChange={(e) => setNewEmpForm((f) => ({ ...f, first_name: e.target.value }))} />
+            </div>
+            <div className="col-span-1">
+              <label className="text-xs font-medium">Naam *</label>
+              <Input value={newEmpForm.last_name} onChange={(e) => setNewEmpForm((f) => ({ ...f, last_name: e.target.value }))} />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs font-medium">E-mail</label>
+              <Input type="email" value={newEmpForm.email} onChange={(e) => setNewEmpForm((f) => ({ ...f, email: e.target.value }))} />
+            </div>
+            <div className="col-span-1">
+              <label className="text-xs font-medium">Telefoon</label>
+              <Input value={newEmpForm.phone} onChange={(e) => setNewEmpForm((f) => ({ ...f, phone: e.target.value }))} />
+            </div>
+            <div className="col-span-1">
+              <label className="text-xs font-medium">Werkgever</label>
+              <Input value={newEmpForm.employer} onChange={(e) => setNewEmpForm((f) => ({ ...f, employer: e.target.value }))} />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs font-medium">Functie</label>
+              <Input value={newEmpForm.function_title} onChange={(e) => setNewEmpForm((f) => ({ ...f, function_title: e.target.value }))} />
+            </div>
+            <div className="col-span-2 flex items-center gap-4 pt-1 text-sm">
+              <label className="flex items-center gap-2">
+                <input type="radio" checked={newEmpForm.active} onChange={() => setNewEmpForm((f) => ({ ...f, active: true }))} />
+                Actief
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="radio" checked={!newEmpForm.active} onChange={() => setNewEmpForm((f) => ({ ...f, active: false }))} />
+                Inactief
+              </label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNewEmpOpen(false)} disabled={creatingEmp}>Annuleren</Button>
+            <Button onClick={createAndAssignEmployee} disabled={creatingEmp}>
+              {creatingEmp ? <><Loader2 className="w-4 h-4 animate-spin" /> Aanmaken…</> : `Aanmaken & koppelen (${selected.size})`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

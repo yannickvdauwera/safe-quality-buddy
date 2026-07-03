@@ -56,6 +56,15 @@ function EmployeesPage() {
     function_title: "",
     status: "all" as "all" | "active" | "inactive",
   });
+  const [sort, setSort] = useState<{ column: string; dir: "asc" | "desc" } | null>(null);
+
+  const toggleSort = (column: string) => {
+    setSort((prev) => {
+      if (!prev || prev.column !== column) return { column, dir: "asc" };
+      if (prev.dir === "asc") return { column, dir: "desc" };
+      return null;
+    });
+  };
 
   const { data: employees = [], isLoading } = useQuery({
     queryKey: ["employees"],

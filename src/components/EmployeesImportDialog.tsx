@@ -69,7 +69,7 @@ function mapRow(record: Record<string, unknown>): {
 
 interface ImportRow {
   data: ReturnType<typeof mapRow>;
-  status: "new" | "duplicate" | "invalid";
+  status: "new" | "duplicate" | "invalid" | "skip";
   reason?: string;
 }
 
@@ -83,9 +83,12 @@ export function EmployeesImportDialog() {
   const [rows, setRows] = useState<ImportRow[]>([]);
   const [fileName, setFileName] = useState<string>("");
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "new" | "duplicate" | "invalid" | "skip">("all");
   const [sortKey, setSortKey] = useState<SortKey | null>(null);
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [statusOverride, setStatusOverride] = useState<StatusOverride>("excel");
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [bulkEmployer, setBulkEmployer] = useState("");
   const queryClient = useQueryClient();
   const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
 

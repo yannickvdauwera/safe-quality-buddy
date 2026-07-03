@@ -87,6 +87,44 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
   const [signatureDataUrl, setSignatureDataUrl] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
+  // -------- Draft / concept support (internal only) --------
+  const [submitted, setSubmitted] = useState(false);
+  const [showCloseGuard, setShowCloseGuard] = useState(false);
+  const draftValues = { form, hazards, risks, photos, signatureDataUrl, step };
+  const initialRef = useRef(JSON.stringify(draftValues));
+  const isDirty = useMemo(
+    () => JSON.stringify(draftValues) !== initialRef.current,
+    [draftValues],
+  );
+  const draft = useDraftForm({
+    formType: `melding:${type}`,
+    formKey: user?.id ?? "anonymous",
+    values: draftValues,
+    isDirty,
+    isSubmitted: submitted,
+    title: `${label.title} — concept`,
+    enabled: mode === "internal" && !!user,
+  });
+  const applyDraft = (p: typeof draftValues) => {
+    if (p.form) setForm(p.form);
+    if (Array.isArray(p.hazards)) setHazards(p.hazards);
+    if (Array.isArray(p.risks)) setRisks(p.risks);
+    if (Array.isArray(p.photos)) setPhotos(p.photos);
+    if (typeof p.step === "number") setStep(p.step);
+    if (p.signatureDataUrl) {
+      setSignatureDataUrl(p.signatureDataUrl);
+      setSigEmpty(false);
+    }
+  };
+  const requestClose = () => {
+    if (mode === "internal" && isDirty && !submitted) {
+      setShowCloseGuard(true);
+    } else {
+      onDone();
+    }
+  };
+
+
   const upd = <K extends keyof typeof form>(k: K, v: string) =>
     setForm((f) => ({ ...f, [k]: v }));
   const toggle = (arr: string[], set: (v: string[]) => void, v: string) =>

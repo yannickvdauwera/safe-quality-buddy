@@ -86,6 +86,7 @@ export function EmployeesImportDialog() {
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
   const [statusOverride, setStatusOverride] = useState<StatusOverride>("excel");
   const queryClient = useQueryClient();
+  const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
 
   const handleFile = async (file: File) => {
     setParsing(true);

@@ -56,7 +56,10 @@ export function WpiImportDialog() {
   const [employees, setEmployees] = useState<{ id: string; first_name: string | null; last_name: string | null }[]>([]);
   const [sortKey, setSortKey] = useState<"row" | "name" | "matched" | "date" | "worksite" | "answered" | "nok">("row");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
-  const toggleSort = (key: typeof sortKey) => {
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "matched" | "unmatched">("all");
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [bulkEmployee, setBulkEmployee] = useState("");
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortKey(key); setSortDir("asc"); }
   };

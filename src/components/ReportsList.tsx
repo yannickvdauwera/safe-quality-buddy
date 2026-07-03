@@ -237,6 +237,10 @@ export function ReportsList({
     try { exportReportExcel(r as ReportExport); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Export mislukt"); }
   };
+  const handleExportWord = async (r: unknown) => {
+    try { await exportReportWord(r as ReportExport); }
+    catch (e) { toast.error(e instanceof Error ? e.message : "Export mislukt"); }
+  };
 
   return (
     <div className="space-y-6">

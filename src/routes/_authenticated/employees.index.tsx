@@ -271,12 +271,25 @@ function EmployeesPage() {
                       />
                     </TableHead>
                   )}
-                  <TableHead>Naam</TableHead>
-                  <TableHead>Werkgever</TableHead>
-                  <TableHead>E-mail</TableHead>
-                  <TableHead>Telefoon</TableHead>
-                  <TableHead>Functies</TableHead>
-                  <TableHead>Status</TableHead>
+                  {([
+                    { key: "name", label: "Naam" },
+                    { key: "employer", label: "Werkgever" },
+                    { key: "email", label: "E-mail" },
+                    { key: "phone", label: "Telefoon" },
+                    { key: "function_title", label: "Functies" },
+                    { key: "status", label: "Status" },
+                  ] as const).map(({ key, label }) => {
+                    const active = sort?.column === key;
+                    const Icon = active ? (sort.dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
+                    return (
+                      <TableHead key={key} className="cursor-pointer select-none" onClick={() => toggleSort(key)}>
+                        <div className="flex items-center gap-1">
+                          {label}
+                          <Icon className={`w-3.5 h-3.5 ${active ? "text-foreground" : "text-muted-foreground/50"}`} />
+                        </div>
+                      </TableHead>
+                    );
+                  })}
                 </TableRow>
                 <TableRow className="bg-muted/30">
                   {canEdit && <TableHead className="py-2" />}

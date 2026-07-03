@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { EmployeePicker } from "@/components/EmployeePicker";
 import { SignaturePad } from "@/components/SignaturePad";
 import { cn } from "@/lib/utils";
 import { useDraftForm } from "@/hooks/useDraftForm";
@@ -193,29 +194,25 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      {config.employeePicker && (
-        <div className="space-y-1.5">
-          <Label>{config.employeePicker.label}{config.employeePicker.required ? " *" : ""}</Label>
-          <Select value={subjectEmployeeId} onValueChange={setSubjectEmployeeId}>
-            <SelectTrigger>
-              <SelectValue placeholder="Kies een medewerker uit de personeelsfiches…" />
-            </SelectTrigger>
-            <SelectContent>
-              {employees.length === 0 ? (
-                <div className="px-2 py-1.5 text-sm text-muted-foreground">Geen actieve medewerkers</div>
-              ) : employees.map((e) => (
-                <SelectItem key={e.id} value={e.id}>
-                  {e.last_name} {e.first_name}
-                  {e.employer ? ` — ${e.employer}` : ""}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground">
-            Vult automatisch naam, werkgever en functie in. Voeg medewerkers toe via Personeelsfiches.
-          </p>
-        </div>
-      )}
+      {config.employeePicker && (() => {
+        const selected = employees.find((e) => e.id === subjectEmployeeId);
+        const label = selected
+          ? `${selected.last_name ?? ""}, ${selected.first_name ?? ""}`.trim()
+          : "";
+        return (
+          <div className="space-y-1.5">
+            <Label>{config.employeePicker.label}{config.employeePicker.required ? " *" : ""}</Label>
+            <EmployeePicker
+              value={label}
+              onSelect={(emp) => setSubjectEmployeeId(emp.id)}
+              placeholder="Kies een medewerker uit de personeelsfiches…"
+            />
+            <p className="text-xs text-muted-foreground">
+              Vult automatisch naam, werkgever en functie in. Voeg medewerkers toe via Personeelsfiches.
+            </p>
+          </div>
+        );
+      })()}
 
       {/* Header fields */}
 

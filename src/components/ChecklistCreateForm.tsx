@@ -118,6 +118,33 @@ export function ChecklistCreateForm({ onClose, onCreated, config }: Props) {
   const answered = Object.keys(answers).length;
   const nokCount = Object.values(answers).filter((v) => v === "nok").length;
 
+  // ---------- Concept / draft ----------
+  const [submitted, setSubmitted] = useState(false);
+  const [showCloseGuard, setShowCloseGuard] = useState(false);
+  const values = { header, answers, extras, signature, subjectEmployeeId, severity };
+  const initialRef = useRef(JSON.stringify(values));
+  const isDirty = useMemo(() => JSON.stringify(values) !== initialRef.current, [values]);
+  const draft = useDraftForm({
+    formType: `inspectie:${config.reportType}`,
+    values,
+    isDirty,
+    isSubmitted: submitted,
+    title: config.titleTemplate(header) || `Inspectie (concept)`,
+  });
+  const applyDraft = (p: typeof values) => {
+    setHeader(p.header ?? {});
+    setAnswers(p.answers ?? {});
+    setExtras(p.extras ?? {});
+    setSignature(p.signature ?? null);
+    setSubjectEmployeeId(p.subjectEmployeeId ?? "");
+    setSeverity(p.severity ?? "middel");
+  };
+  const handleCancel = () => {
+    if (isDirty && !submitted) setShowCloseGuard(true);
+    else onClose();
+  };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;

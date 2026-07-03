@@ -50,7 +50,9 @@ export function WpiImportDialog() {
   const [fileName, setFileName] = useState("");
   const [rows, setRows] = useState<RowResult[]>([]);
   const [autoCreate, setAutoCreate] = useState(true);
+  const [newEmployeeActive, setNewEmployeeActive] = useState(false);
   const [employees, setEmployees] = useState<{ id: string; first_name: string | null; last_name: string | null }[]>([]);
+
 
   const allQuestionKeys = WPI_CONFIG.sections.flatMap((s) => s.questions.map((q) => ({ key: q.key, label: q.label })));
   const sortedEmployees = [...employees].sort((a, b) =>
@@ -183,8 +185,9 @@ export function WpiImportDialog() {
             last_name: last || "—",
             employer: e.employer || null,
             function_title: e.func || null,
-            active: false,
-            notes: "Automatisch aangemaakt via WPI-import",
+            active: newEmployeeActive,
+            notes: `Automatisch aangemaakt via WPI-import (${newEmployeeActive ? "actief" : "inactief"})`,
+
           };
         });
         const { data: created, error } = await supabase
@@ -295,10 +298,33 @@ export function WpiImportDialog() {
                 {" "}<b className={unmatched ? "text-amber-600" : ""}>{unmatched}</b> nog niet gekoppeld.
               </AlertDescription>
             </Alert>
-            <label className="flex items-center gap-2 text-sm">
-              <input type="checkbox" checked={autoCreate} onChange={(e) => setAutoCreate(e.target.checked)} />
-              Onbekende namen automatisch aanmaken als <b>inactieve</b> personeelsfiche
-            </label>
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-6">
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" checked={autoCreate} onChange={(e) => setAutoCreate(e.target.checked)} />
+                Onbekende namen automatisch aanmaken als personeelsfiche
+              </label>
+              {autoCreate && (
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="text-muted-foreground">Nieuwe fiches als:</span>
+                  <label className="flex items-center gap-1">
+                    <input type="radio" name="new-emp-status" checked={!newEmployeeActive}
+                      onChange={() => setNewEmployeeActive(false)} />
+                    Inactief
+                  </label>
+                  <label className="flex items-center gap-1">
+                    <input type="radio" name="new-emp-status" checked={newEmployeeActive}
+                      onChange={() => setNewEmployeeActive(true)} />
+                    Actief
+                  </label>
+                </div>
+              )}
+            </div>
+            <datalist id="wpi-emp-options">
+              {sortedEmployees.map((emp) => {
+                const label = `${emp.last_name ?? ""} ${emp.first_name ?? ""}`.trim();
+                return <option key={emp.id} value={label} />;
+              })}
+            </datalist>
             <div className="border rounded-md max-h-[45vh] overflow-y-auto">
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
@@ -316,45 +342,35 @@ export function WpiImportDialog() {
                   {rows.slice(0, 500).map((r) => {
                     const answered = Object.keys(r.answers).length;
                     const nok = Object.values(r.answers).filter((v) => v === "nok").length;
+                    const currentEmp = r.employeeId ? employees.find((e) => e.id === r.employeeId) : null;
+                    const currentLabel = currentEmp
+                      ? `${currentEmp.last_name ?? ""} ${currentEmp.first_name ?? ""}`.trim()
+                      : "";
+                    const onPick = (val: string) => {
+                      const v = val.trim().toLowerCase();
+                      if (!v) return setRowEmployee(r.row, "");
+                      const found = employees.find(
+                        (e) => `${e.last_name ?? ""} ${e.first_name ?? ""}`.trim().toLowerCase() === v,
+                      );
+                      if (found) setRowEmployee(r.row, found.id);
+                    };
                     return (
                       <TableRow key={r.row}>
                         <TableCell className="text-xs text-muted-foreground">{r.row}</TableCell>
                         <TableCell className="text-sm">{r.name || "—"}</TableCell>
                         <TableCell className="text-xs">
-                          {r.matched ? (
-                            <div className="flex items-center gap-2">
-                              <span className="text-emerald-600 font-medium whitespace-nowrap">✓</span>
-                              <select
-                                value={r.employeeId ?? ""}
-                                onChange={(e) => setRowEmployee(r.row, e.target.value)}
-                                className="h-7 rounded-md border border-input bg-background px-1 text-xs max-w-[180px]"
-                              >
-                                {sortedEmployees.map((emp) => (
-                                  <option key={emp.id} value={emp.id}>
-                                    {emp.last_name} {emp.first_name}
-                                  </option>
-                                ))}
-                                <option value="">— ontkoppelen —</option>
-                              </select>
-                            </div>
-                          ) : (
-                            <div className="flex flex-col gap-1">
-                              <select
-                                value=""
-                                onChange={(e) => setRowEmployee(r.row, e.target.value)}
-                                className="h-7 rounded-md border border-input bg-background px-1 text-xs max-w-[200px]"
-                              >
-                                <option value="">
-                                  {autoCreate ? "Nieuw wordt aangemaakt…" : "Kies medewerker…"}
-                                </option>
-                                {sortedEmployees.map((emp) => (
-                                  <option key={emp.id} value={emp.id}>
-                                    {emp.last_name} {emp.first_name}
-                                  </option>
-                                ))}
-                              </select>
-                            </div>
-                          )}
+                          <div className="flex items-center gap-2">
+                            {r.matched && <span className="text-emerald-600 font-medium">✓</span>}
+                            <input
+                              type="text"
+                              list="wpi-emp-options"
+                              defaultValue={currentLabel}
+                              placeholder={r.matched ? "" : autoCreate ? "Nieuw wordt aangemaakt…" : "Zoek medewerker…"}
+                              onChange={(e) => onPick(e.target.value)}
+                              onBlur={(e) => onPick(e.target.value)}
+                              className="h-7 rounded-md border border-input bg-background px-2 text-xs w-[200px]"
+                            />
+                          </div>
                         </TableCell>
                         <TableCell className="text-xs">{r.date ? new Date(r.date).toLocaleDateString("nl-BE") : "—"}</TableCell>
                         <TableCell className="text-xs">{r.worksite || "—"}</TableCell>
@@ -371,6 +387,7 @@ export function WpiImportDialog() {
                 </p>
               )}
             </div>
+
           </>
         )}
 

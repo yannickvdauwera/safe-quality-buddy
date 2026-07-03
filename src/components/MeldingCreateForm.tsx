@@ -290,33 +290,19 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label>Slachtoffernaam *</Label>
-              <Input
-                list="employees-datalist"
+              <Label>Slachtoffer (medewerker) *</Label>
+              <EmployeePicker
                 value={aoVictimName}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setAoVictimName(v);
-                  const match = employees.find(
-                    (emp) => `${emp.last_name}, ${emp.first_name}` === v,
-                  );
-                  if (match) {
-                    if (!involvedFirm && match.employer) setInvolvedFirm(match.employer);
-                  }
+                onSelect={(emp) => {
+                  const label = `${emp.last_name ?? ""}, ${emp.first_name ?? ""}`.trim();
+                  setAoVictimName(label);
+                  if (emp.employer) setInvolvedFirm(emp.employer);
                 }}
-                placeholder="Achternaam, Voornaam (kies uit lijst of typ zelf)"
-                required
+                placeholder="Kies slachtoffer uit personeelsfiches…"
               />
-              <datalist id="employees-datalist">
-                {employees.map((emp) => (
-                  <option
-                    key={emp.id}
-                    value={`${emp.last_name}, ${emp.first_name}`}
-                  >
-                    {emp.function_title ?? ""}{emp.employer ? ` — ${emp.employer}` : ""}
-                  </option>
-                ))}
-              </datalist>
+              <p className="text-xs text-muted-foreground">
+                Vult automatisch de betrokken firma in. Voeg medewerkers toe via Personeelsfiches.
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label>Hulpverlener *</Label>

@@ -362,8 +362,17 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
           <Separator />
           <p className="text-xs uppercase tracking-wide text-muted-foreground font-medium">Interne klacht / incident</p>
           <div className="space-y-1.5">
-            <Label>Achternaam, Voornaam *</Label>
-            <Input value={klSubmitterName} onChange={(e) => setKlSubmitterName(e.target.value)} placeholder="bv. Peeters, Jos" required />
+            <Label>Indiener (medewerker) *</Label>
+            <EmployeePicker
+              value={klSubmitterName}
+              onSelect={(emp) => {
+                const label = `${emp.last_name ?? ""}, ${emp.first_name ?? ""}`.trim();
+                setKlSubmitterName(label);
+                if (emp.function_title && !klSubmitter) setKlSubmitter(emp.function_title);
+                if (emp.employer && !involvedFirm) setInvolvedFirm(emp.employer);
+              }}
+              placeholder="Kies indiener uit personeelsfiches…"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">

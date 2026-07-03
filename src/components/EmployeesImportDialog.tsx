@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,8 @@ import {
 } from "@/components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Upload, FileSpreadsheet, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Upload, FileSpreadsheet, Loader2, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import {
   readSheetAsMatrix, findHeaderRow, matrixToRecords, splitFullName, cellString, nameKey,
 } from "@/lib/import-utils";
@@ -67,12 +68,19 @@ interface ImportRow {
   reason?: string;
 }
 
+type SortKey = "status" | "name" | "employer" | "email" | "function" | "active";
+type StatusOverride = "excel" | "active" | "inactive";
+
 export function EmployeesImportDialog() {
   const [open, setOpen] = useState(false);
   const [parsing, setParsing] = useState(false);
   const [importing, setImporting] = useState(false);
   const [rows, setRows] = useState<ImportRow[]>([]);
   const [fileName, setFileName] = useState<string>("");
+  const [search, setSearch] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey | null>(null);
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+  const [statusOverride, setStatusOverride] = useState<StatusOverride>("excel");
   const queryClient = useQueryClient();
 
   const handleFile = async (file: File) => {
@@ -114,11 +122,18 @@ export function EmployeesImportDialog() {
     }
   };
 
+  const applyActive = (rowActive: boolean): boolean => {
+    if (statusOverride === "active") return true;
+    if (statusOverride === "inactive") return false;
+    return rowActive;
+  };
+
   const doImport = async () => {
-    const toInsert = rows.filter((r) => r.status === "new" && r.data).map((r) => r.data!);
+    const toInsert = rows
+      .filter((r) => r.status === "new" && r.data)
+      .map((r) => ({ ...r.data!, active: applyActive(r.data!.active) }));
     if (toInsert.length === 0) return toast.error("Geen nieuwe rijen om te importeren");
     setImporting(true);
-    // batch in chunks of 200
     let inserted = 0;
     for (let i = 0; i < toInsert.length; i += 200) {
       const chunk = toInsert.slice(i, i + 200);
@@ -136,6 +151,7 @@ export function EmployeesImportDialog() {
     setOpen(false);
     setRows([]);
     setFileName("");
+    setSearch("");
   };
 
   const counts = {
@@ -145,12 +161,72 @@ export function EmployeesImportDialog() {
     inv: rows.filter((r) => r.status === "invalid").length,
   };
 
+  const filteredSortedRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    let list = rows;
+    if (q) {
+      list = list.filter((r) => {
+        const d = r.data;
+        const hay = [
+          d?.first_name, d?.last_name, d?.nickname, d?.employer, d?.email,
+          d?.phone, d?.function_title, r.reason, r.status,
+        ].filter(Boolean).join(" ").toLowerCase();
+        return hay.includes(q);
+      });
+    }
+    if (sortKey) {
+      const dir = sortDir === "asc" ? 1 : -1;
+      const val = (r: ImportRow): string | number => {
+        switch (sortKey) {
+          case "status": return r.status;
+          case "name": return `${r.data?.last_name ?? ""} ${r.data?.first_name ?? ""}`.toLowerCase();
+          case "employer": return (r.data?.employer ?? "").toLowerCase();
+          case "email": return (r.data?.email ?? "").toLowerCase();
+          case "function": return (r.data?.function_title ?? "").toLowerCase();
+          case "active": return r.data?.active ? 1 : 0;
+        }
+      };
+      list = [...list].sort((a, b) => {
+        const av = val(a), bv = val(b);
+        if (av < bv) return -1 * dir;
+        if (av > bv) return 1 * dir;
+        return 0;
+      });
+    }
+    return list;
+  }, [rows, search, sortKey, sortDir]);
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+    }
+  };
+
+  const SortableHead = ({ k, children }: { k: SortKey; children: React.ReactNode }) => {
+    const Icon = sortKey !== k ? ArrowUpDown : sortDir === "asc" ? ArrowUp : ArrowDown;
+    return (
+      <TableHead>
+        <button
+          type="button"
+          onClick={() => toggleSort(k)}
+          className="inline-flex items-center gap-1 hover:text-foreground text-left"
+        >
+          {children}
+          <Icon className="w-3 h-3 opacity-60" />
+        </button>
+      </TableHead>
+    );
+  };
+
   return (
-    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setRows([]); setFileName(""); } }}>
+    <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setRows([]); setFileName(""); setSearch(""); } }}>
       <DialogTrigger asChild>
         <Button variant="outline"><Upload className="w-4 h-4" /> Importeer Excel</Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileSpreadsheet className="w-5 h-5" /> Personeelsfiches importeren
@@ -191,33 +267,71 @@ export function EmployeesImportDialog() {
                 {" "}{counts.inv} ongeldig.
               </AlertDescription>
             </Alert>
+
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-center gap-3 text-sm flex-wrap">
+                <span className="text-muted-foreground">Nieuwe fiches als:</span>
+                <label className="flex items-center gap-1">
+                  <input type="radio" name="emp-imp-status" checked={statusOverride === "excel"}
+                    onChange={() => setStatusOverride("excel")} />
+                  Volgens Excel
+                </label>
+                <label className="flex items-center gap-1">
+                  <input type="radio" name="emp-imp-status" checked={statusOverride === "active"}
+                    onChange={() => setStatusOverride("active")} />
+                  Actief
+                </label>
+                <label className="flex items-center gap-1">
+                  <input type="radio" name="emp-imp-status" checked={statusOverride === "inactive"}
+                    onChange={() => setStatusOverride("inactive")} />
+                  Inactief
+                </label>
+              </div>
+              <Input
+                placeholder="Zoek op naam, werkgever, e-mail…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="sm:w-72 h-9"
+              />
+            </div>
+
             <div className="border rounded-md max-h-[45vh] overflow-y-auto">
               <Table>
                 <TableHeader className="sticky top-0 bg-background z-10">
                   <TableRow>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Naam</TableHead>
-                    <TableHead>Werkgever</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Functie(s)</TableHead>
-                    <TableHead>Actief</TableHead>
+                    <SortableHead k="status">Status</SortableHead>
+                    <SortableHead k="name">Naam</SortableHead>
+                    <SortableHead k="employer">Werkgever</SortableHead>
+                    <SortableHead k="email">Email</SortableHead>
+                    <SortableHead k="function">Functie(s)</SortableHead>
+                    <SortableHead k="active">Actief</SortableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {rows.map((r, i) => (
-                    <TableRow key={i} className={r.status === "duplicate" ? "opacity-50" : r.status === "invalid" ? "opacity-40" : ""}>
-                      <TableCell className="text-xs">
-                        {r.status === "new" && <span className="text-emerald-600 font-medium">Nieuw</span>}
-                        {r.status === "duplicate" && <span className="text-muted-foreground">{r.reason}</span>}
-                        {r.status === "invalid" && <span className="text-destructive">{r.reason}</span>}
+                  {filteredSortedRows.map((r, i) => {
+                    const effActive = r.data ? applyActive(r.data.active) : false;
+                    return (
+                      <TableRow key={i} className={r.status === "duplicate" ? "opacity-50" : r.status === "invalid" ? "opacity-40" : ""}>
+                        <TableCell className="text-xs">
+                          {r.status === "new" && <span className="text-emerald-600 font-medium">Nieuw</span>}
+                          {r.status === "duplicate" && <span className="text-muted-foreground">{r.reason}</span>}
+                          {r.status === "invalid" && <span className="text-destructive">{r.reason}</span>}
+                        </TableCell>
+                        <TableCell>{r.data ? `${r.data.last_name} ${r.data.first_name}` : "—"}</TableCell>
+                        <TableCell>{r.data?.employer ?? "—"}</TableCell>
+                        <TableCell className="text-muted-foreground">{r.data?.email ?? "—"}</TableCell>
+                        <TableCell className="text-xs">{r.data?.function_title ?? "—"}</TableCell>
+                        <TableCell>{effActive ? "Ja" : "Nee"}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {filteredSortedRows.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-sm text-muted-foreground py-6">
+                        Geen resultaten voor "{search}".
                       </TableCell>
-                      <TableCell>{r.data ? `${r.data.last_name} ${r.data.first_name}` : "—"}</TableCell>
-                      <TableCell>{r.data?.employer ?? "—"}</TableCell>
-                      <TableCell className="text-muted-foreground">{r.data?.email ?? "—"}</TableCell>
-                      <TableCell className="text-xs">{r.data?.function_title ?? "—"}</TableCell>
-                      <TableCell>{r.data?.active ? "Ja" : "Nee"}</TableCell>
                     </TableRow>
-                  ))}
+                  )}
                 </TableBody>
               </Table>
             </div>

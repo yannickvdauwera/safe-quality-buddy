@@ -12,6 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { EmployeePicker } from "@/components/EmployeePicker";
 import { useDraftForm } from "@/hooks/useDraftForm";
 import { RestoreDraftDialog, UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 

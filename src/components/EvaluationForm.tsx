@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { EVALUATION_SECTIONS, SCORE_OPTIONS, ALL_CRITERIA } from "@/lib/evaluation-criteria";
 import { SignaturePad } from "@/components/SignaturePad";
+import { useDraftForm } from "@/hooks/useDraftForm";
+import { RestoreDraftDialog, UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 
 interface Props {
   open: boolean;

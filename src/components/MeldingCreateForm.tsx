@@ -54,20 +54,6 @@ const KLACHT_OPTIONS = [
 
 export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType }: Props) {
   const { user } = useAuth();
-  const employeesQuery = useQuery({
-    queryKey: ["employees-picker"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("employees")
-        .select("id,first_name,last_name,function_title,employer,active")
-        .eq("active", true)
-        .order("last_name", { ascending: true })
-        .limit(2000);
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-  const employees = employeesQuery.data ?? [];
   const [saving, setSaving] = useState(false);
   const [type, setType] = useState<string>(defaultType);
   const [severity, setSeverity] = useState<string>("middel");

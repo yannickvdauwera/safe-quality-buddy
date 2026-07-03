@@ -80,6 +80,21 @@ export function WpiImportDialog() {
     }));
   };
 
+  const applyBulkAssign = () => {
+    const v = bulkEmployee.trim().toLowerCase();
+    if (!v) return toast.error("Kies eerst een medewerker");
+    if (selected.size === 0) return toast.error("Selecteer eerst rijen");
+    const found = employees.find(
+      (e) => `${e.last_name ?? ""} ${e.first_name ?? ""}`.trim().toLowerCase() === v,
+    );
+    if (!found) return toast.error("Onbekende medewerker");
+    setRows((prev) => prev.map((r) => (selected.has(r.row) ? { ...r, employeeId: found.id, matched: true } : r)));
+    toast.success(`${selected.size} rij(en) toegewezen aan ${found.last_name ?? ""} ${found.first_name ?? ""}`);
+    setSelected(new Set());
+  };
+
+
+
   const handleFile = async (file: File) => {
     setParsing(true);
     setFileName(file.name);

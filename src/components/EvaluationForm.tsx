@@ -220,13 +220,59 @@ export function EvaluationForm({ open, onOpenChange, employeeId, employeeName, e
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Annuleren</Button>
+        <DialogFooter className="gap-2">
+          {!existing && draft.lastSavedAt && !submitted && (
+            <span className="text-xs text-muted-foreground mr-auto self-center">
+              Concept opgeslagen · {new Date(draft.lastSavedAt).toLocaleTimeString("nl-BE", { hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
+          <Button variant="outline" onClick={() => handleClose(false)}>Annuleren</Button>
+          {!existing && (
+            <Button
+              variant="secondary"
+              disabled={!isDirty || draft.saving || submitted}
+              onClick={() => draft.saveNow()}
+            >
+              {draft.saving ? "Opslaan…" : "Concept opslaan"}
+            </Button>
+          )}
           <Button onClick={() => save.mutate()} disabled={save.isPending}>
             {save.isPending ? "Opslaan…" : "Opslaan"}
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <UnsavedChangesDialog
+        open={showCloseGuard}
+        onOpenChange={setShowCloseGuard}
+        saving={draft.saving}
+        onSaveDraft={async () => {
+          await draft.saveNow();
+          setShowCloseGuard(false);
+          onOpenChange(false);
+        }}
+        onDiscard={async () => {
+          await draft.deleteDraft();
+          setShowCloseGuard(false);
+          onOpenChange(false);
+        }}
+      />
+      <RestoreDraftDialog
+        open={!existing && !!draft.existingDraft && draft.checkedForDraft}
+        lastSavedAt={draft.existingDraft?.last_saved_at}
+        onRestore={() => {
+          if (draft.existingDraft) {
+            applyDraft(draft.existingDraft.payload as typeof values);
+            initialRef.current = JSON.stringify(draft.existingDraft.payload);
+          }
+          draft.dismissRestore();
+        }}
+        onDiscard={async () => {
+          await draft.deleteDraft();
+          draft.dismissRestore();
+        }}
+      />
     </Dialog>
   );
 }
+

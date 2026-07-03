@@ -60,6 +60,11 @@ export function WpiImportDialog() {
   const [statusFilter, setStatusFilter] = useState<"all" | "matched" | "unmatched">("all");
   const [selected, setSelected] = useState<Set<number>>(new Set());
   const [bulkEmployee, setBulkEmployee] = useState("");
+  const [newEmpOpen, setNewEmpOpen] = useState(false);
+  const [newEmpForm, setNewEmpForm] = useState({
+    first_name: "", last_name: "", email: "", phone: "", function_title: "", employer: "", active: true,
+  });
+  const [creatingEmp, setCreatingEmp] = useState(false);
   const toggleSort = (key: typeof sortKey) => {
     if (sortKey === key) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortKey(key); setSortDir("asc"); }
@@ -94,6 +99,41 @@ export function WpiImportDialog() {
   };
 
 
+
+  const createAndAssignEmployee = async () => {
+    if (selected.size === 0) return toast.error("Selecteer eerst rijen");
+    const fn = newEmpForm.first_name.trim();
+    const ln = newEmpForm.last_name.trim();
+    if (!fn || !ln) return toast.error("Voornaam en naam zijn verplicht");
+    setCreatingEmp(true);
+    try {
+      const { data, error } = await supabase
+        .from("employees")
+        .insert({
+          first_name: fn,
+          last_name: ln,
+          email: newEmpForm.email.trim() || null,
+          phone: newEmpForm.phone.trim() || null,
+          function_title: newEmpForm.function_title.trim() || null,
+          employer: newEmpForm.employer.trim() || null,
+          active: newEmpForm.active,
+        })
+        .select("id, first_name, last_name")
+        .single();
+      if (error) throw error;
+      setEmployees((prev) => [...prev, data]);
+      setRows((prev) => prev.map((r) => (selected.has(r.row) ? { ...r, employeeId: data.id, matched: true, newEmployee: false } : r)));
+      toast.success(`${selected.size} rij(en) toegewezen aan nieuwe medewerker ${ln} ${fn}`);
+      setSelected(new Set());
+      setNewEmpOpen(false);
+      setNewEmpForm({ first_name: "", last_name: "", email: "", phone: "", function_title: "", employer: "", active: true });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Onbekende fout";
+      toast.error(`Aanmaken mislukt: ${msg}`);
+    } finally {
+      setCreatingEmp(false);
+    }
+  };
 
   const handleFile = async (file: File) => {
     setParsing(true);
@@ -385,6 +425,23 @@ export function WpiImportDialog() {
                 <Button size="sm" variant="secondary" onClick={applyBulkAssign} disabled={selected.size === 0 || !bulkEmployee.trim()}>
                   <UserPlus className="w-4 h-4" /> Toewijzen
                 </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    if (selected.size === 0) return toast.error("Selecteer eerst rijen");
+                    // Prefill from first selected row (name split)
+                    const firstRow = rows.find((r) => selected.has(r.row));
+                    if (firstRow?.name) {
+                      const { first, last } = splitFullName(firstRow.name);
+                      setNewEmpForm((f) => ({ ...f, first_name: first || "", last_name: last || "" }));
+                    }
+                    setNewEmpOpen(true);
+                  }}
+                  disabled={selected.size === 0}
+                >
+                  <UserPlus className="w-4 h-4" /> Nieuwe medewerker
+                </Button>
               </div>
             </div>
 
@@ -521,6 +578,59 @@ export function WpiImportDialog() {
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      <Dialog open={newEmpOpen} onOpenChange={(o) => !creatingEmp && setNewEmpOpen(o)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Nieuwe medewerker aanmaken</DialogTitle>
+            <DialogDescription>
+              Vul de gegevens in. De {selected.size} geselecteerde rij(en) worden aan deze nieuwe medewerker gekoppeld.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-1">
+              <label className="text-xs font-medium">Voornaam *</label>
+              <Input value={newEmpForm.first_name} onChange={(e) => setNewEmpForm((f) => ({ ...f, first_name: e.target.value }))} />
+            </div>
+            <div className="col-span-1">
+              <label className="text-xs font-medium">Naam *</label>
+              <Input value={newEmpForm.last_name} onChange={(e) => setNewEmpForm((f) => ({ ...f, last_name: e.target.value }))} />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs font-medium">E-mail</label>
+              <Input type="email" value={newEmpForm.email} onChange={(e) => setNewEmpForm((f) => ({ ...f, email: e.target.value }))} />
+            </div>
+            <div className="col-span-1">
+              <label className="text-xs font-medium">Telefoon</label>
+              <Input value={newEmpForm.phone} onChange={(e) => setNewEmpForm((f) => ({ ...f, phone: e.target.value }))} />
+            </div>
+            <div className="col-span-1">
+              <label className="text-xs font-medium">Werkgever</label>
+              <Input value={newEmpForm.employer} onChange={(e) => setNewEmpForm((f) => ({ ...f, employer: e.target.value }))} />
+            </div>
+            <div className="col-span-2">
+              <label className="text-xs font-medium">Functie</label>
+              <Input value={newEmpForm.function_title} onChange={(e) => setNewEmpForm((f) => ({ ...f, function_title: e.target.value }))} />
+            </div>
+            <div className="col-span-2 flex items-center gap-4 pt-1 text-sm">
+              <label className="flex items-center gap-2">
+                <input type="radio" checked={newEmpForm.active} onChange={() => setNewEmpForm((f) => ({ ...f, active: true }))} />
+                Actief
+              </label>
+              <label className="flex items-center gap-2">
+                <input type="radio" checked={!newEmpForm.active} onChange={() => setNewEmpForm((f) => ({ ...f, active: false }))} />
+                Inactief
+              </label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNewEmpOpen(false)} disabled={creatingEmp}>Annuleren</Button>
+            <Button onClick={createAndAssignEmployee} disabled={creatingEmp}>
+              {creatingEmp ? <><Loader2 className="w-4 h-4 animate-spin" /> Aanmaken…</> : `Aanmaken & koppelen (${selected.size})`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

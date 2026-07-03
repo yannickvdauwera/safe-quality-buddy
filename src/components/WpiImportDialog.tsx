@@ -578,7 +578,10 @@ export function WpiImportDialog() {
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => setOpen(false)}>Annuleren</Button>
+          <Button variant="outline" onClick={() => {
+            if (rows.length > 0) { setConfirmCloseOpen(true); }
+            else { setOpen(false); }
+          }}>Annuleren</Button>
           <Button onClick={doImport} disabled={importing || rows.length === 0}>
             {importing
               ? <><Loader2 className="w-4 h-4 animate-spin" /> Importeren…</>

@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
@@ -52,6 +53,20 @@ const KLACHT_OPTIONS = [
 
 export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType }: Props) {
   const { user } = useAuth();
+  const employeesQuery = useQuery({
+    queryKey: ["employees-picker"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("employees")
+        .select("id,first_name,last_name,function_title,employer,active")
+        .eq("active", true)
+        .order("last_name", { ascending: true })
+        .limit(2000);
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+  const employees = employeesQuery.data ?? [];
   const [saving, setSaving] = useState(false);
   const [type, setType] = useState<string>(defaultType);
   const [severity, setSeverity] = useState<string>("middel");
@@ -275,7 +290,32 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>Slachtoffernaam *</Label>
-              <Input value={aoVictimName} onChange={(e) => setAoVictimName(e.target.value)} placeholder="Achternaam, Voornaam" required />
+              <Input
+                list="employees-datalist"
+                value={aoVictimName}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setAoVictimName(v);
+                  const match = employees.find(
+                    (emp) => `${emp.last_name}, ${emp.first_name}` === v,
+                  );
+                  if (match) {
+                    if (!involvedFirm && match.employer) setInvolvedFirm(match.employer);
+                  }
+                }}
+                placeholder="Achternaam, Voornaam (kies uit lijst of typ zelf)"
+                required
+              />
+              <datalist id="employees-datalist">
+                {employees.map((emp) => (
+                  <option
+                    key={emp.id}
+                    value={`${emp.last_name}, ${emp.first_name}`}
+                  >
+                    {emp.function_title ?? ""}{emp.employer ? ` — ${emp.employer}` : ""}
+                  </option>
+                ))}
+              </datalist>
             </div>
             <div className="space-y-1.5">
               <Label>Hulpverlener *</Label>

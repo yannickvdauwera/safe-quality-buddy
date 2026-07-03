@@ -19,6 +19,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
+import { useDraftForm } from "@/hooks/useDraftForm";
+import { RestoreDraftDialog, UnsavedChangesDialog } from "@/components/UnsavedChangesDialog";
 
 const FUNCTION_OPTIONS_USER = ["Brandwacht", "Veiligheidswacht", "Gasanalist"] as const;
 const FUNCTION_OPTIONS_ALL = [

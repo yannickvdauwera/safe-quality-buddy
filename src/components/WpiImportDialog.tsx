@@ -100,7 +100,42 @@ export function WpiImportDialog() {
 
 
 
-  const handleFile = async (file: File) => {
+  const createAndAssignEmployee = async () => {
+    if (selected.size === 0) return toast.error("Selecteer eerst rijen");
+    const fn = newEmpForm.first_name.trim();
+    const ln = newEmpForm.last_name.trim();
+    if (!fn || !ln) return toast.error("Voornaam en naam zijn verplicht");
+    setCreatingEmp(true);
+    try {
+      const { data, error } = await supabase
+        .from("employees")
+        .insert({
+          first_name: fn,
+          last_name: ln,
+          email: newEmpForm.email.trim() || null,
+          phone: newEmpForm.phone.trim() || null,
+          function_title: newEmpForm.function_title.trim() || null,
+          employer: newEmpForm.employer.trim() || null,
+          active: newEmpForm.active,
+        })
+        .select("id, first_name, last_name")
+        .single();
+      if (error) throw error;
+      setEmployees((prev) => [...prev, data]);
+      setRows((prev) => prev.map((r) => (selected.has(r.row) ? { ...r, employeeId: data.id, matched: true, newEmployee: false } : r)));
+      toast.success(`${selected.size} rij(en) toegewezen aan nieuwe medewerker ${ln} ${fn}`);
+      setSelected(new Set());
+      setNewEmpOpen(false);
+      setNewEmpForm({ first_name: "", last_name: "", email: "", phone: "", function_title: "", employer: "", active: true });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Onbekende fout";
+      toast.error(`Aanmaken mislukt: ${msg}`);
+    } finally {
+      setCreatingEmp(false);
+    }
+  };
+
+
     setParsing(true);
     setFileName(file.name);
     try {

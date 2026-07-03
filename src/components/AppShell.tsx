@@ -18,6 +18,7 @@ import {
   Hand,
   ChevronDown,
   ChevronRight,
+  FileEdit,
   
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";

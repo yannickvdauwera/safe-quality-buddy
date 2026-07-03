@@ -13,7 +13,6 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as SignTokenRouteImport } from './routes/sign.$token'
-import { Route as ReportTypeRouteImport } from './routes/report.$type'
 import { Route as AuthenticatedUsersRouteImport } from './routes/_authenticated/users'
 import { Route as AuthenticatedStopRouteImport } from './routes/_authenticated/stop'
 import { Route as AuthenticatedMosRouteImport } from './routes/_authenticated/mos'
@@ -54,11 +53,6 @@ const IndexRoute = IndexRouteImport.update({
 const SignTokenRoute = SignTokenRouteImport.update({
   id: '/sign/$token',
   path: '/sign/$token',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReportTypeRoute = ReportTypeRouteImport.update({
-  id: '/report/$type',
-  path: '/report/$type',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedUsersRoute = AuthenticatedUsersRouteImport.update({
@@ -196,7 +190,6 @@ export interface FileRoutesByFullPath {
   '/mos': typeof AuthenticatedMosRoute
   '/stop': typeof AuthenticatedStopRoute
   '/users': typeof AuthenticatedUsersRoute
-  '/report/$type': typeof ReportTypeRoute
   '/sign/$token': typeof SignTokenRoute
   '/employees/$id': typeof AuthenticatedEmployeesIdRoute
   '/inspecties/$id': typeof AuthenticatedInspectiesIdRoute
@@ -222,7 +215,6 @@ export interface FileRoutesByTo {
   '/mos': typeof AuthenticatedMosRoute
   '/stop': typeof AuthenticatedStopRoute
   '/users': typeof AuthenticatedUsersRoute
-  '/report/$type': typeof ReportTypeRoute
   '/sign/$token': typeof SignTokenRoute
   '/employees/$id': typeof AuthenticatedEmployeesIdRoute
   '/inspecties/$id': typeof AuthenticatedInspectiesIdRoute
@@ -252,7 +244,6 @@ export interface FileRoutesById {
   '/_authenticated/mos': typeof AuthenticatedMosRoute
   '/_authenticated/stop': typeof AuthenticatedStopRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
-  '/report/$type': typeof ReportTypeRoute
   '/sign/$token': typeof SignTokenRoute
   '/_authenticated/employees/$id': typeof AuthenticatedEmployeesIdRoute
   '/_authenticated/inspecties/$id': typeof AuthenticatedInspectiesIdRoute
@@ -282,7 +273,6 @@ export interface FileRouteTypes {
     | '/mos'
     | '/stop'
     | '/users'
-    | '/report/$type'
     | '/sign/$token'
     | '/employees/$id'
     | '/inspecties/$id'
@@ -308,7 +298,6 @@ export interface FileRouteTypes {
     | '/mos'
     | '/stop'
     | '/users'
-    | '/report/$type'
     | '/sign/$token'
     | '/employees/$id'
     | '/inspecties/$id'
@@ -337,7 +326,6 @@ export interface FileRouteTypes {
     | '/_authenticated/mos'
     | '/_authenticated/stop'
     | '/_authenticated/users'
-    | '/report/$type'
     | '/sign/$token'
     | '/_authenticated/employees/$id'
     | '/_authenticated/inspecties/$id'
@@ -360,7 +348,6 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
-  ReportTypeRoute: typeof ReportTypeRoute
   SignTokenRoute: typeof SignTokenRoute
   ApiPublicToolboxSignRoute: typeof ApiPublicToolboxSignRoute
 }
@@ -393,13 +380,6 @@ declare module '@tanstack/react-router' {
       path: '/sign/$token'
       fullPath: '/sign/$token'
       preLoaderRoute: typeof SignTokenRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/report/$type': {
-      id: '/report/$type'
-      path: '/report/$type'
-      fullPath: '/report/$type'
-      preLoaderRoute: typeof ReportTypeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/users': {
@@ -640,7 +620,6 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
-  ReportTypeRoute: ReportTypeRoute,
   SignTokenRoute: SignTokenRoute,
   ApiPublicToolboxSignRoute: ApiPublicToolboxSignRoute,
 }

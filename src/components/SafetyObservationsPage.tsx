@@ -17,7 +17,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Download, Plus, FileText, FileSpreadsheet, FileType, Link as LinkIcon, Camera, PenLine, Trash2 } from "lucide-react";
+import { Download, Plus, FileText, FileSpreadsheet, FileType, Camera, PenLine, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { SafetyObservationWizard } from "./SafetyObservationWizard";
 import { TYPE_LABELS, type SafetyObservationType } from "@/lib/safety-observations";
@@ -48,13 +48,6 @@ export function SafetyObservationsPage({ type }: { type: SafetyObservationType }
     },
   });
 
-  const copyPublicLink = async () => {
-    const url = `${window.location.origin}/report/${type}`;
-    await navigator.clipboard.writeText(url);
-    toast.success("Publieke link gekopieerd", {
-      description: "Deel deze via QR of e-mail. Werkt zonder login.",
-    });
-  };
 
   const bulkDelete = async () => {
     if (selectedIds.size === 0) return;
@@ -97,9 +90,6 @@ export function SafetyObservationsPage({ type }: { type: SafetyObservationType }
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={copyPublicLink}>
-            <LinkIcon className="w-4 h-4" /> Publieke link
-          </Button>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button><Plus className="w-4 h-4" /> Nieuwe {label.short}</Button>

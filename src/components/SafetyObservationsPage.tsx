@@ -127,6 +127,7 @@ export function SafetyObservationsPage({ type }: { type: SafetyObservationType }
       )}
 
       <Card className="p-0 overflow-hidden">
+        <div className="overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
@@ -145,7 +146,7 @@ export function SafetyObservationsPage({ type }: { type: SafetyObservationType }
               <TableHead>Gevaren</TableHead>
               <TableHead className="w-24">Extra</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-right">Export</TableHead>
+              <TableHead className="text-right whitespace-nowrap">Export</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -186,7 +187,7 @@ export function SafetyObservationsPage({ type }: { type: SafetyObservationType }
                     </div>
                   </TableCell>
                   <TableCell><Badge variant="secondary">{o.status}</Badge></TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="text-right whitespace-nowrap">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="outline" size="sm"><Download className="w-4 h-4" /> Export</Button>
@@ -209,6 +210,7 @@ export function SafetyObservationsPage({ type }: { type: SafetyObservationType }
             )}
           </TableBody>
         </Table>
+        </div>
       </Card>
 
       <AlertDialog open={confirmDelete} onOpenChange={setConfirmDelete}>

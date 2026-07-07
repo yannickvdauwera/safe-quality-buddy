@@ -75,7 +75,7 @@ const baseNav: NavItem[] = [
   { to: "/drafts", label: "Mijn concepten", icon: FileEdit },
   { to: "/documents", label: "Documenten", icon: FileText, disabled: true },
   { to: "/toolboxes", label: "Toolboxen", icon: ClipboardCheck },
-  { to: "/risk-analyses", label: "Risicoanalyses", icon: ShieldAlert, disabled: true },
+  { to: "/risk-analyses", label: "Risicoanalyses", icon: ShieldAlert },
 ];
 
 

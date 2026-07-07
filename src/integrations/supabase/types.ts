@@ -320,6 +320,308 @@ export type Database = {
           },
         ]
       }
+      risk_analyses: {
+        Row: {
+          analysis_type: Database["public"]["Enums"]["risk_analysis_type"]
+          created_at: string
+          created_by: string | null
+          current_version: number
+          department: string | null
+          description: string | null
+          id: string
+          status: Database["public"]["Enums"]["risk_analysis_status"]
+          title: string
+          updated_at: string
+          workpost: string | null
+        }
+        Insert: {
+          analysis_type?: Database["public"]["Enums"]["risk_analysis_type"]
+          created_at?: string
+          created_by?: string | null
+          current_version?: number
+          department?: string | null
+          description?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["risk_analysis_status"]
+          title: string
+          updated_at?: string
+          workpost?: string | null
+        }
+        Update: {
+          analysis_type?: Database["public"]["Enums"]["risk_analysis_type"]
+          created_at?: string
+          created_by?: string | null
+          current_version?: number
+          department?: string | null
+          description?: string | null
+          id?: string
+          status?: Database["public"]["Enums"]["risk_analysis_status"]
+          title?: string
+          updated_at?: string
+          workpost?: string | null
+        }
+        Relationships: []
+      }
+      risk_analysis_items: {
+        Row: {
+          activity: string | null
+          created_at: string
+          hazard: string
+          id: string
+          measure_types: Database["public"]["Enums"]["risk_measure_type"][]
+          measures: string | null
+          notes: string | null
+          position: number
+          residual_b: number | null
+          residual_e: number | null
+          residual_r: number | null
+          residual_w: number | null
+          risk_description: string | null
+          score_b: number | null
+          score_e: number | null
+          score_r: number | null
+          score_w: number | null
+          updated_at: string
+          version_id: string
+        }
+        Insert: {
+          activity?: string | null
+          created_at?: string
+          hazard: string
+          id?: string
+          measure_types?: Database["public"]["Enums"]["risk_measure_type"][]
+          measures?: string | null
+          notes?: string | null
+          position?: number
+          residual_b?: number | null
+          residual_e?: number | null
+          residual_r?: number | null
+          residual_w?: number | null
+          risk_description?: string | null
+          score_b?: number | null
+          score_e?: number | null
+          score_r?: number | null
+          score_w?: number | null
+          updated_at?: string
+          version_id: string
+        }
+        Update: {
+          activity?: string | null
+          created_at?: string
+          hazard?: string
+          id?: string
+          measure_types?: Database["public"]["Enums"]["risk_measure_type"][]
+          measures?: string | null
+          notes?: string | null
+          position?: number
+          residual_b?: number | null
+          residual_e?: number | null
+          residual_r?: number | null
+          residual_w?: number | null
+          risk_description?: string | null
+          score_b?: number | null
+          score_e?: number | null
+          score_r?: number | null
+          score_w?: number | null
+          updated_at?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_analysis_items_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "risk_analysis_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      risk_analysis_sessions: {
+        Row: {
+          analysis_id: string
+          created_at: string
+          created_by: string | null
+          given_at: string | null
+          given_by: string | null
+          given_by_name: string | null
+          id: string
+          location: string | null
+          notes: string | null
+          scheduled_at: string | null
+          signing_token: string
+          status: Database["public"]["Enums"]["risk_session_status"]
+          updated_at: string
+          version_id: string
+        }
+        Insert: {
+          analysis_id: string
+          created_at?: string
+          created_by?: string | null
+          given_at?: string | null
+          given_by?: string | null
+          given_by_name?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          scheduled_at?: string | null
+          signing_token?: string
+          status?: Database["public"]["Enums"]["risk_session_status"]
+          updated_at?: string
+          version_id: string
+        }
+        Update: {
+          analysis_id?: string
+          created_at?: string
+          created_by?: string | null
+          given_at?: string | null
+          given_by?: string | null
+          given_by_name?: string | null
+          id?: string
+          location?: string | null
+          notes?: string | null
+          scheduled_at?: string | null
+          signing_token?: string
+          status?: Database["public"]["Enums"]["risk_session_status"]
+          updated_at?: string
+          version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_analysis_sessions_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "risk_analyses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risk_analysis_sessions_given_by_fkey"
+            columns: ["given_by"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risk_analysis_sessions_version_id_fkey"
+            columns: ["version_id"]
+            isOneToOne: false
+            referencedRelation: "risk_analysis_versions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      risk_analysis_signatures: {
+        Row: {
+          employee_id: string
+          id: string
+          session_id: string
+          sign_method: Database["public"]["Enums"]["risk_sign_method"]
+          signature_data: string
+          signed_at: string
+          signed_by_user_id: string | null
+        }
+        Insert: {
+          employee_id: string
+          id?: string
+          session_id: string
+          sign_method?: Database["public"]["Enums"]["risk_sign_method"]
+          signature_data: string
+          signed_at?: string
+          signed_by_user_id?: string | null
+        }
+        Update: {
+          employee_id?: string
+          id?: string
+          session_id?: string
+          sign_method?: Database["public"]["Enums"]["risk_sign_method"]
+          signature_data?: string
+          signed_at?: string
+          signed_by_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_analysis_signatures_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risk_analysis_signatures_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "risk_analysis_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      risk_analysis_versions: {
+        Row: {
+          analysis_id: string
+          change_notes: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          published_at: string | null
+          version_number: number
+        }
+        Insert: {
+          analysis_id: string
+          change_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published_at?: string | null
+          version_number: number
+        }
+        Update: {
+          analysis_id?: string
+          change_notes?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          published_at?: string | null
+          version_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_analysis_versions_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "risk_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      risk_session_participants: {
+        Row: {
+          employee_id: string
+          session_id: string
+        }
+        Insert: {
+          employee_id: string
+          session_id: string
+        }
+        Update: {
+          employee_id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_session_participants_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "risk_session_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "risk_analysis_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       safety_observations: {
         Row: {
           action_taken: string | null
@@ -679,6 +981,11 @@ export type Database = {
         | "klacht"
         | "andere"
         | "kwaliteitscontrole"
+      risk_analysis_status: "draft" | "published" | "archived"
+      risk_analysis_type: "werkpost" | "tra" | "lmra" | "rie"
+      risk_measure_type: "technical" | "organizational" | "human"
+      risk_session_status: "planned" | "in_progress" | "completed" | "cancelled"
+      risk_sign_method: "kiosk" | "qr" | "login"
       safety_observation_type: "mos" | "stop"
       toolbox_session_status:
         | "planned"
@@ -827,6 +1134,11 @@ export const Constants = {
         "andere",
         "kwaliteitscontrole",
       ],
+      risk_analysis_status: ["draft", "published", "archived"],
+      risk_analysis_type: ["werkpost", "tra", "lmra", "rie"],
+      risk_measure_type: ["technical", "organizational", "human"],
+      risk_session_status: ["planned", "in_progress", "completed", "cancelled"],
+      risk_sign_method: ["kiosk", "qr", "login"],
       safety_observation_type: ["mos", "stop"],
       toolbox_session_status: [
         "planned",

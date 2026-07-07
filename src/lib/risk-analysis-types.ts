@@ -144,6 +144,6 @@ export function levelsFor(method: RiskMethod) {
 
 // Drempel voor "hoog risico" per methode (gebruikt voor statistieken).
 export function highRiskThreshold(method: RiskMethod): number {
-  return method === "kans_ernst" ? 13 : 200;
+  return method === "kans_ernst" ? 15 : 200;
 }
 

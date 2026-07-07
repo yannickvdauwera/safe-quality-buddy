@@ -206,6 +206,7 @@ function KanbanColumn({
   onExport: (id: string) => void;
   muted?: boolean;
 }) {
+  const navigate = useNavigate();
   return (
     <div className={`rounded-lg border bg-muted/30 p-3 flex flex-col gap-3 ${muted ? "opacity-90" : ""}`}>
       <div className="flex items-center justify-between px-1">
@@ -219,42 +220,43 @@ function KanbanColumn({
       ) : (
         <div className="flex flex-col gap-2">
           {items.map((a) => (
-            <div key={a.id} className="relative group">
-              <Link to="/risk-analyses/$id" params={{ id: a.id }} className="block">
-                <Card className="p-3 hover:border-primary/50 hover:shadow-sm transition-all">
-                  <div className="flex items-start justify-between gap-2 mb-2">
-                    <h3 className="font-semibold leading-tight flex-1 text-sm pr-16">{a.title}</h3>
-                    <Badge variant={a.status === "published" ? "default" : "secondary"} className="text-[10px]">
-                      {STATUS_LABELS[a.status as RiskAnalysisStatus] ?? a.status}
-                    </Badge>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 mb-2">
-                    {a.workpost && <Badge variant="outline" className="text-[10px]">{a.workpost}</Badge>}
-                    {a.department && <Badge variant="outline" className="text-[10px]">{a.department}</Badge>}
-                  </div>
-                  {a.description && <p className="text-xs text-muted-foreground line-clamp-2">{a.description}</p>}
-                  <div className="text-[10px] text-muted-foreground mt-2 pt-2 border-t">
-                    v{a.current_version} · {new Date(a.updated_at).toLocaleDateString("nl-BE")}
-                  </div>
-                </Card>
-              </Link>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="absolute top-2 right-14 h-7 w-7 opacity-70 group-hover:opacity-100"
-                title="Exporteer PDF"
-                disabled={exportingId === a.id}
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onExport(a.id);
-                }}
-              >
-                {exportingId === a.id
-                  ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  : <FileDown className="w-3.5 h-3.5" />}
-              </Button>
-            </div>
+            <Card
+              key={a.id}
+              className="p-3 hover:border-primary/50 hover:shadow-sm transition-all cursor-pointer"
+              onClick={() => navigate({ to: "/risk-analyses/$id", params: { id: a.id } })}
+            >
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <h3 className="font-semibold leading-tight flex-1 text-sm">{a.title}</h3>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <Badge variant={a.status === "published" ? "default" : "secondary"} className="text-[10px]">
+                    {STATUS_LABELS[a.status as RiskAnalysisStatus] ?? a.status}
+                  </Badge>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-6 w-6 -mr-1"
+                    title="Exporteer PDF"
+                    disabled={exportingId === a.id}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onExport(a.id);
+                    }}
+                  >
+                    {exportingId === a.id
+                      ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      : <FileDown className="w-3.5 h-3.5" />}
+                  </Button>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {a.workpost && <Badge variant="outline" className="text-[10px]">{a.workpost}</Badge>}
+                {a.department && <Badge variant="outline" className="text-[10px]">{a.department}</Badge>}
+              </div>
+              {a.description && <p className="text-xs text-muted-foreground line-clamp-2">{a.description}</p>}
+              <div className="text-[10px] text-muted-foreground mt-2 pt-2 border-t">
+                v{a.current_version} · {new Date(a.updated_at).toLocaleDateString("nl-BE")}
+              </div>
+            </Card>
           ))}
         </div>
       )}

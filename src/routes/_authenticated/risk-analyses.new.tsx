@@ -237,7 +237,7 @@ function NewRiskAnalysis() {
                 <Select value={importType} onValueChange={(v) => setImportType(v as RiskAnalysisType)}>
                   <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {(Object.keys(TYPE_LABELS) as RiskAnalysisType[]).map((t) => (
+                    {SELECTABLE_TYPES.map((t) => (
                       <SelectItem key={t} value={t}>{TYPE_LABELS[t]}</SelectItem>
                     ))}
                   </SelectContent>

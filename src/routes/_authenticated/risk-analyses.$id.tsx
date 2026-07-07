@@ -141,8 +141,14 @@ function RiskAnalysisDetail() {
       score_b: method === "kans_ernst" ? null : (editItem.score_b ?? null),
       score_e: editItem.score_e ?? null,
       score_r: computeRFor(method, editItem.score_w ?? null, editItem.score_b ?? null, editItem.score_e ?? null),
-      measures: editItem.measures || null,
-      measure_types: editItem.measure_types ?? [],
+      measures: (() => {
+        const byType = editItem.measures_by_type ?? {};
+        const serialized = serializeMeasures(byType);
+        // Behoud legacy tekst zolang de gebruiker nog niets in de per-type velden heeft ingevuld.
+        if (serialized) return serialized;
+        return editItem.measures_legacy?.trim() || null;
+      })(),
+      measure_types: measureTypesFrom(editItem.measures_by_type ?? {}),
       residual_w: editItem.residual_w ?? null,
       residual_b: method === "kans_ernst" ? null : (editItem.residual_b ?? null),
       residual_e: editItem.residual_e ?? null,

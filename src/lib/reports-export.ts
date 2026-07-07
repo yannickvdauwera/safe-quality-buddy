@@ -236,7 +236,7 @@ const filename = (r: ReportExport, ext: string) =>
   `TSA_${label(r.type).short}_${(r.details as { incident_date?: string })?.incident_date ?? r.observed_at.slice(0, 10)}_${r.id.slice(0, 8)}.${ext}`;
 
 // ---------------- PDF ----------------
-export async function exportReportPdf(r: ReportExport) {
+async function renderReportPdf(r: ReportExport): Promise<jsPDF> {
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
@@ -334,7 +334,20 @@ export async function exportReportPdf(r: ReportExport) {
     doc.setPage(i);
     drawFooter();
   }
+  return doc;
+}
+
+export async function exportReportPdf(r: ReportExport) {
+  const doc = await renderReportPdf(r);
   doc.save(filename(r, "pdf"));
+}
+
+/** Build the report PDF and return it as base64 (no download). */
+export async function buildReportPdfBase64(r: ReportExport): Promise<{ base64: string; filename: string }> {
+  const doc = await renderReportPdf(r);
+  const dataUri = doc.output("datauristring");
+  const base64 = dataUri.substring(dataUri.indexOf(",") + 1);
+  return { base64, filename: filename(r, "pdf") };
 }
 
 // ---------------- Excel ----------------

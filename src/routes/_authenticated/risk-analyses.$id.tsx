@@ -537,19 +537,51 @@ function ItemDialog({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs">Risicoreductie / maatregelen</Label>
-            <Textarea rows={4} value={item.measures ?? ""} onChange={(e) => onChange({ ...item, measures: e.target.value })} />
-            <div className="flex gap-4 pt-1">
-              {(Object.keys(MEASURE_TYPE_LABELS) as RiskMeasureType[]).map((t) => (
-                <label key={t} className="flex items-center gap-2 text-sm cursor-pointer">
-                  <Checkbox
-                    checked={item.measure_types?.includes(t) ?? false}
-                    onCheckedChange={() => toggleType(t)}
-                  />
-                  {MEASURE_TYPE_LABELS[t]}
-                </label>
-              ))}
+            <div className="flex items-baseline justify-between">
+              <Label className="text-xs">Risicoreductie — per type maatregel</Label>
+              <span className="text-[10px] text-muted-foreground">
+                Volgorde: technisch (bron) → organisatorisch → mensgericht (PBM)
+              </span>
             </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {MEASURE_TYPE_ORDER.map((t) => {
+                const meta = MEASURE_TYPE_META[t];
+                return (
+                  <div key={t} className="border rounded-md overflow-hidden">
+                    <div
+                      className="px-3 py-2 text-xs font-semibold flex items-center gap-2 border-b"
+                      style={{ background: meta.swatch + "18", color: meta.swatch }}
+                    >
+                      <span
+                        className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold text-white"
+                        style={{ background: meta.swatch }}
+                      >
+                        {meta.short}
+                      </span>
+                      {meta.label}
+                    </div>
+                    <Textarea
+                      rows={5}
+                      className="border-0 rounded-none focus-visible:ring-0 text-sm"
+                      placeholder={meta.hint}
+                      value={byType[t] ?? ""}
+                      onChange={(e) => setByType(t, e.target.value)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            {item.measures_legacy && (
+              <div className="border rounded-md p-3 bg-yellow-50 border-yellow-200 text-xs space-y-1">
+                <div className="font-semibold text-yellow-900">
+                  Bestaande omschrijving (nog niet ingedeeld per type)
+                </div>
+                <div className="whitespace-pre-line text-yellow-900/80">{item.measures_legacy}</div>
+                <div className="text-[10px] text-yellow-800">
+                  Kopieer de tekst in de juiste kolom(men) hierboven en sla op — dan verdwijnt dit blok.
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="border rounded-md p-3 space-y-3 bg-muted/30">

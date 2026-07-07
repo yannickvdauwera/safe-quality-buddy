@@ -120,9 +120,6 @@ function RiskAnalysesLibrary() {
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold">Risicoanalyses</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Werkpostanalyses en TRA's volgens de Kans × Ernst matrix (5 × 5).
-          </p>
         </div>
         <div className="flex gap-2">
           <Button onClick={() => navigate({ to: "/risk-analyses/new", search: { mode: "manual" } })}>

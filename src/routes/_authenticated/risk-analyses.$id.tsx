@@ -19,7 +19,7 @@ import { exportRiskAnalysisToPdf } from "@/lib/risk-analysis-pdf";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  TYPE_LABELS, STATUS_LABELS, MEASURE_TYPE_LABELS, MEASURE_TYPE_META, MEASURE_TYPE_ORDER,
+  TYPE_LABELS, STATUS_LABELS, MEASURE_TYPE_META, MEASURE_TYPE_ORDER,
   METHOD_LABELS, SELECTABLE_TYPES,
   classifyRiskFor, computeRFor, levelsFor, highRiskThreshold,
   parseMeasures, serializeMeasures, measureTypesFrom,

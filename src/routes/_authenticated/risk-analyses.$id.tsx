@@ -488,9 +488,10 @@ function ItemDialog({
   const kansLabel = isKE ? "K · Kans" : "W · Waarschijnlijkheid";
   const ernstLabel = isKE ? "E · Ernst" : "E · Effect";
 
-  const toggleType = (t: RiskMeasureType) => {
-    const cur = item.measure_types ?? [];
-    onChange({ ...item, measure_types: cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t] });
+  const byType: MeasuresByType = item.measures_by_type ?? {};
+  const setByType = (t: RiskMeasureType, v: string) => {
+    const next = { ...byType, [t]: v };
+    onChange({ ...item, measures_by_type: next });
   };
 
   return (

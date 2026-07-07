@@ -407,18 +407,7 @@ function RiskAnalysisDetail() {
                       </div>
                     </td>
                     <td className="py-3 px-2 max-w-md">
-                      {it.measures ? (
-                        <div className="text-xs whitespace-pre-line line-clamp-3">{it.measures}</div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                      {it.measure_types.length > 0 && (
-                        <div className="flex gap-1 mt-1">
-                          {it.measure_types.map((m) => (
-                            <Badge key={m} variant="outline" className="text-[10px] py-0">{MEASURE_TYPE_LABELS[m]}</Badge>
-                          ))}
-                        </div>
-                      )}
+                      <MeasuresCell raw={it.measures} />
                     </td>
                     <td className="py-3 px-2">
                       <RiskBadge r={it.residual_r} method={method} />

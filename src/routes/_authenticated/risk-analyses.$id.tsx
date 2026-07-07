@@ -12,8 +12,11 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+
 import {
-  ArrowLeft, Plus, Trash2, Save, Edit, Loader2, ShieldAlert, TrendingDown, FileDown,
+  ArrowLeft, Plus, Trash2, Save, Edit, Loader2, ShieldAlert, TrendingDown, FileDown, Users, Check, X,
 } from "lucide-react";
 import { exportRiskAnalysisToPdf } from "@/lib/risk-analysis-pdf";
 import { useMemo, useState } from "react";

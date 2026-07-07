@@ -29,6 +29,7 @@ import { Route as ApiPublicToolboxSignRouteImport } from './routes/api/public/to
 import { Route as AuthenticatedToolboxesNewRouteImport } from './routes/_authenticated/toolboxes.new'
 import { Route as AuthenticatedToolboxesIdRouteImport } from './routes/_authenticated/toolboxes.$id'
 import { Route as AuthenticatedRiskAnalysesNewRouteImport } from './routes/_authenticated/risk-analyses.new'
+import { Route as AuthenticatedRiskAnalysesIdRouteImport } from './routes/_authenticated/risk-analyses.$id'
 import { Route as AuthenticatedMeldingenOngevallenRouteImport } from './routes/_authenticated/meldingen.ongevallen'
 import { Route as AuthenticatedMeldingenInternRouteImport } from './routes/_authenticated/meldingen.intern'
 import { Route as AuthenticatedMeldingenIdRouteImport } from './routes/_authenticated/meldingen.$id'
@@ -145,6 +146,12 @@ const AuthenticatedRiskAnalysesNewRoute =
     path: '/risk-analyses/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedRiskAnalysesIdRoute =
+  AuthenticatedRiskAnalysesIdRouteImport.update({
+    id: '/risk-analyses/$id',
+    path: '/risk-analyses/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMeldingenOngevallenRoute =
   AuthenticatedMeldingenOngevallenRouteImport.update({
     id: '/ongevallen',
@@ -212,6 +219,7 @@ export interface FileRoutesByFullPath {
   '/meldingen/$id': typeof AuthenticatedMeldingenIdRoute
   '/meldingen/intern': typeof AuthenticatedMeldingenInternRoute
   '/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
+  '/risk-analyses/$id': typeof AuthenticatedRiskAnalysesIdRoute
   '/risk-analyses/new': typeof AuthenticatedRiskAnalysesNewRoute
   '/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
@@ -239,6 +247,7 @@ export interface FileRoutesByTo {
   '/meldingen/$id': typeof AuthenticatedMeldingenIdRoute
   '/meldingen/intern': typeof AuthenticatedMeldingenInternRoute
   '/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
+  '/risk-analyses/$id': typeof AuthenticatedRiskAnalysesIdRoute
   '/risk-analyses/new': typeof AuthenticatedRiskAnalysesNewRoute
   '/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
@@ -270,6 +279,7 @@ export interface FileRoutesById {
   '/_authenticated/meldingen/$id': typeof AuthenticatedMeldingenIdRoute
   '/_authenticated/meldingen/intern': typeof AuthenticatedMeldingenInternRoute
   '/_authenticated/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
+  '/_authenticated/risk-analyses/$id': typeof AuthenticatedRiskAnalysesIdRoute
   '/_authenticated/risk-analyses/new': typeof AuthenticatedRiskAnalysesNewRoute
   '/_authenticated/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/_authenticated/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
@@ -301,6 +311,7 @@ export interface FileRouteTypes {
     | '/meldingen/$id'
     | '/meldingen/intern'
     | '/meldingen/ongevallen'
+    | '/risk-analyses/$id'
     | '/risk-analyses/new'
     | '/toolboxes/$id'
     | '/toolboxes/new'
@@ -328,6 +339,7 @@ export interface FileRouteTypes {
     | '/meldingen/$id'
     | '/meldingen/intern'
     | '/meldingen/ongevallen'
+    | '/risk-analyses/$id'
     | '/risk-analyses/new'
     | '/toolboxes/$id'
     | '/toolboxes/new'
@@ -358,6 +370,7 @@ export interface FileRouteTypes {
     | '/_authenticated/meldingen/$id'
     | '/_authenticated/meldingen/intern'
     | '/_authenticated/meldingen/ongevallen'
+    | '/_authenticated/risk-analyses/$id'
     | '/_authenticated/risk-analyses/new'
     | '/_authenticated/toolboxes/$id'
     | '/_authenticated/toolboxes/new'
@@ -520,6 +533,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRiskAnalysesNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/risk-analyses/$id': {
+      id: '/_authenticated/risk-analyses/$id'
+      path: '/risk-analyses/$id'
+      fullPath: '/risk-analyses/$id'
+      preLoaderRoute: typeof AuthenticatedRiskAnalysesIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/meldingen/ongevallen': {
       id: '/_authenticated/meldingen/ongevallen'
       path: '/ongevallen'
@@ -630,6 +650,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedStopRoute: typeof AuthenticatedStopRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedEmployeesIdRoute: typeof AuthenticatedEmployeesIdRoute
+  AuthenticatedRiskAnalysesIdRoute: typeof AuthenticatedRiskAnalysesIdRoute
   AuthenticatedRiskAnalysesNewRoute: typeof AuthenticatedRiskAnalysesNewRoute
   AuthenticatedToolboxesIdRoute: typeof AuthenticatedToolboxesIdRoute
   AuthenticatedToolboxesNewRoute: typeof AuthenticatedToolboxesNewRoute
@@ -648,6 +669,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedStopRoute: AuthenticatedStopRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedEmployeesIdRoute: AuthenticatedEmployeesIdRoute,
+  AuthenticatedRiskAnalysesIdRoute: AuthenticatedRiskAnalysesIdRoute,
   AuthenticatedRiskAnalysesNewRoute: AuthenticatedRiskAnalysesNewRoute,
   AuthenticatedToolboxesIdRoute: AuthenticatedToolboxesIdRoute,
   AuthenticatedToolboxesNewRoute: AuthenticatedToolboxesNewRoute,

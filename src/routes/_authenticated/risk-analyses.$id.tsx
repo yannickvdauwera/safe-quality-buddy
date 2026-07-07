@@ -373,6 +373,7 @@ function RiskAnalysisDetail() {
                 current_version: analysis.current_version,
                 version_change_notes: currentVersion?.change_notes,
                 version_published_at: currentVersion?.published_at,
+                executors: executors ?? [],
                 items: items ?? [],
               }).catch((e) => toast.error(e instanceof Error ? e.message : "Export mislukt"))
             }

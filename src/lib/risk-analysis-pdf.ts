@@ -153,7 +153,7 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
 
   autoTable(doc, {
     startY: y,
-    head: [["Totaal items", `Bruto R ≥ ${threshold}`, `Netto R ≥ ${threshold}`, "Gem. risicoreductie"]],
+    head: [["Totaal items", `Bruto R >= ${threshold}`, `Netto R >= ${threshold}`, "Gem. risicoreductie"]],
     body: [[String(a.items.length), String(grossHigh), String(netHigh), `${avgReduction}%`]],
     theme: "grid",
     styles: { fontSize: 9, cellPadding: 3, halign: "center", textColor: TSA_DARK, lineColor: [229, 229, 229], lineWidth: 0.1 },

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShieldAlert, Plus, Upload, Search } from "lucide-react";
+import { ShieldAlert, Plus, Search } from "lucide-react";
 import { STATUS_LABELS, TYPE_LABELS, type RiskAnalysisType } from "@/lib/risk-analysis-types";
 import { useState } from "react";
 

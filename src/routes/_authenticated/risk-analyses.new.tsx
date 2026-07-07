@@ -302,6 +302,17 @@ function NewRiskAnalysis() {
               </Select>
             </div>
             <div className="space-y-2">
+              <Label>Methode</Label>
+              <Select value={riskMethod} onValueChange={(v) => setRiskMethod(v as RiskMethod)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(METHOD_LABELS) as RiskMethod[]).map((m) => (
+                    <SelectItem key={m} value={m}>{METHOD_LABELS[m]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label>Werkpost / functie</Label>
               <Input value={workpost} onChange={(e) => setWorkpost(e.target.value)} placeholder="Bv. Brand- en veiligheidswacht" />
             </div>

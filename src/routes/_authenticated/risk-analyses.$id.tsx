@@ -118,6 +118,8 @@ function RiskAnalysisDetail() {
     queryClient.invalidateQueries({ queryKey: ["risk-analysis", id] });
   };
 
+  const method: RiskMethod = (analysis?.risk_method as RiskMethod) ?? "fine_kinney";
+
   const saveItem = async () => {
     if (!editItem || !currentVersion) return;
     if (!editItem.hazard?.trim()) return toast.error("Gevaar is verplicht");
@@ -128,15 +130,15 @@ function RiskAnalysisDetail() {
       hazard: editItem.hazard.trim(),
       risk_description: editItem.risk_description || null,
       score_w: editItem.score_w ?? null,
-      score_b: editItem.score_b ?? null,
+      score_b: method === "kans_ernst" ? null : (editItem.score_b ?? null),
       score_e: editItem.score_e ?? null,
-      score_r: computeR(editItem.score_w ?? null, editItem.score_b ?? null, editItem.score_e ?? null),
+      score_r: computeRFor(method, editItem.score_w ?? null, editItem.score_b ?? null, editItem.score_e ?? null),
       measures: editItem.measures || null,
       measure_types: editItem.measure_types ?? [],
       residual_w: editItem.residual_w ?? null,
-      residual_b: editItem.residual_b ?? null,
+      residual_b: method === "kans_ernst" ? null : (editItem.residual_b ?? null),
       residual_e: editItem.residual_e ?? null,
-      residual_r: computeR(editItem.residual_w ?? null, editItem.residual_b ?? null, editItem.residual_e ?? null),
+      residual_r: computeRFor(method, editItem.residual_w ?? null, editItem.residual_b ?? null, editItem.residual_e ?? null),
     };
     try {
       if (editItem.id) {

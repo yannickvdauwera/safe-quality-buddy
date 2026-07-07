@@ -3,6 +3,12 @@ export type RiskAnalysisStatus = "draft" | "published" | "archived";
 export type RiskMeasureType = "technical" | "organizational" | "human";
 export type RiskSessionStatus = "planned" | "in_progress" | "completed" | "cancelled";
 export type RiskSignMethod = "kiosk" | "qr" | "login";
+export type RiskMethod = "fine_kinney" | "kans_ernst";
+
+export const METHOD_LABELS: Record<RiskMethod, string> = {
+  fine_kinney: "Fine & Kinney (W × B × E)",
+  kans_ernst: "Kans × Ernst (5 × 5)",
+};
 
 export const TYPE_LABELS: Record<RiskAnalysisType, string> = {
   werkpost: "Werkpostanalyse",
@@ -81,3 +87,64 @@ export const E_SCALE = [
   { value: 3, label: "3 — Belangrijk (EHBO)" },
   { value: 1, label: "1 — Gering (geen letsel)" },
 ];
+
+// ============ Kans × Ernst (5×5) ============
+// Score = K × E, waarbij K ∈ 1..5 en E ∈ 1..5, R ∈ 1..25.
+// K wordt opgeslagen in score_w, E in score_e, R in score_r (score_b blijft null).
+
+export const K_SCALE = [
+  { value: 5, label: "5 — Zeer waarschijnlijk / vaak" },
+  { value: 4, label: "4 — Waarschijnlijk" },
+  { value: 3, label: "3 — Mogelijk" },
+  { value: 2, label: "2 — Onwaarschijnlijk" },
+  { value: 1, label: "1 — Zeer onwaarschijnlijk" },
+];
+
+export const E5_SCALE = [
+  { value: 5, label: "5 — Catastrofaal (dodelijk)" },
+  { value: 4, label: "4 — Zeer ernstig (blijvend letsel)" },
+  { value: 3, label: "3 — Ernstig (verzuim)" },
+  { value: 2, label: "2 — Beperkt (EHBO)" },
+  { value: 1, label: "1 — Verwaarloosbaar" },
+];
+
+export const RISK_LEVELS_KE: Record<RiskLevel, { label: string; min: number; max: number; color: string; badgeClass: string }> = {
+  very_low: { label: "Zeer laag", min: 1, max: 4, color: "#16a34a", badgeClass: "bg-green-100 text-green-800 border-green-300" },
+  low: { label: "Laag", min: 4, max: 7, color: "#65a30d", badgeClass: "bg-lime-100 text-lime-800 border-lime-300" },
+  medium: { label: "Gemiddeld", min: 7, max: 13, color: "#eab308", badgeClass: "bg-yellow-100 text-yellow-800 border-yellow-300" },
+  high: { label: "Hoog", min: 13, max: 20, color: "#ea580c", badgeClass: "bg-orange-100 text-orange-800 border-orange-300" },
+  very_high: { label: "Zeer hoog", min: 20, max: 25, color: "#dc2626", badgeClass: "bg-red-100 text-red-800 border-red-300" },
+};
+
+export function classifyRiskKE(r: number | null | undefined): RiskLevel | null {
+  if (r == null || Number.isNaN(r)) return null;
+  if (r < 4) return "very_low";
+  if (r < 7) return "low";
+  if (r < 13) return "medium";
+  if (r < 20) return "high";
+  return "very_high";
+}
+
+export function computeRKE(k: number | null, e: number | null): number | null {
+  if (k == null || e == null) return null;
+  return k * e;
+}
+
+// Method-agnostic helpers — pick the right formula/classificatie op basis van methode.
+export function computeRFor(method: RiskMethod, w: number | null, b: number | null, e: number | null): number | null {
+  return method === "kans_ernst" ? computeRKE(w, e) : computeR(w, b, e);
+}
+
+export function classifyRiskFor(method: RiskMethod, r: number | null | undefined): RiskLevel | null {
+  return method === "kans_ernst" ? classifyRiskKE(r) : classifyRisk(r);
+}
+
+export function levelsFor(method: RiskMethod) {
+  return method === "kans_ernst" ? RISK_LEVELS_KE : RISK_LEVELS;
+}
+
+// Drempel voor "hoog risico" per methode (gebruikt voor statistieken).
+export function highRiskThreshold(method: RiskMethod): number {
+  return method === "kans_ernst" ? 13 : 200;
+}
+

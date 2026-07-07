@@ -10,7 +10,7 @@ import { Upload, Save, Loader2, ArrowLeft, FileSpreadsheet, CheckCircle2 } from 
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { TYPE_LABELS, classifyRisk, RISK_LEVELS, type RiskAnalysisType } from "@/lib/risk-analysis-types";
+import { TYPE_LABELS, METHOD_LABELS, levelsFor, type RiskAnalysisType, type RiskMethod } from "@/lib/risk-analysis-types";
 import { parseMondayExport, type ParsedRiskAnalysis } from "@/lib/risk-analysis-excel";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -32,6 +32,7 @@ function NewRiskAnalysis() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [analysisType, setAnalysisType] = useState<RiskAnalysisType>("werkpost");
+  const [riskMethod, setRiskMethod] = useState<RiskMethod>("fine_kinney");
   const [workpost, setWorkpost] = useState("");
   const [department, setDepartment] = useState("");
   const [saving, setSaving] = useState(false);
@@ -40,6 +41,7 @@ function NewRiskAnalysis() {
   const [parsedAnalyses, setParsedAnalyses] = useState<ParsedRiskAnalysis[]>([]);
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [importType, setImportType] = useState<RiskAnalysisType>("werkpost");
+  const [importMethod, setImportMethod] = useState<RiskMethod>("fine_kinney");
   const [importDept, setImportDept] = useState("");
   const [importing, setImporting] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);
@@ -72,6 +74,7 @@ function NewRiskAnalysis() {
           title: title.trim(),
           description: description.trim() || null,
           analysis_type: analysisType,
+          risk_method: riskMethod,
           workpost: workpost.trim() || null,
           department: department.trim() || null,
           status: "draft",
@@ -110,6 +113,7 @@ function NewRiskAnalysis() {
           .insert({
             title: p.title,
             analysis_type: importType,
+            risk_method: importMethod,
             workpost: p.title,
             department: importDept.trim() || null,
             status: "draft",
@@ -205,6 +209,17 @@ function NewRiskAnalysis() {
                 </Select>
               </div>
               <div className="space-y-2">
+                <Label>Methode</Label>
+                <Select value={importMethod} onValueChange={(v) => setImportMethod(v as RiskMethod)}>
+                  <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(METHOD_LABELS) as RiskMethod[]).map((m) => (
+                      <SelectItem key={m} value={m}>{METHOD_LABELS[m]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label>Afdeling (optioneel)</Label>
                 <Input value={importDept} onChange={(e) => setImportDept(e.target.value)} placeholder="Bv. Petrochemie" />
               </div>
@@ -287,6 +302,17 @@ function NewRiskAnalysis() {
               </Select>
             </div>
             <div className="space-y-2">
+              <Label>Methode</Label>
+              <Select value={riskMethod} onValueChange={(v) => setRiskMethod(v as RiskMethod)}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(METHOD_LABELS) as RiskMethod[]).map((m) => (
+                    <SelectItem key={m} value={m}>{METHOD_LABELS[m]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label>Werkpost / functie</Label>
               <Input value={workpost} onChange={(e) => setWorkpost(e.target.value)} placeholder="Bv. Brand- en veiligheidswacht" />
             </div>
@@ -300,19 +326,28 @@ function NewRiskAnalysis() {
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Doel en scope van de analyse" />
           </div>
 
-          <div className="border rounded-md p-4 bg-muted/30 text-xs space-y-2">
-            <div className="font-medium text-sm">Fine & Kinney classificatie (R = W × B × E)</div>
-            <div className="flex flex-wrap gap-2">
-              {(Object.keys(RISK_LEVELS) as Array<keyof typeof RISK_LEVELS>).map((lvl) => {
-                const v = RISK_LEVELS[lvl];
-                return (
-                  <Badge key={lvl} variant="outline" className={v.badgeClass}>
-                    {v.label} — {v.min}{v.max === Infinity ? "+" : `–${v.max}`}
-                  </Badge>
-                );
-              })}
-            </div>
-          </div>
+          {(() => {
+            const levels = levelsFor(riskMethod);
+            return (
+              <div className="border rounded-md p-4 bg-muted/30 text-xs space-y-2">
+                <div className="font-medium text-sm">
+                  {riskMethod === "kans_ernst"
+                    ? "Kans × Ernst classificatie (R = K × E, 1–25)"
+                    : "Fine & Kinney classificatie (R = W × B × E)"}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(Object.keys(levels) as Array<keyof typeof levels>).map((lvl) => {
+                    const v = levels[lvl];
+                    return (
+                      <Badge key={String(lvl)} variant="outline" className={v.badgeClass}>
+                        {v.label} — {v.min}{v.max === Infinity ? "+" : `–${v.max}`}
+                      </Badge>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           <div className="flex justify-end border-t pt-4">
             <Button onClick={saveManual} disabled={saving}>
@@ -321,8 +356,7 @@ function NewRiskAnalysis() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            {classifyRisk(0) ? "" : ""}
-            Na het aanmaken kan je items (activiteit, gevaar, W/B/E, maatregelen, restrisico) toevoegen op de detailpagina.
+            Na het aanmaken kan je items toevoegen op de detailpagina.
           </p>
         </Card>
       )}

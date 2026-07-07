@@ -329,6 +329,7 @@ export type Database = {
           department: string | null
           description: string | null
           id: string
+          risk_method: Database["public"]["Enums"]["risk_method"]
           status: Database["public"]["Enums"]["risk_analysis_status"]
           title: string
           updated_at: string
@@ -342,6 +343,7 @@ export type Database = {
           department?: string | null
           description?: string | null
           id?: string
+          risk_method?: Database["public"]["Enums"]["risk_method"]
           status?: Database["public"]["Enums"]["risk_analysis_status"]
           title: string
           updated_at?: string
@@ -355,6 +357,7 @@ export type Database = {
           department?: string | null
           description?: string | null
           id?: string
+          risk_method?: Database["public"]["Enums"]["risk_method"]
           status?: Database["public"]["Enums"]["risk_analysis_status"]
           title?: string
           updated_at?: string
@@ -984,6 +987,7 @@ export type Database = {
       risk_analysis_status: "draft" | "published" | "archived"
       risk_analysis_type: "werkpost" | "tra" | "lmra" | "rie"
       risk_measure_type: "technical" | "organizational" | "human"
+      risk_method: "fine_kinney" | "kans_ernst"
       risk_session_status: "planned" | "in_progress" | "completed" | "cancelled"
       risk_sign_method: "kiosk" | "qr" | "login"
       safety_observation_type: "mos" | "stop"
@@ -1137,6 +1141,7 @@ export const Constants = {
       risk_analysis_status: ["draft", "published", "archived"],
       risk_analysis_type: ["werkpost", "tra", "lmra", "rie"],
       risk_measure_type: ["technical", "organizational", "human"],
+      risk_method: ["fine_kinney", "kans_ernst"],
       risk_session_status: ["planned", "in_progress", "completed", "cancelled"],
       risk_sign_method: ["kiosk", "qr", "login"],
       safety_observation_type: ["mos", "stop"],

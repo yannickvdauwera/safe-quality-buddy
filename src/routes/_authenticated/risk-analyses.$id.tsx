@@ -18,9 +18,10 @@ import {
 import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  TYPE_LABELS, STATUS_LABELS, MEASURE_TYPE_LABELS, RISK_LEVELS, classifyRisk, computeR,
-  W_SCALE, B_SCALE, E_SCALE,
-  type RiskAnalysisType, type RiskAnalysisStatus, type RiskMeasureType,
+  TYPE_LABELS, STATUS_LABELS, MEASURE_TYPE_LABELS, METHOD_LABELS,
+  classifyRiskFor, computeRFor, levelsFor, highRiskThreshold,
+  W_SCALE, B_SCALE, E_SCALE, K_SCALE, E5_SCALE,
+  type RiskAnalysisType, type RiskAnalysisStatus, type RiskMeasureType, type RiskMethod,
 } from "@/lib/risk-analysis-types";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -47,11 +48,11 @@ interface Item {
   residual_r: number | null;
 }
 
-function RiskBadge({ r }: { r: number | null | undefined }) {
-  const level = classifyRisk(r);
+function RiskBadge({ r, method }: { r: number | null | undefined; method: RiskMethod }) {
+  const level = classifyRiskFor(method, r);
   if (r == null) return <span className="text-muted-foreground">—</span>;
   if (!level) return <span>{r}</span>;
-  const cfg = RISK_LEVELS[level];
+  const cfg = levelsFor(method)[level];
   return (
     <Badge variant="outline" className={cn("font-mono text-xs", cfg.badgeClass)}>
       {r} · {cfg.label}
@@ -117,6 +118,8 @@ function RiskAnalysisDetail() {
     queryClient.invalidateQueries({ queryKey: ["risk-analysis", id] });
   };
 
+  const method: RiskMethod = (analysis?.risk_method as RiskMethod) ?? "fine_kinney";
+
   const saveItem = async () => {
     if (!editItem || !currentVersion) return;
     if (!editItem.hazard?.trim()) return toast.error("Gevaar is verplicht");
@@ -127,15 +130,15 @@ function RiskAnalysisDetail() {
       hazard: editItem.hazard.trim(),
       risk_description: editItem.risk_description || null,
       score_w: editItem.score_w ?? null,
-      score_b: editItem.score_b ?? null,
+      score_b: method === "kans_ernst" ? null : (editItem.score_b ?? null),
       score_e: editItem.score_e ?? null,
-      score_r: computeR(editItem.score_w ?? null, editItem.score_b ?? null, editItem.score_e ?? null),
+      score_r: computeRFor(method, editItem.score_w ?? null, editItem.score_b ?? null, editItem.score_e ?? null),
       measures: editItem.measures || null,
       measure_types: editItem.measure_types ?? [],
       residual_w: editItem.residual_w ?? null,
-      residual_b: editItem.residual_b ?? null,
+      residual_b: method === "kans_ernst" ? null : (editItem.residual_b ?? null),
       residual_e: editItem.residual_e ?? null,
-      residual_r: computeR(editItem.residual_w ?? null, editItem.residual_b ?? null, editItem.residual_e ?? null),
+      residual_r: computeRFor(method, editItem.residual_w ?? null, editItem.residual_b ?? null, editItem.residual_e ?? null),
     };
     try {
       if (editItem.id) {
@@ -221,8 +224,9 @@ function RiskAnalysisDetail() {
 
   const stats = useMemo(() => {
     if (!items) return null;
-    const grossHigh = items.filter((i) => (i.score_r ?? 0) >= 200).length;
-    const netHigh = items.filter((i) => (i.residual_r ?? 0) >= 200).length;
+    const threshold = highRiskThreshold(method);
+    const grossHigh = items.filter((i) => (i.score_r ?? 0) >= threshold).length;
+    const netHigh = items.filter((i) => (i.residual_r ?? 0) >= threshold).length;
     const avgReduction = items.length
       ? Math.round(
           items.reduce((sum, i) => {
@@ -231,8 +235,8 @@ function RiskAnalysisDetail() {
           }, 0) / items.length,
         )
       : 0;
-    return { total: items.length, grossHigh, netHigh, avgReduction };
-  }, [items]);
+    return { total: items.length, grossHigh, netHigh, avgReduction, threshold };
+  }, [items, method]);
 
   if (isLoading || !analysis) {
     return <div className="text-sm text-muted-foreground">Laden...</div>;
@@ -252,6 +256,7 @@ function RiskAnalysisDetail() {
               {STATUS_LABELS[analysis.status as RiskAnalysisStatus]}
             </Badge>
             <Badge variant="outline">Versie {analysis.current_version}</Badge>
+            <Badge variant="outline" className="text-[10px]">{METHOD_LABELS[method]}</Badge>
           </div>
           <h1 className="text-2xl font-bold">{analysis.title}</h1>
           <div className="text-sm text-muted-foreground mt-1 flex flex-wrap gap-3">
@@ -282,11 +287,11 @@ function RiskAnalysisDetail() {
             <div className="text-2xl font-bold mt-1">{stats.total}</div>
           </Card>
           <Card className="p-4">
-            <div className="text-xs text-muted-foreground uppercase tracking-wide">Bruto R ≥ 200</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wide">Bruto R ≥ {stats.threshold}</div>
             <div className="text-2xl font-bold mt-1 text-orange-600">{stats.grossHigh}</div>
           </Card>
           <Card className="p-4">
-            <div className="text-xs text-muted-foreground uppercase tracking-wide">Netto R ≥ 200</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wide">Netto R ≥ {stats.threshold}</div>
             <div className={cn("text-2xl font-bold mt-1", stats.netHigh > 0 ? "text-orange-600" : "text-green-600")}>
               {stats.netHigh}
             </div>
@@ -338,9 +343,11 @@ function RiskAnalysisDetail() {
                       )}
                     </td>
                     <td className="py-3 px-2">
-                      <RiskBadge r={it.score_r} />
+                      <RiskBadge r={it.score_r} method={method} />
                       <div className="text-[10px] text-muted-foreground font-mono mt-1">
-                        W{it.score_w ?? "—"} · B{it.score_b ?? "—"} · E{it.score_e ?? "—"}
+                        {method === "kans_ernst"
+                          ? <>K{it.score_w ?? "—"} · E{it.score_e ?? "—"}</>
+                          : <>W{it.score_w ?? "—"} · B{it.score_b ?? "—"} · E{it.score_e ?? "—"}</>}
                       </div>
                     </td>
                     <td className="py-3 px-2 max-w-md">
@@ -358,10 +365,12 @@ function RiskAnalysisDetail() {
                       )}
                     </td>
                     <td className="py-3 px-2">
-                      <RiskBadge r={it.residual_r} />
+                      <RiskBadge r={it.residual_r} method={method} />
                       {it.residual_w != null && (
                         <div className="text-[10px] text-muted-foreground font-mono mt-1">
-                          W{it.residual_w} · B{it.residual_b} · E{it.residual_e}
+                          {method === "kans_ernst"
+                            ? <>K{it.residual_w} · E{it.residual_e}</>
+                            : <>W{it.residual_w} · B{it.residual_b} · E{it.residual_e}</>}
                         </div>
                       )}
                     </td>
@@ -385,6 +394,7 @@ function RiskAnalysisDetail() {
 
       <ItemDialog
         item={editItem}
+        method={method}
         onClose={() => setEditItem(null)}
         onChange={setEditItem}
         onSave={saveItem}
@@ -412,16 +422,22 @@ function ScoreSelect({
 }
 
 function ItemDialog({
-  item, onClose, onChange, onSave,
+  item, method, onClose, onChange, onSave,
 }: {
   item: Partial<Item> | null;
+  method: RiskMethod;
   onClose: () => void;
   onChange: (i: Partial<Item>) => void;
   onSave: () => void;
 }) {
   if (!item) return null;
-  const grossR = computeR(item.score_w ?? null, item.score_b ?? null, item.score_e ?? null);
-  const netR = computeR(item.residual_w ?? null, item.residual_b ?? null, item.residual_e ?? null);
+  const isKE = method === "kans_ernst";
+  const grossR = computeRFor(method, item.score_w ?? null, item.score_b ?? null, item.score_e ?? null);
+  const netR = computeRFor(method, item.residual_w ?? null, item.residual_b ?? null, item.residual_e ?? null);
+  const kansScale = isKE ? K_SCALE : W_SCALE;
+  const ernstScale = isKE ? E5_SCALE : E_SCALE;
+  const kansLabel = isKE ? "K · Kans" : "W · Waarschijnlijkheid";
+  const ernstLabel = isKE ? "E · Ernst" : "E · Effect";
 
   const toggleType = (t: RiskMeasureType) => {
     const cur = item.measure_types ?? [];
@@ -453,17 +469,19 @@ function ItemDialog({
           <div className="border rounded-md p-3 space-y-3 bg-muted/30">
             <div className="flex items-center justify-between">
               <div className="font-medium text-sm">Bruto risico (zonder maatregelen)</div>
-              <RiskBadge r={grossR} />
+              <RiskBadge r={grossR} method={method} />
             </div>
-            <div className="grid gap-2 md:grid-cols-3">
-              <div><Label className="text-[10px] uppercase">W · Waarschijnlijkheid</Label>
-                <ScoreSelect value={item.score_w} onChange={(v) => onChange({ ...item, score_w: v })} scale={W_SCALE} placeholder="W" />
+            <div className={cn("grid gap-2", isKE ? "md:grid-cols-2" : "md:grid-cols-3")}>
+              <div><Label className="text-[10px] uppercase">{kansLabel}</Label>
+                <ScoreSelect value={item.score_w} onChange={(v) => onChange({ ...item, score_w: v })} scale={kansScale} placeholder={isKE ? "K" : "W"} />
               </div>
-              <div><Label className="text-[10px] uppercase">B · Blootstelling</Label>
-                <ScoreSelect value={item.score_b} onChange={(v) => onChange({ ...item, score_b: v })} scale={B_SCALE} placeholder="B" />
-              </div>
-              <div><Label className="text-[10px] uppercase">E · Effect</Label>
-                <ScoreSelect value={item.score_e} onChange={(v) => onChange({ ...item, score_e: v })} scale={E_SCALE} placeholder="E" />
+              {!isKE && (
+                <div><Label className="text-[10px] uppercase">B · Blootstelling</Label>
+                  <ScoreSelect value={item.score_b} onChange={(v) => onChange({ ...item, score_b: v })} scale={B_SCALE} placeholder="B" />
+                </div>
+              )}
+              <div><Label className="text-[10px] uppercase">{ernstLabel}</Label>
+                <ScoreSelect value={item.score_e} onChange={(v) => onChange({ ...item, score_e: v })} scale={ernstScale} placeholder="E" />
               </div>
             </div>
           </div>
@@ -487,17 +505,19 @@ function ItemDialog({
           <div className="border rounded-md p-3 space-y-3 bg-muted/30">
             <div className="flex items-center justify-between">
               <div className="font-medium text-sm">Restrisico (na maatregelen)</div>
-              <RiskBadge r={netR} />
+              <RiskBadge r={netR} method={method} />
             </div>
-            <div className="grid gap-2 md:grid-cols-3">
-              <div><Label className="text-[10px] uppercase">W′</Label>
-                <ScoreSelect value={item.residual_w} onChange={(v) => onChange({ ...item, residual_w: v })} scale={W_SCALE} placeholder="W" />
+            <div className={cn("grid gap-2", isKE ? "md:grid-cols-2" : "md:grid-cols-3")}>
+              <div><Label className="text-[10px] uppercase">{isKE ? "K′" : "W′"}</Label>
+                <ScoreSelect value={item.residual_w} onChange={(v) => onChange({ ...item, residual_w: v })} scale={kansScale} placeholder={isKE ? "K" : "W"} />
               </div>
-              <div><Label className="text-[10px] uppercase">B′</Label>
-                <ScoreSelect value={item.residual_b} onChange={(v) => onChange({ ...item, residual_b: v })} scale={B_SCALE} placeholder="B" />
-              </div>
+              {!isKE && (
+                <div><Label className="text-[10px] uppercase">B′</Label>
+                  <ScoreSelect value={item.residual_b} onChange={(v) => onChange({ ...item, residual_b: v })} scale={B_SCALE} placeholder="B" />
+                </div>
+              )}
               <div><Label className="text-[10px] uppercase">E′</Label>
-                <ScoreSelect value={item.residual_e} onChange={(v) => onChange({ ...item, residual_e: v })} scale={E_SCALE} placeholder="E" />
+                <ScoreSelect value={item.residual_e} onChange={(v) => onChange({ ...item, residual_e: v })} scale={ernstScale} placeholder="E" />
               </div>
             </div>
           </div>

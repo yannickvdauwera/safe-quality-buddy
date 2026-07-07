@@ -106,6 +106,40 @@ function NewRiskAnalysis() {
     if (chosen.length === 0) return toast.error("Selecteer minstens één analyse");
     setImporting(true);
     let ok = 0;
+
+    // Mapping F&K (W, B, E) → Kans × Ernst (5×5).
+    // K wordt afgeleid uit W×B (waarschijnlijkheid × frequentie), E uit F&K-E.
+    const mapK = (w: number | null, b: number | null): number | null => {
+      if (w == null && b == null) return null;
+      const wb = (w ?? 1) * (b ?? 1);
+      if (wb <= 1) return 1;
+      if (wb <= 5) return 2;
+      if (wb <= 15) return 3;
+      if (wb <= 40) return 4;
+      return 5;
+    };
+    const mapE = (e: number | null): number | null => {
+      if (e == null) return null;
+      if (e <= 1) return 1;
+      if (e <= 3) return 2;
+      if (e <= 7) return 3;
+      if (e <= 15) return 4;
+      return 5;
+    };
+    const toKE = (it: {
+      score_w: number | null; score_b: number | null; score_e: number | null;
+      residual_w: number | null; residual_b: number | null; residual_e: number | null;
+    }) => {
+      const k = mapK(it.score_w, it.score_b);
+      const e = mapE(it.score_e);
+      const rk = mapK(it.residual_w, it.residual_b);
+      const re = mapE(it.residual_e);
+      return {
+        score_w: k, score_b: null, score_e: e, score_r: k != null && e != null ? k * e : null,
+        residual_w: rk, residual_b: null, residual_e: re, residual_r: rk != null && re != null ? rk * re : null,
+      };
+    };
+
     try {
       for (const p of chosen) {
         const { data: ra, error: raErr } = await supabase
@@ -129,7 +163,9 @@ function NewRiskAnalysis() {
           .insert({
             analysis_id: ra.id,
             version_number: 1,
-            change_notes: "Geïmporteerd uit Excel",
+            change_notes: importMethod === "kans_ernst"
+              ? "Geïmporteerd uit Excel — scores omgezet van F&K naar Kans × Ernst"
+              : "Geïmporteerd uit Excel",
             created_by: user.id,
           })
           .select("id")
@@ -138,23 +174,22 @@ function NewRiskAnalysis() {
 
         if (p.items.length > 0) {
           const { error: itemsErr } = await supabase.from("risk_analysis_items").insert(
-            p.items.map((it) => ({
-              version_id: ver.id,
-              position: it.position,
-              activity: it.activity,
-              hazard: it.hazard,
-              risk_description: it.risk_description,
-              score_w: it.score_w,
-              score_b: it.score_b,
-              score_e: it.score_e,
-              score_r: it.score_r,
-              measures: it.measures,
-              measure_types: it.measure_types,
-              residual_w: it.residual_w,
-              residual_b: it.residual_b,
-              residual_e: it.residual_e,
-              residual_r: it.residual_r,
-            })),
+            p.items.map((it) => {
+              const scores = importMethod === "kans_ernst" ? toKE(it) : {
+                score_w: it.score_w, score_b: it.score_b, score_e: it.score_e, score_r: it.score_r,
+                residual_w: it.residual_w, residual_b: it.residual_b, residual_e: it.residual_e, residual_r: it.residual_r,
+              };
+              return {
+                version_id: ver.id,
+                position: it.position,
+                activity: it.activity,
+                hazard: it.hazard,
+                risk_description: it.risk_description,
+                ...scores,
+                measures: it.measures,
+                measure_types: it.measure_types,
+              };
+            }),
           );
           if (itemsErr) throw itemsErr;
         }

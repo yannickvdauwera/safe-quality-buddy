@@ -612,3 +612,43 @@ function ItemDialog({
     </Dialog>
   );
 }
+
+// Toont per item de risicoreductie ingedeeld per type maatregel.
+// Wanneer een item nog niet is gemigreerd (vrije tekst) valt het terug op een neutrale weergave.
+function MeasuresCell({ raw }: { raw: string | null }) {
+  const { byType, legacy } = parseMeasures(raw);
+  const activeTypes = MEASURE_TYPE_ORDER.filter((t) => (byType[t] ?? "").trim().length > 0);
+  if (activeTypes.length === 0 && !legacy) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+  return (
+    <div className="space-y-1.5">
+      {activeTypes.map((t) => {
+        const meta = MEASURE_TYPE_META[t];
+        return (
+          <div key={t} className="text-xs">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span
+                className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold text-white"
+                style={{ background: meta.swatch }}
+                title={meta.label}
+              >
+                {meta.short}
+              </span>
+              <span className="font-medium" style={{ color: meta.swatch }}>{meta.label}</span>
+            </div>
+            <div className="whitespace-pre-line line-clamp-3 pl-5 text-muted-foreground">
+              {byType[t]}
+            </div>
+          </div>
+        );
+      })}
+      {legacy && (
+        <div className="text-xs">
+          <Badge variant="outline" className="text-[9px] py-0 mb-0.5">Niet ingedeeld</Badge>
+          <div className="whitespace-pre-line line-clamp-3 text-muted-foreground">{legacy}</div>
+        </div>
+      )}
+    </div>
+  );
+}

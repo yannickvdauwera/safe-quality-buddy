@@ -74,16 +74,17 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
   const logo = await loadImage(tsaLogoUrl).catch(() => null);
 
   const drawHeader = () => {
-    doc.setFillColor(...TSA_RED);
-    doc.rect(0, 0, pageW, 22, "F");
-    doc.setFillColor(...TSA_DARK);
-    doc.rect(0, 22, pageW, 2, "F");
+    doc.setFillColor(255, 255, 255);
+    doc.rect(0, 0, pageW, 24, "F");
+    doc.setDrawColor(...TSA_RED);
+    doc.setLineWidth(1.2);
+    doc.line(0, 24, pageW, 24);
     if (logo) {
       const h = 14;
       const w = (logo.width / logo.height) * h;
-      doc.addImage(logo.dataUrl, "PNG", 12, 4, w, h);
+      doc.addImage(logo.dataUrl, "PNG", 12, 5, w, h);
     }
-    doc.setTextColor(255, 255, 255);
+    doc.setTextColor(...TSA_RED);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(14);
     doc.text("RISICOANALYSE", pageW - 12, 12, { align: "right" });

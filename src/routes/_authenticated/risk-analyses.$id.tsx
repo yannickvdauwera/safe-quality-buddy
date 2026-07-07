@@ -48,11 +48,11 @@ interface Item {
   residual_r: number | null;
 }
 
-function RiskBadge({ r }: { r: number | null | undefined }) {
-  const level = classifyRisk(r);
+function RiskBadge({ r, method }: { r: number | null | undefined; method: RiskMethod }) {
+  const level = classifyRiskFor(method, r);
   if (r == null) return <span className="text-muted-foreground">—</span>;
   if (!level) return <span>{r}</span>;
-  const cfg = RISK_LEVELS[level];
+  const cfg = levelsFor(method)[level];
   return (
     <Badge variant="outline" className={cn("font-mono text-xs", cfg.badgeClass)}>
       {r} · {cfg.label}

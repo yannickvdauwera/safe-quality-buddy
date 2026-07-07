@@ -330,7 +330,7 @@ function NewRiskAnalysis() {
               <Select value={analysisType} onValueChange={(v) => setAnalysisType(v as RiskAnalysisType)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {(Object.keys(TYPE_LABELS) as RiskAnalysisType[]).map((t) => (
+                  {SELECTABLE_TYPES.map((t) => (
                     <SelectItem key={t} value={t}>{TYPE_LABELS[t]}</SelectItem>
                   ))}
                 </SelectContent>

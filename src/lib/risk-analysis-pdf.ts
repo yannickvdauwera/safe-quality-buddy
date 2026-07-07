@@ -267,6 +267,75 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
     },
   });
 
+  // Beoordelingsschalen — beschrijf elke factor die meespeelt in het risico.
+  // @ts-expect-error jspdf-autotable augments doc
+  let sy = (doc.lastAutoTable?.finalY ?? ly) + 6;
+  const isKE = a.risk_method === "kans_ernst";
+  const scales: Array<{ title: string; scale: { value: number; label: string }[] }> = isKE
+    ? [
+        { title: "K — Kans dat het risico zich voordoet", scale: K_SCALE },
+        { title: "E — Ernst van het letsel / de schade", scale: E5_SCALE },
+      ]
+    : [
+        { title: "W — Waarschijnlijkheid", scale: W_SCALE },
+        { title: "B — Blootstelling / frequentie", scale: B_SCALE },
+        { title: "E — Effect / ernst", scale: E_SCALE },
+      ];
+
+  // Split de omschrijving in waarde + tekst (labels hebben de vorm "5 — beschrijving").
+  const splitLabel = (label: string): [string, string] => {
+    const m = label.match(/^\s*([^—-]+?)\s*[—-]\s*(.*)$/);
+    return m ? [m[1].trim(), m[2].trim()] : [String(label), ""];
+  };
+
+  const totalWidth = 273; // A4 landscape binnen marges ~ pageW - 24
+  const colWidth = Math.floor((totalWidth - (scales.length - 1) * 4) / scales.length);
+
+  // Reken vooraf uit of alle schalen samen op de huidige pagina passen; zo niet, begin op een nieuwe pagina.
+  const estRowHeight = 5;
+  const estHeaderHeight = 12;
+  const maxRows = Math.max(...scales.map((s) => s.scale.length));
+  const neededHeight = estHeaderHeight + estRowHeight * (maxRows + 1);
+  if (sy + neededHeight > pageH - 20) {
+    doc.addPage();
+    drawHeader();
+    sy = 32;
+  }
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(...TSA_DARK);
+  doc.text("Beoordelingsschalen — omschrijving per factor", 12, sy);
+  sy += 4;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(90, 90, 90);
+  doc.text(
+    `Elk item wordt beoordeeld op ${scales.length} factoren; hieronder staat de betekenis van elke waarde.`,
+    12, sy,
+  );
+  sy += 3;
+
+  scales.forEach((s, idx) => {
+    const x = 12 + idx * (colWidth + 4);
+    autoTable(doc, {
+      startY: sy,
+      head: [[s.title]],
+      body: s.scale.map((row) => {
+        const [val, txt] = splitLabel(row.label);
+        return [{ content: val, styles: { fontStyle: "bold" as const, halign: "center" as const, cellWidth: 10 } }, txt];
+      }),
+      theme: "grid",
+      styles: { fontSize: 7.5, cellPadding: 1.6, lineColor: [229, 229, 229], lineWidth: 0.1, textColor: TSA_DARK, valign: "top" },
+      headStyles: { fillColor: TSA_DARK, textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8, halign: "left" },
+      columnStyles: { 0: { cellWidth: 10 }, 1: { cellWidth: colWidth - 10 } },
+      margin: { left: x, right: pageW - x - colWidth },
+      tableWidth: colWidth,
+    });
+  });
+
+
+
   const total = doc.getNumberOfPages();
   for (let i = 1; i <= total; i++) {
     doc.setPage(i);

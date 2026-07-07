@@ -3,6 +3,12 @@ export type RiskAnalysisStatus = "draft" | "published" | "archived";
 export type RiskMeasureType = "technical" | "organizational" | "human";
 export type RiskSessionStatus = "planned" | "in_progress" | "completed" | "cancelled";
 export type RiskSignMethod = "kiosk" | "qr" | "login";
+export type RiskMethod = "fine_kinney" | "kans_ernst";
+
+export const METHOD_LABELS: Record<RiskMethod, string> = {
+  fine_kinney: "Fine & Kinney (W × B × E)",
+  kans_ernst: "Kans × Ernst (5 × 5)",
+};
 
 export const TYPE_LABELS: Record<RiskAnalysisType, string> = {
   werkpost: "Werkpostanalyse",

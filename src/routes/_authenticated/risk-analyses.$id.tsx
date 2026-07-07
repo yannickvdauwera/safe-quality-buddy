@@ -124,9 +124,55 @@ function RiskAnalysisDetail() {
     },
   });
 
+  // Alle app-gebruikers (Gebruikers & Rollen) — bron voor de uitvoerders-picker.
+  const { data: appUsers } = useQuery({
+    queryKey: ["profiles-picker"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .order("full_name", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as { id: string; full_name: string | null; email: string | null }[];
+    },
+  });
+
+  // Uitvoerders van deze RA, met de bijhorende gebruikersgegevens.
+  const { data: executors } = useQuery({
+    queryKey: ["risk-analysis-executors", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("risk_analysis_executors")
+        .select("user_id, profiles:user_id(id, full_name, email)")
+        .eq("analysis_id", id);
+      if (error) throw error;
+      type Row = { user_id: string; profiles: { id: string; full_name: string | null; email: string | null } | null };
+      return ((data ?? []) as unknown as Row[])
+        .map((r) => r.profiles ?? { id: r.user_id, full_name: null, email: null });
+    },
+  });
+
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["risk-analysis-items", currentVersion?.id] });
     queryClient.invalidateQueries({ queryKey: ["risk-analysis", id] });
+  };
+
+  const addExecutor = async (userId: string) => {
+    const { error } = await supabase
+      .from("risk_analysis_executors")
+      .insert({ analysis_id: id, user_id: userId });
+    if (error) return toast.error(error.message);
+    queryClient.invalidateQueries({ queryKey: ["risk-analysis-executors", id] });
+  };
+
+  const removeExecutor = async (userId: string) => {
+    const { error } = await supabase
+      .from("risk_analysis_executors")
+      .delete()
+      .eq("analysis_id", id)
+      .eq("user_id", userId);
+    if (error) return toast.error(error.message);
+    queryClient.invalidateQueries({ queryKey: ["risk-analysis-executors", id] });
   };
 
   const method: RiskMethod = (analysis?.risk_method as RiskMethod) ?? "fine_kinney";

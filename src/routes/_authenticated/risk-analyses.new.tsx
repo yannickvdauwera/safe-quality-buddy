@@ -41,6 +41,7 @@ function NewRiskAnalysis() {
   const [parsedAnalyses, setParsedAnalyses] = useState<ParsedRiskAnalysis[]>([]);
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [importType, setImportType] = useState<RiskAnalysisType>("werkpost");
+  const [importMethod, setImportMethod] = useState<RiskMethod>("fine_kinney");
   const [importDept, setImportDept] = useState("");
   const [importing, setImporting] = useState(false);
   const [fileName, setFileName] = useState<string | null>(null);

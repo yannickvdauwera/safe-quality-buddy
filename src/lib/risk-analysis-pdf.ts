@@ -53,6 +53,12 @@ export interface RiskAnalysisExportItem {
   residual_r: number | null;
 }
 
+export interface RiskAnalysisExecutor {
+  id: string;
+  full_name: string | null;
+  email: string | null;
+}
+
 export interface RiskAnalysisExport {
   id: string;
   title: string;
@@ -65,6 +71,7 @@ export interface RiskAnalysisExport {
   current_version: number;
   version_change_notes?: string | null;
   version_published_at?: string | null;
+  executors?: RiskAnalysisExecutor[];
   items: RiskAnalysisExportItem[];
 }
 

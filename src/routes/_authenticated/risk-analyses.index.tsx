@@ -48,13 +48,10 @@ function RiskAnalysesLibrary() {
         <div>
           <h1 className="text-2xl font-bold">Risicoanalyses</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Werkpostanalyses, TRA's en LMRA's volgens Fine & Kinney (W × B × E).
+            Werkpostanalyses, TRA's en LMRA's volgens de Kans × Ernst matrix (5 × 5).
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigate({ to: "/risk-analyses/new", search: { mode: "import" } })}>
-            <Upload className="w-4 h-4" /> Importeer uit Excel
-          </Button>
           <Button onClick={() => navigate({ to: "/risk-analyses/new", search: { mode: "manual" } })}>
             <Plus className="w-4 h-4" /> Nieuwe analyse
           </Button>

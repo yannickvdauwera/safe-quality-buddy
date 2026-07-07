@@ -2,8 +2,8 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import tsaLogoUrl from "@/assets/tsa-logo.png";
 import {
-  METHOD_LABELS, MEASURE_TYPE_LABELS, TYPE_LABELS, STATUS_LABELS,
-  classifyRiskFor, levelsFor, highRiskThreshold,
+  METHOD_LABELS, MEASURE_TYPE_META, MEASURE_TYPE_ORDER, TYPE_LABELS, STATUS_LABELS,
+  classifyRiskFor, levelsFor, highRiskThreshold, parseMeasures,
   type RiskMethod, type RiskAnalysisType, type RiskAnalysisStatus, type RiskMeasureType,
 } from "./risk-analysis-types";
 

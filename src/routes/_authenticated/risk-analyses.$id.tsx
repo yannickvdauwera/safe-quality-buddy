@@ -256,6 +256,7 @@ function RiskAnalysisDetail() {
               {STATUS_LABELS[analysis.status as RiskAnalysisStatus]}
             </Badge>
             <Badge variant="outline">Versie {analysis.current_version}</Badge>
+            <Badge variant="outline" className="text-[10px]">{METHOD_LABELS[method]}</Badge>
           </div>
           <h1 className="text-2xl font-bold">{analysis.title}</h1>
           <div className="text-sm text-muted-foreground mt-1 flex flex-wrap gap-3">

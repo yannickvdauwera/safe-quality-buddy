@@ -326,19 +326,28 @@ function NewRiskAnalysis() {
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={3} placeholder="Doel en scope van de analyse" />
           </div>
 
-          <div className="border rounded-md p-4 bg-muted/30 text-xs space-y-2">
-            <div className="font-medium text-sm">Fine & Kinney classificatie (R = W × B × E)</div>
-            <div className="flex flex-wrap gap-2">
-              {(Object.keys(RISK_LEVELS) as Array<keyof typeof RISK_LEVELS>).map((lvl) => {
-                const v = RISK_LEVELS[lvl];
-                return (
-                  <Badge key={lvl} variant="outline" className={v.badgeClass}>
-                    {v.label} — {v.min}{v.max === Infinity ? "+" : `–${v.max}`}
-                  </Badge>
-                );
-              })}
-            </div>
-          </div>
+          {(() => {
+            const levels = levelsFor(riskMethod);
+            return (
+              <div className="border rounded-md p-4 bg-muted/30 text-xs space-y-2">
+                <div className="font-medium text-sm">
+                  {riskMethod === "kans_ernst"
+                    ? "Kans × Ernst classificatie (R = K × E, 1–25)"
+                    : "Fine & Kinney classificatie (R = W × B × E)"}
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {(Object.keys(levels) as Array<keyof typeof levels>).map((lvl) => {
+                    const v = levels[lvl];
+                    return (
+                      <Badge key={String(lvl)} variant="outline" className={v.badgeClass}>
+                        {v.label} — {v.min}{v.max === Infinity ? "+" : `–${v.max}`}
+                      </Badge>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })()}
 
           <div className="flex justify-end border-t pt-4">
             <Button onClick={saveManual} disabled={saving}>
@@ -347,8 +356,7 @@ function NewRiskAnalysis() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            {classifyRisk(0) ? "" : ""}
-            Na het aanmaken kan je items (activiteit, gevaar, W/B/E, maatregelen, restrisico) toevoegen op de detailpagina.
+            Na het aanmaken kan je items toevoegen op de detailpagina.
           </p>
         </Card>
       )}

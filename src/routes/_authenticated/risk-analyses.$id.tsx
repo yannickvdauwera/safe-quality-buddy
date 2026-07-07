@@ -13,8 +13,9 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  ArrowLeft, Plus, Trash2, Save, Edit, Loader2, ShieldAlert, TrendingDown,
+  ArrowLeft, Plus, Trash2, Save, Edit, Loader2, ShieldAlert, TrendingDown, FileDown,
 } from "lucide-react";
+import { exportRiskAnalysisToPdf } from "@/lib/risk-analysis-pdf";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import {
@@ -274,6 +275,27 @@ function RiskAnalysisDetail() {
               <SelectItem value="archived">Gearchiveerd</SelectItem>
             </SelectContent>
           </Select>
+          <Button
+            variant="outline"
+            onClick={() =>
+              exportRiskAnalysisToPdf({
+                id: analysis.id,
+                title: analysis.title,
+                description: analysis.description,
+                analysis_type: analysis.analysis_type as RiskAnalysisType,
+                status: analysis.status as RiskAnalysisStatus,
+                workpost: analysis.workpost,
+                department: analysis.department,
+                risk_method: method,
+                current_version: analysis.current_version,
+                version_change_notes: currentVersion?.change_notes,
+                version_published_at: currentVersion?.published_at,
+                items: items ?? [],
+              }).catch((e) => toast.error(e instanceof Error ? e.message : "Export mislukt"))
+            }
+          >
+            <FileDown className="w-4 h-4" /> Exporteer PDF
+          </Button>
           <Button variant="outline" onClick={createNewVersion}>
             <Plus className="w-4 h-4" /> Nieuwe versie
           </Button>

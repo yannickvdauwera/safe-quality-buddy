@@ -394,6 +394,7 @@ function RiskAnalysisDetail() {
 
       <ItemDialog
         item={editItem}
+        method={method}
         onClose={() => setEditItem(null)}
         onChange={setEditItem}
         onSave={saveItem}

@@ -13,8 +13,9 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
-  ArrowLeft, Plus, Trash2, Save, Edit, Loader2, ShieldAlert, TrendingDown,
+  ArrowLeft, Plus, Trash2, Save, Edit, Loader2, ShieldAlert, TrendingDown, FileDown,
 } from "lucide-react";
+import { exportRiskAnalysisToPdf } from "@/lib/risk-analysis-pdf";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import {

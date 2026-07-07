@@ -365,6 +365,32 @@ export type Database = {
         }
         Relationships: []
       }
+      risk_analysis_executors: {
+        Row: {
+          analysis_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          analysis_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          analysis_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "risk_analysis_executors_analysis_id_fkey"
+            columns: ["analysis_id"]
+            isOneToOne: false
+            referencedRelation: "risk_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       risk_analysis_items: {
         Row: {
           activity: string | null

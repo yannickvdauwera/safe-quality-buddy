@@ -12,8 +12,11 @@ import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+
 import {
-  ArrowLeft, Plus, Trash2, Save, Edit, Loader2, ShieldAlert, TrendingDown, FileDown,
+  ArrowLeft, Plus, Trash2, Save, Edit, Loader2, ShieldAlert, TrendingDown, FileDown, Users, Check, X,
 } from "lucide-react";
 import { exportRiskAnalysisToPdf } from "@/lib/risk-analysis-pdf";
 import { useMemo, useState } from "react";
@@ -121,9 +124,55 @@ function RiskAnalysisDetail() {
     },
   });
 
+  // Alle app-gebruikers (Gebruikers & Rollen) — bron voor de uitvoerders-picker.
+  const { data: appUsers } = useQuery({
+    queryKey: ["profiles-picker"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, full_name, email")
+        .order("full_name", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as { id: string; full_name: string | null; email: string | null }[];
+    },
+  });
+
+  // Uitvoerders van deze RA, met de bijhorende gebruikersgegevens.
+  const { data: executors } = useQuery({
+    queryKey: ["risk-analysis-executors", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("risk_analysis_executors")
+        .select("user_id, profiles:user_id(id, full_name, email)")
+        .eq("analysis_id", id);
+      if (error) throw error;
+      type Row = { user_id: string; profiles: { id: string; full_name: string | null; email: string | null } | null };
+      return ((data ?? []) as unknown as Row[])
+        .map((r) => r.profiles ?? { id: r.user_id, full_name: null, email: null });
+    },
+  });
+
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["risk-analysis-items", currentVersion?.id] });
     queryClient.invalidateQueries({ queryKey: ["risk-analysis", id] });
+  };
+
+  const addExecutor = async (userId: string) => {
+    const { error } = await supabase
+      .from("risk_analysis_executors")
+      .insert({ analysis_id: id, user_id: userId });
+    if (error) return toast.error(error.message);
+    queryClient.invalidateQueries({ queryKey: ["risk-analysis-executors", id] });
+  };
+
+  const removeExecutor = async (userId: string) => {
+    const { error } = await supabase
+      .from("risk_analysis_executors")
+      .delete()
+      .eq("analysis_id", id)
+      .eq("user_id", userId);
+    if (error) return toast.error(error.message);
+    queryClient.invalidateQueries({ queryKey: ["risk-analysis-executors", id] });
   };
 
   const method: RiskMethod = (analysis?.risk_method as RiskMethod) ?? "fine_kinney";
@@ -324,6 +373,7 @@ function RiskAnalysisDetail() {
                 current_version: analysis.current_version,
                 version_change_notes: currentVersion?.change_notes,
                 version_published_at: currentVersion?.published_at,
+                executors: executors ?? [],
                 items: items ?? [],
               }).catch((e) => toast.error(e instanceof Error ? e.message : "Export mislukt"))
             }
@@ -360,6 +410,14 @@ function RiskAnalysisDetail() {
           </Card>
         </div>
       )}
+
+      <ExecutorsCard
+        users={appUsers ?? []}
+        executors={executors ?? []}
+        onAdd={addExecutor}
+        onRemove={removeExecutor}
+      />
+
 
       <Card className="p-5">
         <div className="flex items-center justify-between mb-4">
@@ -650,5 +708,93 @@ function MeasuresCell({ raw }: { raw: string | null }) {
         </div>
       )}
     </div>
+  );
+}
+
+type ExecutorUser = { id: string; full_name: string | null; email: string | null };
+
+function ExecutorsCard({
+  users, executors, onAdd, onRemove,
+}: {
+  users: ExecutorUser[];
+  executors: ExecutorUser[];
+  onAdd: (userId: string) => void;
+  onRemove: (userId: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedIds = new Set(executors.map((e) => e.id));
+  const displayName = (u: ExecutorUser) => u.full_name || u.email || "Onbekende gebruiker";
+  return (
+    <Card className="p-5">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div>
+          <h2 className="font-semibold flex items-center gap-2">
+            <Users className="w-4 h-4" /> Uitvoerders
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Kies uit de vaste lijst van app-gebruikers (Gebruikers &amp; Rollen). Verschijnen ook op de export.
+          </p>
+        </div>
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button size="sm" variant="outline">
+              <Plus className="w-4 h-4" /> Uitvoerder toevoegen
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-80 p-0" align="end">
+            <Command
+              filter={(v, s) => (v.toLowerCase().includes(s.toLowerCase()) ? 1 : 0)}
+            >
+              <CommandInput placeholder="Zoek op naam of e-mail…" />
+              <CommandList>
+                <CommandEmpty>Geen gebruikers gevonden.</CommandEmpty>
+                <CommandGroup>
+                  {users.map((u) => {
+                    const active = selectedIds.has(u.id);
+                    return (
+                      <CommandItem
+                        key={u.id}
+                        value={`${u.full_name ?? ""} ${u.email ?? ""}`}
+                        onSelect={() => {
+                          if (active) onRemove(u.id);
+                          else onAdd(u.id);
+                        }}
+                      >
+                        <Check className={cn("mr-2 h-4 w-4", active ? "opacity-100" : "opacity-0")} />
+                        <div className="flex flex-col">
+                          <span className="text-sm">{displayName(u)}</span>
+                          {u.email && u.full_name && (
+                            <span className="text-[10px] text-muted-foreground">{u.email}</span>
+                          )}
+                        </div>
+                      </CommandItem>
+                    );
+                  })}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
+      {executors.length === 0 ? (
+        <div className="text-sm text-muted-foreground italic">Nog geen uitvoerders toegewezen.</div>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {executors.map((u) => (
+            <Badge key={u.id} variant="secondary" className="gap-1.5 pr-1 py-1">
+              <span className="text-xs">{displayName(u)}</span>
+              <button
+                type="button"
+                onClick={() => onRemove(u.id)}
+                className="rounded-full hover:bg-muted p-0.5"
+                aria-label="Verwijder uitvoerder"
+              >
+                <X className="w-3 h-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      )}
+    </Card>
   );
 }

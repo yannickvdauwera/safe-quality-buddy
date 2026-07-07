@@ -343,9 +343,11 @@ function RiskAnalysisDetail() {
                       )}
                     </td>
                     <td className="py-3 px-2">
-                      <RiskBadge r={it.score_r} />
+                      <RiskBadge r={it.score_r} method={method} />
                       <div className="text-[10px] text-muted-foreground font-mono mt-1">
-                        W{it.score_w ?? "—"} · B{it.score_b ?? "—"} · E{it.score_e ?? "—"}
+                        {method === "kans_ernst"
+                          ? <>K{it.score_w ?? "—"} · E{it.score_e ?? "—"}</>
+                          : <>W{it.score_w ?? "—"} · B{it.score_b ?? "—"} · E{it.score_e ?? "—"}</>}
                       </div>
                     </td>
                     <td className="py-3 px-2 max-w-md">
@@ -363,10 +365,12 @@ function RiskAnalysisDetail() {
                       )}
                     </td>
                     <td className="py-3 px-2">
-                      <RiskBadge r={it.residual_r} />
+                      <RiskBadge r={it.residual_r} method={method} />
                       {it.residual_w != null && (
                         <div className="text-[10px] text-muted-foreground font-mono mt-1">
-                          W{it.residual_w} · B{it.residual_b} · E{it.residual_e}
+                          {method === "kans_ernst"
+                            ? <>K{it.residual_w} · E{it.residual_e}</>
+                            : <>W{it.residual_w} · B{it.residual_b} · E{it.residual_e}</>}
                         </div>
                       )}
                     </td>

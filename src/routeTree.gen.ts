@@ -21,12 +21,14 @@ import { Route as AuthenticatedInspectiesRouteImport } from './routes/_authentic
 import { Route as AuthenticatedDraftsRouteImport } from './routes/_authenticated/drafts'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedToolboxesIndexRouteImport } from './routes/_authenticated/toolboxes.index'
+import { Route as AuthenticatedRiskAnalysesIndexRouteImport } from './routes/_authenticated/risk-analyses.index'
 import { Route as AuthenticatedMeldingenIndexRouteImport } from './routes/_authenticated/meldingen.index'
 import { Route as AuthenticatedInspectiesIndexRouteImport } from './routes/_authenticated/inspecties.index'
 import { Route as AuthenticatedEmployeesIndexRouteImport } from './routes/_authenticated/employees.index'
 import { Route as ApiPublicToolboxSignRouteImport } from './routes/api/public/toolbox-sign'
 import { Route as AuthenticatedToolboxesNewRouteImport } from './routes/_authenticated/toolboxes.new'
 import { Route as AuthenticatedToolboxesIdRouteImport } from './routes/_authenticated/toolboxes.$id'
+import { Route as AuthenticatedRiskAnalysesNewRouteImport } from './routes/_authenticated/risk-analyses.new'
 import { Route as AuthenticatedMeldingenOngevallenRouteImport } from './routes/_authenticated/meldingen.ongevallen'
 import { Route as AuthenticatedMeldingenInternRouteImport } from './routes/_authenticated/meldingen.intern'
 import { Route as AuthenticatedMeldingenIdRouteImport } from './routes/_authenticated/meldingen.$id'
@@ -96,6 +98,12 @@ const AuthenticatedToolboxesIndexRoute =
     path: '/toolboxes/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedRiskAnalysesIndexRoute =
+  AuthenticatedRiskAnalysesIndexRouteImport.update({
+    id: '/risk-analyses/',
+    path: '/risk-analyses/',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedMeldingenIndexRoute =
   AuthenticatedMeldingenIndexRouteImport.update({
     id: '/',
@@ -129,6 +137,12 @@ const AuthenticatedToolboxesIdRoute =
   AuthenticatedToolboxesIdRouteImport.update({
     id: '/toolboxes/$id',
     path: '/toolboxes/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedRiskAnalysesNewRoute =
+  AuthenticatedRiskAnalysesNewRouteImport.update({
+    id: '/risk-analyses/new',
+    path: '/risk-analyses/new',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
 const AuthenticatedMeldingenOngevallenRoute =
@@ -198,12 +212,14 @@ export interface FileRoutesByFullPath {
   '/meldingen/$id': typeof AuthenticatedMeldingenIdRoute
   '/meldingen/intern': typeof AuthenticatedMeldingenInternRoute
   '/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
+  '/risk-analyses/new': typeof AuthenticatedRiskAnalysesNewRoute
   '/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
   '/employees/': typeof AuthenticatedEmployeesIndexRoute
   '/inspecties/': typeof AuthenticatedInspectiesIndexRoute
   '/meldingen/': typeof AuthenticatedMeldingenIndexRoute
+  '/risk-analyses/': typeof AuthenticatedRiskAnalysesIndexRoute
   '/toolboxes/': typeof AuthenticatedToolboxesIndexRoute
   '/toolboxes/sessions/$id': typeof AuthenticatedToolboxesSessionsIdRoute
 }
@@ -223,12 +239,14 @@ export interface FileRoutesByTo {
   '/meldingen/$id': typeof AuthenticatedMeldingenIdRoute
   '/meldingen/intern': typeof AuthenticatedMeldingenInternRoute
   '/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
+  '/risk-analyses/new': typeof AuthenticatedRiskAnalysesNewRoute
   '/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
   '/employees': typeof AuthenticatedEmployeesIndexRoute
   '/inspecties': typeof AuthenticatedInspectiesIndexRoute
   '/meldingen': typeof AuthenticatedMeldingenIndexRoute
+  '/risk-analyses': typeof AuthenticatedRiskAnalysesIndexRoute
   '/toolboxes': typeof AuthenticatedToolboxesIndexRoute
   '/toolboxes/sessions/$id': typeof AuthenticatedToolboxesSessionsIdRoute
 }
@@ -252,12 +270,14 @@ export interface FileRoutesById {
   '/_authenticated/meldingen/$id': typeof AuthenticatedMeldingenIdRoute
   '/_authenticated/meldingen/intern': typeof AuthenticatedMeldingenInternRoute
   '/_authenticated/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
+  '/_authenticated/risk-analyses/new': typeof AuthenticatedRiskAnalysesNewRoute
   '/_authenticated/toolboxes/$id': typeof AuthenticatedToolboxesIdRoute
   '/_authenticated/toolboxes/new': typeof AuthenticatedToolboxesNewRoute
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
   '/_authenticated/employees/': typeof AuthenticatedEmployeesIndexRoute
   '/_authenticated/inspecties/': typeof AuthenticatedInspectiesIndexRoute
   '/_authenticated/meldingen/': typeof AuthenticatedMeldingenIndexRoute
+  '/_authenticated/risk-analyses/': typeof AuthenticatedRiskAnalysesIndexRoute
   '/_authenticated/toolboxes/': typeof AuthenticatedToolboxesIndexRoute
   '/_authenticated/toolboxes/sessions/$id': typeof AuthenticatedToolboxesSessionsIdRoute
 }
@@ -281,12 +301,14 @@ export interface FileRouteTypes {
     | '/meldingen/$id'
     | '/meldingen/intern'
     | '/meldingen/ongevallen'
+    | '/risk-analyses/new'
     | '/toolboxes/$id'
     | '/toolboxes/new'
     | '/api/public/toolbox-sign'
     | '/employees/'
     | '/inspecties/'
     | '/meldingen/'
+    | '/risk-analyses/'
     | '/toolboxes/'
     | '/toolboxes/sessions/$id'
   fileRoutesByTo: FileRoutesByTo
@@ -306,12 +328,14 @@ export interface FileRouteTypes {
     | '/meldingen/$id'
     | '/meldingen/intern'
     | '/meldingen/ongevallen'
+    | '/risk-analyses/new'
     | '/toolboxes/$id'
     | '/toolboxes/new'
     | '/api/public/toolbox-sign'
     | '/employees'
     | '/inspecties'
     | '/meldingen'
+    | '/risk-analyses'
     | '/toolboxes'
     | '/toolboxes/sessions/$id'
   id:
@@ -334,12 +358,14 @@ export interface FileRouteTypes {
     | '/_authenticated/meldingen/$id'
     | '/_authenticated/meldingen/intern'
     | '/_authenticated/meldingen/ongevallen'
+    | '/_authenticated/risk-analyses/new'
     | '/_authenticated/toolboxes/$id'
     | '/_authenticated/toolboxes/new'
     | '/api/public/toolbox-sign'
     | '/_authenticated/employees/'
     | '/_authenticated/inspecties/'
     | '/_authenticated/meldingen/'
+    | '/_authenticated/risk-analyses/'
     | '/_authenticated/toolboxes/'
     | '/_authenticated/toolboxes/sessions/$id'
   fileRoutesById: FileRoutesById
@@ -438,6 +464,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedToolboxesIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/risk-analyses/': {
+      id: '/_authenticated/risk-analyses/'
+      path: '/risk-analyses'
+      fullPath: '/risk-analyses/'
+      preLoaderRoute: typeof AuthenticatedRiskAnalysesIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/meldingen/': {
       id: '/_authenticated/meldingen/'
       path: '/'
@@ -478,6 +511,13 @@ declare module '@tanstack/react-router' {
       path: '/toolboxes/$id'
       fullPath: '/toolboxes/$id'
       preLoaderRoute: typeof AuthenticatedToolboxesIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/risk-analyses/new': {
+      id: '/_authenticated/risk-analyses/new'
+      path: '/risk-analyses/new'
+      fullPath: '/risk-analyses/new'
+      preLoaderRoute: typeof AuthenticatedRiskAnalysesNewRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/meldingen/ongevallen': {
@@ -590,9 +630,11 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedStopRoute: typeof AuthenticatedStopRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedEmployeesIdRoute: typeof AuthenticatedEmployeesIdRoute
+  AuthenticatedRiskAnalysesNewRoute: typeof AuthenticatedRiskAnalysesNewRoute
   AuthenticatedToolboxesIdRoute: typeof AuthenticatedToolboxesIdRoute
   AuthenticatedToolboxesNewRoute: typeof AuthenticatedToolboxesNewRoute
   AuthenticatedEmployeesIndexRoute: typeof AuthenticatedEmployeesIndexRoute
+  AuthenticatedRiskAnalysesIndexRoute: typeof AuthenticatedRiskAnalysesIndexRoute
   AuthenticatedToolboxesIndexRoute: typeof AuthenticatedToolboxesIndexRoute
   AuthenticatedToolboxesSessionsIdRoute: typeof AuthenticatedToolboxesSessionsIdRoute
 }
@@ -606,9 +648,11 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedStopRoute: AuthenticatedStopRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedEmployeesIdRoute: AuthenticatedEmployeesIdRoute,
+  AuthenticatedRiskAnalysesNewRoute: AuthenticatedRiskAnalysesNewRoute,
   AuthenticatedToolboxesIdRoute: AuthenticatedToolboxesIdRoute,
   AuthenticatedToolboxesNewRoute: AuthenticatedToolboxesNewRoute,
   AuthenticatedEmployeesIndexRoute: AuthenticatedEmployeesIndexRoute,
+  AuthenticatedRiskAnalysesIndexRoute: AuthenticatedRiskAnalysesIndexRoute,
   AuthenticatedToolboxesIndexRoute: AuthenticatedToolboxesIndexRoute,
   AuthenticatedToolboxesSessionsIdRoute: AuthenticatedToolboxesSessionsIdRoute,
 }

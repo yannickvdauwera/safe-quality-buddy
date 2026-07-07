@@ -32,7 +32,7 @@ function NewRiskAnalysis() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [analysisType, setAnalysisType] = useState<RiskAnalysisType>("werkpost");
-  const [riskMethod, setRiskMethod] = useState<RiskMethod>("fine_kinney");
+  const [riskMethod, setRiskMethod] = useState<RiskMethod>("kans_ernst");
   const [workpost, setWorkpost] = useState("");
   const [department, setDepartment] = useState("");
   const [saving, setSaving] = useState(false);

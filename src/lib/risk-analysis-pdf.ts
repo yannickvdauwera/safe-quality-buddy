@@ -270,7 +270,6 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
   // Beoordelingsschalen — beschrijf elke factor die meespeelt in het risico.
   // @ts-expect-error jspdf-autotable augments doc
   let sy = (doc.lastAutoTable?.finalY ?? ly) + 6;
-  const isKE = a.risk_method === "kans_ernst";
   const scales: Array<{ title: string; scale: { value: number; label: string }[] }> = isKE
     ? [
         { title: "K — Kans dat het risico zich voordoet", scale: K_SCALE },

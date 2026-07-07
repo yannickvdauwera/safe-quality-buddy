@@ -411,6 +411,14 @@ function RiskAnalysisDetail() {
         </div>
       )}
 
+      <ExecutorsCard
+        users={appUsers ?? []}
+        executors={executors ?? []}
+        onAdd={addExecutor}
+        onRemove={removeExecutor}
+      />
+
+
       <Card className="p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">Items ({items?.length ?? 0})</h2>

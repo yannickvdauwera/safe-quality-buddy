@@ -422,16 +422,22 @@ function ScoreSelect({
 }
 
 function ItemDialog({
-  item, onClose, onChange, onSave,
+  item, method, onClose, onChange, onSave,
 }: {
   item: Partial<Item> | null;
+  method: RiskMethod;
   onClose: () => void;
   onChange: (i: Partial<Item>) => void;
   onSave: () => void;
 }) {
   if (!item) return null;
-  const grossR = computeR(item.score_w ?? null, item.score_b ?? null, item.score_e ?? null);
-  const netR = computeR(item.residual_w ?? null, item.residual_b ?? null, item.residual_e ?? null);
+  const isKE = method === "kans_ernst";
+  const grossR = computeRFor(method, item.score_w ?? null, item.score_b ?? null, item.score_e ?? null);
+  const netR = computeRFor(method, item.residual_w ?? null, item.residual_b ?? null, item.residual_e ?? null);
+  const kansScale = isKE ? K_SCALE : W_SCALE;
+  const ernstScale = isKE ? E5_SCALE : E_SCALE;
+  const kansLabel = isKE ? "K · Kans" : "W · Waarschijnlijkheid";
+  const ernstLabel = isKE ? "E · Ernst" : "E · Effect";
 
   const toggleType = (t: RiskMeasureType) => {
     const cur = item.measure_types ?? [];
@@ -463,17 +469,19 @@ function ItemDialog({
           <div className="border rounded-md p-3 space-y-3 bg-muted/30">
             <div className="flex items-center justify-between">
               <div className="font-medium text-sm">Bruto risico (zonder maatregelen)</div>
-              <RiskBadge r={grossR} />
+              <RiskBadge r={grossR} method={method} />
             </div>
-            <div className="grid gap-2 md:grid-cols-3">
-              <div><Label className="text-[10px] uppercase">W · Waarschijnlijkheid</Label>
-                <ScoreSelect value={item.score_w} onChange={(v) => onChange({ ...item, score_w: v })} scale={W_SCALE} placeholder="W" />
+            <div className={cn("grid gap-2", isKE ? "md:grid-cols-2" : "md:grid-cols-3")}>
+              <div><Label className="text-[10px] uppercase">{kansLabel}</Label>
+                <ScoreSelect value={item.score_w} onChange={(v) => onChange({ ...item, score_w: v })} scale={kansScale} placeholder={isKE ? "K" : "W"} />
               </div>
-              <div><Label className="text-[10px] uppercase">B · Blootstelling</Label>
-                <ScoreSelect value={item.score_b} onChange={(v) => onChange({ ...item, score_b: v })} scale={B_SCALE} placeholder="B" />
-              </div>
-              <div><Label className="text-[10px] uppercase">E · Effect</Label>
-                <ScoreSelect value={item.score_e} onChange={(v) => onChange({ ...item, score_e: v })} scale={E_SCALE} placeholder="E" />
+              {!isKE && (
+                <div><Label className="text-[10px] uppercase">B · Blootstelling</Label>
+                  <ScoreSelect value={item.score_b} onChange={(v) => onChange({ ...item, score_b: v })} scale={B_SCALE} placeholder="B" />
+                </div>
+              )}
+              <div><Label className="text-[10px] uppercase">{ernstLabel}</Label>
+                <ScoreSelect value={item.score_e} onChange={(v) => onChange({ ...item, score_e: v })} scale={ernstScale} placeholder="E" />
               </div>
             </div>
           </div>
@@ -497,17 +505,19 @@ function ItemDialog({
           <div className="border rounded-md p-3 space-y-3 bg-muted/30">
             <div className="flex items-center justify-between">
               <div className="font-medium text-sm">Restrisico (na maatregelen)</div>
-              <RiskBadge r={netR} />
+              <RiskBadge r={netR} method={method} />
             </div>
-            <div className="grid gap-2 md:grid-cols-3">
-              <div><Label className="text-[10px] uppercase">W′</Label>
-                <ScoreSelect value={item.residual_w} onChange={(v) => onChange({ ...item, residual_w: v })} scale={W_SCALE} placeholder="W" />
+            <div className={cn("grid gap-2", isKE ? "md:grid-cols-2" : "md:grid-cols-3")}>
+              <div><Label className="text-[10px] uppercase">{isKE ? "K′" : "W′"}</Label>
+                <ScoreSelect value={item.residual_w} onChange={(v) => onChange({ ...item, residual_w: v })} scale={kansScale} placeholder={isKE ? "K" : "W"} />
               </div>
-              <div><Label className="text-[10px] uppercase">B′</Label>
-                <ScoreSelect value={item.residual_b} onChange={(v) => onChange({ ...item, residual_b: v })} scale={B_SCALE} placeholder="B" />
-              </div>
+              {!isKE && (
+                <div><Label className="text-[10px] uppercase">B′</Label>
+                  <ScoreSelect value={item.residual_b} onChange={(v) => onChange({ ...item, residual_b: v })} scale={B_SCALE} placeholder="B" />
+                </div>
+              )}
               <div><Label className="text-[10px] uppercase">E′</Label>
-                <ScoreSelect value={item.residual_e} onChange={(v) => onChange({ ...item, residual_e: v })} scale={E_SCALE} placeholder="E" />
+                <ScoreSelect value={item.residual_e} onChange={(v) => onChange({ ...item, residual_e: v })} scale={ernstScale} placeholder="E" />
               </div>
             </div>
           </div>

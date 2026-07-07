@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-import { Checkbox } from "@/components/ui/checkbox";
+
 import {
   ArrowLeft, Plus, Trash2, Save, Edit, Loader2, ShieldAlert, TrendingDown, FileDown,
 } from "lucide-react";
@@ -19,10 +19,13 @@ import { exportRiskAnalysisToPdf } from "@/lib/risk-analysis-pdf";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  TYPE_LABELS, STATUS_LABELS, MEASURE_TYPE_LABELS, METHOD_LABELS, SELECTABLE_TYPES,
+  TYPE_LABELS, STATUS_LABELS, MEASURE_TYPE_META, MEASURE_TYPE_ORDER,
+  METHOD_LABELS, SELECTABLE_TYPES,
   classifyRiskFor, computeRFor, levelsFor, highRiskThreshold,
+  parseMeasures, serializeMeasures, measureTypesFrom,
   W_SCALE, B_SCALE, E_SCALE, K_SCALE, E5_SCALE,
   type RiskAnalysisType, type RiskAnalysisStatus, type RiskMeasureType, type RiskMethod,
+  type MeasuresByType,
 } from "@/lib/risk-analysis-types";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -47,6 +50,10 @@ interface Item {
   residual_b: number | null;
   residual_e: number | null;
   residual_r: number | null;
+  // In-memory werkveld voor de dialog: per type een tekstblok. Wordt bij
+  // opslaan geserialiseerd naar `measures` (JSON) en `measure_types`.
+  measures_by_type?: MeasuresByType;
+  measures_legacy?: string;
 }
 
 function RiskBadge({ r, method }: { r: number | null | undefined; method: RiskMethod }) {
@@ -134,8 +141,14 @@ function RiskAnalysisDetail() {
       score_b: method === "kans_ernst" ? null : (editItem.score_b ?? null),
       score_e: editItem.score_e ?? null,
       score_r: computeRFor(method, editItem.score_w ?? null, editItem.score_b ?? null, editItem.score_e ?? null),
-      measures: editItem.measures || null,
-      measure_types: editItem.measure_types ?? [],
+      measures: (() => {
+        const byType = editItem.measures_by_type ?? {};
+        const serialized = serializeMeasures(byType);
+        // Behoud legacy tekst zolang de gebruiker nog niets in de per-type velden heeft ingevuld.
+        if (serialized) return serialized;
+        return editItem.measures_legacy?.trim() || null;
+      })(),
+      measure_types: measureTypesFrom(editItem.measures_by_type ?? {}),
       residual_w: editItem.residual_w ?? null,
       residual_b: method === "kans_ernst" ? null : (editItem.residual_b ?? null),
       residual_e: editItem.residual_e ?? null,
@@ -351,7 +364,7 @@ function RiskAnalysisDetail() {
       <Card className="p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">Items ({items?.length ?? 0})</h2>
-          <Button size="sm" onClick={() => setEditItem({ position: (items?.length ?? 0) + 1, measure_types: [] })}>
+          <Button size="sm" onClick={() => setEditItem({ position: (items?.length ?? 0) + 1, measure_types: [], measures_by_type: {} })}>
             <Plus className="w-4 h-4" /> Item toevoegen
           </Button>
         </div>
@@ -394,18 +407,7 @@ function RiskAnalysisDetail() {
                       </div>
                     </td>
                     <td className="py-3 px-2 max-w-md">
-                      {it.measures ? (
-                        <div className="text-xs whitespace-pre-line line-clamp-3">{it.measures}</div>
-                      ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
-                      )}
-                      {it.measure_types.length > 0 && (
-                        <div className="flex gap-1 mt-1">
-                          {it.measure_types.map((m) => (
-                            <Badge key={m} variant="outline" className="text-[10px] py-0">{MEASURE_TYPE_LABELS[m]}</Badge>
-                          ))}
-                        </div>
-                      )}
+                      <MeasuresCell raw={it.measures} />
                     </td>
                     <td className="py-3 px-2">
                       <RiskBadge r={it.residual_r} method={method} />
@@ -419,7 +421,11 @@ function RiskAnalysisDetail() {
                     </td>
                     <td className="py-3 px-2">
                       <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => setEditItem(it)}>
+                        <Button size="icon" variant="ghost" onClick={() => {
+                          const parsed = parseMeasures(it.measures);
+                          setEditItem({ ...it, measures_by_type: parsed.byType, measures_legacy: parsed.legacy });
+                        }}>
+
                           <Edit className="w-3.5 h-3.5" />
                         </Button>
                         <Button size="icon" variant="ghost" onClick={() => deleteItem(it.id)}>
@@ -482,9 +488,10 @@ function ItemDialog({
   const kansLabel = isKE ? "K · Kans" : "W · Waarschijnlijkheid";
   const ernstLabel = isKE ? "E · Ernst" : "E · Effect";
 
-  const toggleType = (t: RiskMeasureType) => {
-    const cur = item.measure_types ?? [];
-    onChange({ ...item, measure_types: cur.includes(t) ? cur.filter((x) => x !== t) : [...cur, t] });
+  const byType: MeasuresByType = item.measures_by_type ?? {};
+  const setByType = (t: RiskMeasureType, v: string) => {
+    const next = { ...byType, [t]: v };
+    onChange({ ...item, measures_by_type: next });
   };
 
   return (
@@ -530,19 +537,51 @@ function ItemDialog({
           </div>
 
           <div className="space-y-2">
-            <Label className="text-xs">Risicoreductie / maatregelen</Label>
-            <Textarea rows={4} value={item.measures ?? ""} onChange={(e) => onChange({ ...item, measures: e.target.value })} />
-            <div className="flex gap-4 pt-1">
-              {(Object.keys(MEASURE_TYPE_LABELS) as RiskMeasureType[]).map((t) => (
-                <label key={t} className="flex items-center gap-2 text-sm cursor-pointer">
-                  <Checkbox
-                    checked={item.measure_types?.includes(t) ?? false}
-                    onCheckedChange={() => toggleType(t)}
-                  />
-                  {MEASURE_TYPE_LABELS[t]}
-                </label>
-              ))}
+            <div className="flex items-baseline justify-between">
+              <Label className="text-xs">Risicoreductie — per type maatregel</Label>
+              <span className="text-[10px] text-muted-foreground">
+                Volgorde: technisch (bron) → organisatorisch → mensgericht (PBM)
+              </span>
             </div>
+            <div className="grid gap-3 md:grid-cols-3">
+              {MEASURE_TYPE_ORDER.map((t) => {
+                const meta = MEASURE_TYPE_META[t];
+                return (
+                  <div key={t} className="border rounded-md overflow-hidden">
+                    <div
+                      className="px-3 py-2 text-xs font-semibold flex items-center gap-2 border-b"
+                      style={{ background: meta.swatch + "18", color: meta.swatch }}
+                    >
+                      <span
+                        className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold text-white"
+                        style={{ background: meta.swatch }}
+                      >
+                        {meta.short}
+                      </span>
+                      {meta.label}
+                    </div>
+                    <Textarea
+                      rows={5}
+                      className="border-0 rounded-none focus-visible:ring-0 text-sm"
+                      placeholder={meta.hint}
+                      value={byType[t] ?? ""}
+                      onChange={(e) => setByType(t, e.target.value)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            {item.measures_legacy && (
+              <div className="border rounded-md p-3 bg-yellow-50 border-yellow-200 text-xs space-y-1">
+                <div className="font-semibold text-yellow-900">
+                  Bestaande omschrijving (nog niet ingedeeld per type)
+                </div>
+                <div className="whitespace-pre-line text-yellow-900/80">{item.measures_legacy}</div>
+                <div className="text-[10px] text-yellow-800">
+                  Kopieer de tekst in de juiste kolom(men) hierboven en sla op — dan verdwijnt dit blok.
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="border rounded-md p-3 space-y-3 bg-muted/30">
@@ -571,5 +610,45 @@ function ItemDialog({
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+// Toont per item de risicoreductie ingedeeld per type maatregel.
+// Wanneer een item nog niet is gemigreerd (vrije tekst) valt het terug op een neutrale weergave.
+function MeasuresCell({ raw }: { raw: string | null }) {
+  const { byType, legacy } = parseMeasures(raw);
+  const activeTypes = MEASURE_TYPE_ORDER.filter((t) => (byType[t] ?? "").trim().length > 0);
+  if (activeTypes.length === 0 && !legacy) {
+    return <span className="text-xs text-muted-foreground">—</span>;
+  }
+  return (
+    <div className="space-y-1.5">
+      {activeTypes.map((t) => {
+        const meta = MEASURE_TYPE_META[t];
+        return (
+          <div key={t} className="text-xs">
+            <div className="flex items-center gap-1.5 mb-0.5">
+              <span
+                className="inline-flex items-center justify-center w-4 h-4 rounded-full text-[9px] font-bold text-white"
+                style={{ background: meta.swatch }}
+                title={meta.label}
+              >
+                {meta.short}
+              </span>
+              <span className="font-medium" style={{ color: meta.swatch }}>{meta.label}</span>
+            </div>
+            <div className="whitespace-pre-line line-clamp-3 pl-5 text-muted-foreground">
+              {byType[t]}
+            </div>
+          </div>
+        );
+      })}
+      {legacy && (
+        <div className="text-xs">
+          <Badge variant="outline" className="text-[9px] py-0 mb-0.5">Niet ingedeeld</Badge>
+          <div className="whitespace-pre-line line-clamp-3 text-muted-foreground">{legacy}</div>
+        </div>
+      )}
+    </div>
   );
 }

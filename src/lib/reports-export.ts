@@ -111,6 +111,53 @@ function aoSections(r: ReportExport): Array<{ title: string; rows: Array<[string
   ];
 }
 
+function klachtSections(r: ReportExport): Array<{ title: string; rows: Array<[string, string]> }> {
+  const d = (r.details ?? {}) as Record<string, string | undefined>;
+  return [
+    {
+      title: "Referentie & status",
+      rows: [
+        ["Referentie", r.id.slice(0, 8).toUpperCase()],
+        ["Titel", r.title],
+        ["Categorie", d.category ?? "—"],
+        ["Ernst", r.severity],
+        ["Status", r.status],
+      ],
+    },
+    {
+      title: "Indiener",
+      rows: [
+        ["Naam", d.submitter_name ?? "—"],
+        ["Functie / rol", d.submitter_role ?? "—"],
+        ["E-mail", d.submitter_email ?? "—"],
+      ],
+    },
+    {
+      title: "Gaat over",
+      rows: [
+        ["Naam", d.about_name ?? "—"],
+        ["Functie / rol", d.about_function ?? "—"],
+        ["E-mail", d.about_email ?? "—"],
+      ],
+    },
+    {
+      title: "Situering",
+      rows: [
+        ["Datum", fmtDate(d.incident_date || r.observed_at)],
+        ["Werf / Locatie / Klant", r.location ?? d.worksite ?? "—"],
+        ["Betrokken firma", r.involved_firm ?? "—"],
+      ],
+    },
+    {
+      title: "Beschrijving & opvolging",
+      rows: [
+        ["Beschrijving", r.description ?? "—"],
+        ["Opvolging", r.follow_up_notes ?? "—"],
+      ],
+    },
+  ];
+}
+
 const humanize = (k: string) =>
   k.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
@@ -181,7 +228,9 @@ function genericSections(r: ReportExport): Array<{ title: string; rows: Array<[s
 }
 
 const sectionsFor = (r: ReportExport) =>
-  r.type === "ao_ehbo" ? aoSections(r) : genericSections(r);
+  r.type === "ao_ehbo" ? aoSections(r)
+  : r.type === "klacht" ? klachtSections(r)
+  : genericSections(r);
 
 const filename = (r: ReportExport, ext: string) =>
   `TSA_${label(r.type).short}_${(r.details as { incident_date?: string })?.incident_date ?? r.observed_at.slice(0, 10)}_${r.id.slice(0, 8)}.${ext}`;

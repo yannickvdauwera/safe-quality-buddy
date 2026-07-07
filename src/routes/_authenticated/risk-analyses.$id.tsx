@@ -274,6 +274,20 @@ function RiskAnalysisDetail() {
           {analysis.description && <p className="text-sm text-muted-foreground mt-2 max-w-2xl">{analysis.description}</p>}
         </div>
         <div className="flex gap-2 flex-wrap">
+          <Select value={analysis.analysis_type} onValueChange={(v) => updateType(v as RiskAnalysisType)}>
+            <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {SELECTABLE_TYPES.map((t) => (
+                <SelectItem key={t} value={t}>{TYPE_LABELS[t]}</SelectItem>
+              ))}
+              {/* Toon huidig type ook als het uitgefaseerd is, zodat de selectie zichtbaar blijft. */}
+              {!SELECTABLE_TYPES.includes(analysis.analysis_type as RiskAnalysisType) && (
+                <SelectItem value={analysis.analysis_type}>
+                  {TYPE_LABELS[analysis.analysis_type as RiskAnalysisType] ?? analysis.analysis_type} — wijzig aub
+                </SelectItem>
+              )}
+            </SelectContent>
+          </Select>
           <Select value={analysis.status} onValueChange={(v) => updateStatus(v as RiskAnalysisStatus)}>
             <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
             <SelectContent>

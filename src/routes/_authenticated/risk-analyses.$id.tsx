@@ -50,6 +50,10 @@ interface Item {
   residual_b: number | null;
   residual_e: number | null;
   residual_r: number | null;
+  // In-memory werkveld voor de dialog: per type een tekstblok. Wordt bij
+  // opslaan geserialiseerd naar `measures` (JSON) en `measure_types`.
+  measures_by_type?: MeasuresByType;
+  measures_legacy?: string;
 }
 
 function RiskBadge({ r, method }: { r: number | null | undefined; method: RiskMethod }) {

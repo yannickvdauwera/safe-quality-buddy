@@ -172,12 +172,22 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
     return lvl ? levelsFor(a.risk_method)[lvl] : null;
   };
 
+  const formatMeasures = (raw: string | null) => {
+    const { byType, legacy } = parseMeasures(raw);
+    const parts: string[] = [];
+    for (const t of MEASURE_TYPE_ORDER) {
+      const v = byType[t];
+      if (v && v.trim()) parts.push(`[${MEASURE_TYPE_META[t].label}]\n${v.trim()}`);
+    }
+    if (legacy) parts.push(`[Niet ingedeeld]\n${legacy.trim()}`);
+    return parts.join("\n\n");
+  };
+
   const body = a.items.map((it) => [
     String(it.position),
     [it.activity, it.hazard, it.risk_description ? `Kans op: ${it.risk_description}` : null].filter(Boolean).join("\n"),
     `${it.score_r ?? "—"}\n${scoreLabel(it.score_w, it.score_b, it.score_e)}`,
-    [it.measures ?? "", it.measure_types.length ? `[${it.measure_types.map((m) => MEASURE_TYPE_LABELS[m]).join(", ")}]` : ""]
-      .filter(Boolean).join("\n"),
+    formatMeasures(it.measures),
     `${it.residual_r ?? "—"}\n${scoreLabel(it.residual_w, it.residual_b, it.residual_e)}`,
   ]);
 

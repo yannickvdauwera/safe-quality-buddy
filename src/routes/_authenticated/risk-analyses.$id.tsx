@@ -128,10 +128,7 @@ function RiskAnalysisDetail() {
   const { data: appUsers } = useQuery({
     queryKey: ["profiles-picker"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, email")
-        .order("full_name", { ascending: true });
+      const { data, error } = await supabase.rpc("list_app_users");
       if (error) throw error;
       return (data ?? []) as { id: string; full_name: string | null; email: string | null }[];
     },
@@ -139,17 +136,17 @@ function RiskAnalysisDetail() {
 
   // Uitvoerders van deze RA, met de bijhorende gebruikersgegevens.
   const { data: executors } = useQuery({
-    queryKey: ["risk-analysis-executors", id],
+    queryKey: ["risk-analysis-executors", id, appUsers?.length ?? 0],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("risk_analysis_executors")
-        .select("user_id, profiles:user_id(id, full_name, email)")
+        .select("user_id")
         .eq("analysis_id", id);
       if (error) throw error;
-      type Row = { user_id: string; profiles: { id: string; full_name: string | null; email: string | null } | null };
-      return ((data ?? []) as unknown as Row[])
-        .map((r) => r.profiles ?? { id: r.user_id, full_name: null, email: null });
+      const byId = new Map((appUsers ?? []).map((u) => [u.id, u]));
+      return (data ?? []).map((r) => byId.get(r.user_id) ?? { id: r.user_id, full_name: null, email: null });
     },
+    enabled: !!appUsers,
   });
 
   const invalidate = () => {

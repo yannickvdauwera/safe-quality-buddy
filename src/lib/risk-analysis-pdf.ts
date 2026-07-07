@@ -236,26 +236,27 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
     },
   });
 
-  // Legend
-  // @ts-expect-error jspdf-autotable augments doc
-  let ly = (doc.lastAutoTable?.finalY ?? y) + 6;
+  // ===== Risicoclassificatie + Beoordelingsschalen (samen op één pagina) =====
+  doc.addPage();
+  drawHeader();
+
   const levels = levelsFor(a.risk_method);
   const entries = Object.values(levels);
-  if (ly > pageH - 30) {
-    doc.addPage();
-    drawHeader();
-    ly = 32;
-  }
+
+  // --- Linker kolom: Risicoclassificatie ---
+  let ly = 32;
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
+  doc.setFontSize(11);
   doc.setTextColor(...TSA_DARK);
   doc.text("Risicoclassificatie", 12, ly);
-  ly += 4;
+  ly += 5;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(90, 90, 90);
   doc.text(`Toegepaste methodiek: ${METHOD_LABELS[a.risk_method]}`, 12, ly);
   ly += 4;
+
+  const classTableW = 90;
   autoTable(doc, {
     startY: ly,
     head: [["Niveau", "Van", "Tot"]],
@@ -263,8 +264,13 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
     theme: "grid",
     styles: { fontSize: 8, cellPadding: 2, lineColor: [229, 229, 229], lineWidth: 0.1, textColor: TSA_DARK },
     headStyles: { fillColor: TSA_DARK, textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8 },
-    columnStyles: { 0: { cellWidth: 50, fontStyle: "bold" }, 1: { cellWidth: 20, halign: "center" }, 2: { cellWidth: 20, halign: "center" } },
-    margin: { left: 12, right: 12 },
+    columnStyles: {
+      0: { cellWidth: 42, fontStyle: "bold" },
+      1: { cellWidth: 18, halign: "center" },
+      2: { cellWidth: 18, halign: "center" },
+    },
+    margin: { left: 12, right: pageW - 12 - classTableW },
+    tableWidth: classTableW,
     didParseCell: (data) => {
       if (data.section === "body" && data.column.index === 0) {
         const cfg = entries[data.row.index];
@@ -272,11 +278,10 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
         data.cell.styles.textColor = [255, 255, 255];
       }
     },
+    didDrawPage: () => drawHeader(),
   });
 
-  // Beoordelingsschalen — beschrijf elke factor die meespeelt in het risico.
-  // @ts-expect-error jspdf-autotable augments doc
-  let sy = (doc.lastAutoTable?.finalY ?? ly) + 8;
+  // --- Rechter kolom: Beoordelingsschalen ---
   const scales: Array<{ title: string; subtitle: string; scale: { value: number; label: string }[] }> = isKE
     ? [
         { title: "K — Kans", subtitle: "Hoe waarschijnlijk is het dat het risico zich voordoet?", scale: K_SCALE },
@@ -288,55 +293,45 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
         { title: "E — Effect / Ernst", subtitle: "Wat is de ernst van het letsel of de schade?", scale: E_SCALE },
       ];
 
-  // Split de omschrijving in waarde + tekst (labels hebben de vorm "5 — beschrijving").
   const splitLabel = (label: string): [string, string] => {
     const m = label.match(/^\s*([^—-]+?)\s*[—-]\s*(.*)$/);
     return m ? [m[1].trim(), m[2].trim()] : [String(label), ""];
   };
 
-  if (sy > pageH - 60) {
-    doc.addPage();
-    drawHeader();
-    sy = 32;
-  }
+  const rightX = 118;
+  const rightGutter = 5;
+  const scaleColW = (pageW - rightX - 12 - rightGutter) / 2;
 
+  let sy = 32;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(11);
   doc.setTextColor(...TSA_DARK);
-  doc.text("Beoordelingsschalen", 12, sy);
+  doc.text("Beoordelingsschalen", rightX, sy);
   sy += 4.5;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(8);
   doc.setTextColor(90, 90, 90);
   doc.text(
     `Toegepaste methodiek: ${METHOD_LABELS[a.risk_method]}. Elk item wordt beoordeeld op ${scales.length} factoren; hieronder de betekenis van elke waarde.`,
-    12, sy,
+    rightX, sy,
   );
   sy += 3;
 
-  // Twee kolommen naast elkaar — rustig leesbare tabellen zonder lange regels.
-  const gutter = 6;
-  const colW = (pageW - 24 - gutter) / 2;
-
-  let rowTopY = sy;
-  let nextColIndex = 0;
-  let rowHeights: number[] = [0, 0];
-
-  scales.forEach((s) => {
-    const col = nextColIndex;
-    const x = 12 + col * (colW + gutter);
-    const startAt = rowTopY;
-
+  const drawScaleTable = (
+    s: (typeof scales)[number],
+    x: number,
+    startY: number,
+  ): number => {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(9.5);
     doc.setTextColor(...TSA_DARK);
-    doc.text(s.title, x, startAt);
+    doc.text(s.title, x, startY);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5);
     doc.setTextColor(110, 110, 110);
-    const subLines = doc.splitTextToSize(s.subtitle, colW);
-    doc.text(subLines, x, startAt + 3.6);
-    const tableStart = startAt + 3.6 + subLines.length * 3 + 1.5;
+    const subLines = doc.splitTextToSize(s.subtitle, scaleColW);
+    doc.text(subLines, x, startY + 3.6);
+    const tableStart = startY + 3.6 + subLines.length * 3 + 1.5;
 
     autoTable(doc, {
       startY: tableStart,
@@ -352,28 +347,29 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
       styles: { fontSize: 8.5, cellPadding: 2, lineColor: [229, 229, 229], lineWidth: 0.1, textColor: TSA_DARK, valign: "middle" },
       headStyles: { fillColor: TSA_DARK, textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8, halign: "left" },
       alternateRowStyles: { fillColor: TSA_LIGHT },
-      columnStyles: { 0: { cellWidth: 14 }, 1: { cellWidth: colW - 14 } },
-      margin: { left: x, right: pageW - x - colW, top: 28, bottom: 20 },
-      tableWidth: colW,
+      columnStyles: { 0: { cellWidth: 14 }, 1: { cellWidth: scaleColW - 14 } },
+      margin: { left: x, right: pageW - x - scaleColW, top: 28, bottom: 20 },
+      tableWidth: scaleColW,
       didDrawPage: () => drawHeader(),
     });
 
     // @ts-expect-error jspdf-autotable augments doc
-    const finishedY = doc.lastAutoTable?.finalY ?? tableStart;
-    rowHeights[col] = finishedY - startAt;
+    return doc.lastAutoTable?.finalY ?? tableStart;
+  };
 
-    nextColIndex += 1;
-    if (nextColIndex >= 2) {
-      rowTopY = startAt + Math.max(rowHeights[0], rowHeights[1]) + 6;
-      nextColIndex = 0;
-      rowHeights = [0, 0];
-      if (rowTopY > pageH - 40) {
-        doc.addPage();
-        drawHeader();
-        rowTopY = 32;
-      }
-    }
-  });
+  let scalesEndY: number;
+  if (scales.length === 2) {
+    scalesEndY = Math.max(
+      drawScaleTable(scales[0], rightX, sy),
+      drawScaleTable(scales[1], rightX + scaleColW + rightGutter, sy),
+    );
+  } else {
+    const endY1 = drawScaleTable(scales[0], rightX, sy);
+    const endY2 = drawScaleTable(scales[1], rightX + scaleColW + rightGutter, sy);
+    const row2Y = Math.max(endY1, endY2) + 5;
+    const endY3 = drawScaleTable(scales[2], rightX, row2Y);
+    scalesEndY = Math.max(endY1, endY2, endY3);
+  }
 
   // Uitvoerders — vaste medewerkers vanuit Gebruikers & Rollen.
   const executors = a.executors ?? [];

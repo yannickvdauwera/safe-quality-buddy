@@ -224,8 +224,9 @@ function RiskAnalysisDetail() {
 
   const stats = useMemo(() => {
     if (!items) return null;
-    const grossHigh = items.filter((i) => (i.score_r ?? 0) >= 200).length;
-    const netHigh = items.filter((i) => (i.residual_r ?? 0) >= 200).length;
+    const threshold = highRiskThreshold(method);
+    const grossHigh = items.filter((i) => (i.score_r ?? 0) >= threshold).length;
+    const netHigh = items.filter((i) => (i.residual_r ?? 0) >= threshold).length;
     const avgReduction = items.length
       ? Math.round(
           items.reduce((sum, i) => {
@@ -234,8 +235,8 @@ function RiskAnalysisDetail() {
           }, 0) / items.length,
         )
       : 0;
-    return { total: items.length, grossHigh, netHigh, avgReduction };
-  }, [items]);
+    return { total: items.length, grossHigh, netHigh, avgReduction, threshold };
+  }, [items, method]);
 
   if (isLoading || !analysis) {
     return <div className="text-sm text-muted-foreground">Laden...</div>;

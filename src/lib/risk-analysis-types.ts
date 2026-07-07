@@ -108,21 +108,20 @@ export const E5_SCALE = [
   { value: 1, label: "1 — Verwaarloosbaar" },
 ];
 
+// TSA-matrix (5×5): laag 1-4 (groen), gemiddeld 5-12 (geel), hoog 15-25 (rood)
 export const RISK_LEVELS_KE: Record<RiskLevel, { label: string; min: number; max: number; color: string; badgeClass: string }> = {
-  very_low: { label: "Zeer laag", min: 1, max: 4, color: "#16a34a", badgeClass: "bg-green-100 text-green-800 border-green-300" },
-  low: { label: "Laag", min: 4, max: 7, color: "#65a30d", badgeClass: "bg-lime-100 text-lime-800 border-lime-300" },
-  medium: { label: "Gemiddeld", min: 7, max: 13, color: "#eab308", badgeClass: "bg-yellow-100 text-yellow-800 border-yellow-300" },
-  high: { label: "Hoog", min: 13, max: 20, color: "#ea580c", badgeClass: "bg-orange-100 text-orange-800 border-orange-300" },
-  very_high: { label: "Zeer hoog", min: 20, max: 25, color: "#dc2626", badgeClass: "bg-red-100 text-red-800 border-red-300" },
+  very_low: { label: "Laag", min: 1, max: 5, color: "#16a34a", badgeClass: "bg-green-100 text-green-800 border-green-300" },
+  low: { label: "Laag", min: 1, max: 5, color: "#16a34a", badgeClass: "bg-green-100 text-green-800 border-green-300" },
+  medium: { label: "Gemiddeld", min: 5, max: 15, color: "#eab308", badgeClass: "bg-yellow-100 text-yellow-800 border-yellow-300" },
+  high: { label: "Hoog", min: 15, max: 26, color: "#dc2626", badgeClass: "bg-red-100 text-red-800 border-red-300" },
+  very_high: { label: "Hoog", min: 15, max: 26, color: "#dc2626", badgeClass: "bg-red-100 text-red-800 border-red-300" },
 };
 
 export function classifyRiskKE(r: number | null | undefined): RiskLevel | null {
   if (r == null || Number.isNaN(r)) return null;
-  if (r < 4) return "very_low";
-  if (r < 7) return "low";
-  if (r < 13) return "medium";
-  if (r < 20) return "high";
-  return "very_high";
+  if (r < 5) return "low";
+  if (r < 15) return "medium";
+  return "high";
 }
 
 export function computeRKE(k: number | null, e: number | null): number | null {
@@ -145,6 +144,6 @@ export function levelsFor(method: RiskMethod) {
 
 // Drempel voor "hoog risico" per methode (gebruikt voor statistieken).
 export function highRiskThreshold(method: RiskMethod): number {
-  return method === "kans_ernst" ? 13 : 200;
+  return method === "kans_ernst" ? 15 : 200;
 }
 

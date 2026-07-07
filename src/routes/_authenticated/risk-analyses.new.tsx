@@ -113,6 +113,7 @@ function NewRiskAnalysis() {
           .insert({
             title: p.title,
             analysis_type: importType,
+            risk_method: importMethod,
             workpost: p.title,
             department: importDept.trim() || null,
             status: "draft",

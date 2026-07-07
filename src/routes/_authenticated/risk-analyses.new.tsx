@@ -74,6 +74,7 @@ function NewRiskAnalysis() {
           title: title.trim(),
           description: description.trim() || null,
           analysis_type: analysisType,
+          risk_method: riskMethod,
           workpost: workpost.trim() || null,
           department: department.trim() || null,
           status: "draft",

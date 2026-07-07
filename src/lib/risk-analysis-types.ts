@@ -34,6 +34,79 @@ export const MEASURE_TYPE_LABELS: Record<RiskMeasureType, string> = {
   human: "Mensgericht",
 };
 
+// Volgorde en visuele styling voor de drie types risicoreductie.
+// Deze volgorde weerspiegelt de arbeidshygiënische strategie: technisch vóór
+// organisatorisch vóór mensgericht (PBM/instructies als laatste vangnet).
+export const MEASURE_TYPE_ORDER: RiskMeasureType[] = ["technical", "organizational", "human"];
+
+export const MEASURE_TYPE_META: Record<RiskMeasureType, {
+  label: string;
+  short: string;
+  hint: string;
+  badgeClass: string;
+  swatch: string;
+}> = {
+  technical: {
+    label: "Technisch",
+    short: "T",
+    hint: "Bronmaatregelen: hardware, afscherming, ventilatie, veiliger materieel.",
+    badgeClass: "bg-blue-100 text-blue-800 border-blue-300",
+    swatch: "#2563eb",
+  },
+  organizational: {
+    label: "Organisatorisch",
+    short: "O",
+    hint: "Procedures, werkvergunningen, planning, toezicht, taakverdeling.",
+    badgeClass: "bg-purple-100 text-purple-800 border-purple-300",
+    swatch: "#7c3aed",
+  },
+  human: {
+    label: "Mensgericht",
+    short: "M",
+    hint: "PBM, opleiding, instructie, toolbox — laatste vangnet.",
+    badgeClass: "bg-amber-100 text-amber-800 border-amber-300",
+    swatch: "#d97706",
+  },
+};
+
+export type MeasuresByType = Partial<Record<RiskMeasureType, string>>;
+
+// Maatregelen worden per type opgeslagen als JSON in het bestaande `measures` tekstveld.
+// Legacy items (vóór deze splitsing) staan als vrije tekst en worden in `legacy` teruggegeven.
+export function parseMeasures(raw: string | null | undefined): { byType: MeasuresByType; legacy?: string } {
+  if (!raw) return { byType: {} };
+  const trimmed = raw.trim();
+  if (trimmed.startsWith("{")) {
+    try {
+      const parsed = JSON.parse(trimmed) as Record<string, unknown>;
+      if (parsed && typeof parsed === "object") {
+        const out: MeasuresByType = {};
+        for (const k of MEASURE_TYPE_ORDER) {
+          const v = parsed[k];
+          if (typeof v === "string" && v.trim()) out[k] = v;
+        }
+        return { byType: out };
+      }
+    } catch {
+      // fall through to legacy
+    }
+  }
+  return { byType: {}, legacy: raw };
+}
+
+export function serializeMeasures(m: MeasuresByType): string | null {
+  const cleaned: MeasuresByType = {};
+  for (const k of MEASURE_TYPE_ORDER) {
+    const v = m[k]?.trim();
+    if (v) cleaned[k] = v;
+  }
+  return Object.keys(cleaned).length ? JSON.stringify(cleaned) : null;
+}
+
+export function measureTypesFrom(m: MeasuresByType): RiskMeasureType[] {
+  return MEASURE_TYPE_ORDER.filter((k) => (m[k] ?? "").trim().length > 0);
+}
+
 export const SESSION_STATUS_LABELS: Record<RiskSessionStatus, string> = {
   planned: "Gepland",
   in_progress: "Bezig",

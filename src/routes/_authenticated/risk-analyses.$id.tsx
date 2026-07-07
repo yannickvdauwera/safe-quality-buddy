@@ -19,10 +19,13 @@ import { exportRiskAnalysisToPdf } from "@/lib/risk-analysis-pdf";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import {
-  TYPE_LABELS, STATUS_LABELS, MEASURE_TYPE_LABELS, METHOD_LABELS, SELECTABLE_TYPES,
+  TYPE_LABELS, STATUS_LABELS, MEASURE_TYPE_LABELS, MEASURE_TYPE_META, MEASURE_TYPE_ORDER,
+  METHOD_LABELS, SELECTABLE_TYPES,
   classifyRiskFor, computeRFor, levelsFor, highRiskThreshold,
+  parseMeasures, serializeMeasures, measureTypesFrom,
   W_SCALE, B_SCALE, E_SCALE, K_SCALE, E5_SCALE,
   type RiskAnalysisType, type RiskAnalysisStatus, type RiskMeasureType, type RiskMethod,
+  type MeasuresByType,
 } from "@/lib/risk-analysis-types";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";

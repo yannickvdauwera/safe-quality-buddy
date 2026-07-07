@@ -19,7 +19,7 @@ import { useMemo, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import {
   TYPE_LABELS, STATUS_LABELS, MEASURE_TYPE_LABELS, METHOD_LABELS,
-  RISK_LEVELS, RISK_LEVELS_KE, classifyRiskFor, computeRFor, levelsFor, highRiskThreshold,
+  classifyRiskFor, computeRFor, levelsFor, highRiskThreshold,
   W_SCALE, B_SCALE, E_SCALE, K_SCALE, E5_SCALE,
   type RiskAnalysisType, type RiskAnalysisStatus, type RiskMeasureType, type RiskMethod,
 } from "@/lib/risk-analysis-types";

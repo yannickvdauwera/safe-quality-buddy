@@ -432,7 +432,11 @@ function RiskAnalysisDetail() {
                     </td>
                     <td className="py-3 px-2">
                       <div className="flex gap-1">
-                        <Button size="icon" variant="ghost" onClick={() => setEditItem(it)}>
+                        <Button size="icon" variant="ghost" onClick={() => {
+                          const parsed = parseMeasures(it.measures);
+                          setEditItem({ ...it, measures_by_type: parsed.byType, measures_legacy: parsed.legacy });
+                        }}>
+
                           <Edit className="w-3.5 h-3.5" />
                         </Button>
                         <Button size="icon" variant="ghost" onClick={() => deleteItem(it.id)}>

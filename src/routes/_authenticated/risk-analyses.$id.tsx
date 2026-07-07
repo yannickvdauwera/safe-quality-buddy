@@ -174,6 +174,13 @@ function RiskAnalysisDetail() {
     invalidate();
   };
 
+  const updateType = async (analysis_type: RiskAnalysisType) => {
+    const { error } = await supabase.from("risk_analyses").update({ analysis_type }).eq("id", id);
+    if (error) return toast.error(error.message);
+    toast.success("Type bijgewerkt");
+    invalidate();
+  };
+
   const createNewVersion = async () => {
     if (!user || !analysis || !currentVersion) return;
     const notes = prompt("Wijzignotitie voor de nieuwe versie:");

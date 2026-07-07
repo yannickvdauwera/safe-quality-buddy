@@ -4,6 +4,7 @@ import tsaLogoUrl from "@/assets/tsa-logo.png";
 import {
   METHOD_LABELS, MEASURE_TYPE_META, MEASURE_TYPE_ORDER, TYPE_LABELS, STATUS_LABELS,
   classifyRiskFor, levelsFor, highRiskThreshold, parseMeasures,
+  W_SCALE, B_SCALE, E_SCALE, K_SCALE, E5_SCALE,
   type RiskMethod, type RiskAnalysisType, type RiskAnalysisStatus, type RiskMeasureType,
 } from "./risk-analysis-types";
 

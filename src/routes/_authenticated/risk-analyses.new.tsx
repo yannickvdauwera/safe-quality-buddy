@@ -10,7 +10,7 @@ import { Upload, Save, Loader2, ArrowLeft, FileSpreadsheet, CheckCircle2 } from 
 import { useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { TYPE_LABELS, METHOD_LABELS, levelsFor, type RiskAnalysisType, type RiskMethod } from "@/lib/risk-analysis-types";
+import { TYPE_LABELS, METHOD_LABELS, SELECTABLE_TYPES, levelsFor, type RiskAnalysisType, type RiskMethod } from "@/lib/risk-analysis-types";
 import { parseMondayExport, type ParsedRiskAnalysis } from "@/lib/risk-analysis-excel";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -237,7 +237,7 @@ function NewRiskAnalysis() {
                 <Select value={importType} onValueChange={(v) => setImportType(v as RiskAnalysisType)}>
                   <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {(Object.keys(TYPE_LABELS) as RiskAnalysisType[]).map((t) => (
+                    {SELECTABLE_TYPES.map((t) => (
                       <SelectItem key={t} value={t}>{TYPE_LABELS[t]}</SelectItem>
                     ))}
                   </SelectContent>
@@ -330,7 +330,7 @@ function NewRiskAnalysis() {
               <Select value={analysisType} onValueChange={(v) => setAnalysisType(v as RiskAnalysisType)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {(Object.keys(TYPE_LABELS) as RiskAnalysisType[]).map((t) => (
+                  {SELECTABLE_TYPES.map((t) => (
                     <SelectItem key={t} value={t}>{TYPE_LABELS[t]}</SelectItem>
                   ))}
                 </SelectContent>

@@ -287,11 +287,11 @@ function RiskAnalysisDetail() {
             <div className="text-2xl font-bold mt-1">{stats.total}</div>
           </Card>
           <Card className="p-4">
-            <div className="text-xs text-muted-foreground uppercase tracking-wide">Bruto R ≥ 200</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wide">Bruto R ≥ {stats.threshold}</div>
             <div className="text-2xl font-bold mt-1 text-orange-600">{stats.grossHigh}</div>
           </Card>
           <Card className="p-4">
-            <div className="text-xs text-muted-foreground uppercase tracking-wide">Netto R ≥ 200</div>
+            <div className="text-xs text-muted-foreground uppercase tracking-wide">Netto R ≥ {stats.threshold}</div>
             <div className={cn("text-2xl font-bold mt-1", stats.netHigh > 0 ? "text-orange-600" : "text-green-600")}>
               {stats.netHigh}
             </div>

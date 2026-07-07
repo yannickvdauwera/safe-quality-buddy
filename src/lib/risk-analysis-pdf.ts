@@ -375,7 +375,7 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
   const executors = a.executors ?? [];
   if (executors.length > 0) {
     // @ts-expect-error jspdf-autotable augments doc
-    let ey = (doc.lastAutoTable?.finalY ?? rowTopY) + 8;
+    let ey = (doc.lastAutoTable?.finalY ?? scalesEndY) + 8;
     if (ey > pageH - 30) {
       doc.addPage();
       drawHeader();

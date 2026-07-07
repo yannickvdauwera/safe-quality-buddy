@@ -232,6 +232,11 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
   doc.setTextColor(...TSA_DARK);
   doc.text("Risicoclassificatie", 12, ly);
   ly += 4;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(90, 90, 90);
+  doc.text(`Toegepaste methodiek: ${METHOD_LABELS[a.risk_method]}`, 12, ly);
+  ly += 4;
   autoTable(doc, {
     startY: ly,
     head: [["Niveau", "Van", "Tot"]],

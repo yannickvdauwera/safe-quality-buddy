@@ -209,6 +209,17 @@ function NewRiskAnalysis() {
                 </Select>
               </div>
               <div className="space-y-2">
+                <Label>Methode</Label>
+                <Select value={importMethod} onValueChange={(v) => setImportMethod(v as RiskMethod)}>
+                  <SelectTrigger className="w-56"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {(Object.keys(METHOD_LABELS) as RiskMethod[]).map((m) => (
+                      <SelectItem key={m} value={m}>{METHOD_LABELS[m]}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label>Afdeling (optioneel)</Label>
                 <Input value={importDept} onChange={(e) => setImportDept(e.target.value)} placeholder="Bv. Petrochemie" />
               </div>

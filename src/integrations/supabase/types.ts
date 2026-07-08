@@ -1008,6 +1008,7 @@ export type Database = {
         Returns: {
           email: string
           full_name: string
+          function_title: string
           id: string
         }[]
       }

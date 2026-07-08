@@ -44,10 +44,7 @@ export function UserPicker({
   const { data: profiles = [], isLoading } = useQuery<UserPickerProfile[]>({
     queryKey: ["profiles-directory"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("id, full_name, email, function_title")
-        .order("full_name", { ascending: true });
+      const { data, error } = await supabase.rpc("list_app_users");
       if (error) throw error;
       return (data ?? []) as UserPickerProfile[];
     },

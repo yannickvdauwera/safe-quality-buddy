@@ -311,11 +311,9 @@ export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType
           .eq("role", "hse_manager");
         const hseIds = (hseRoles ?? []).map((r) => r.user_id);
         if (hseIds.length > 0) {
-          const { data: hseProfiles } = await supabase
-            .from("profiles")
-            .select("id, full_name, email")
-            .in("id", hseIds);
-          for (const p of hseProfiles ?? []) {
+          const { data: allUsers } = await supabase.rpc("list_app_users");
+          const hseProfiles = (allUsers ?? []).filter((p) => hseIds.includes(p.id));
+          for (const p of hseProfiles) {
             if (p.email) recipients.push({ email: p.email, name: p.full_name ?? undefined });
           }
         }

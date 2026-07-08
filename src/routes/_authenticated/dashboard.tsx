@@ -182,7 +182,9 @@ function HseDashboard() {
       const topReporterIds = Object.entries(byReporter).sort((a, b) => b[1] - a[1]).slice(0, 5);
 
       const profiles = topReporterIds.length
-        ? (await supabase.from("profiles").select("id, full_name, email").in("id", topReporterIds.map(([id]) => id))).data ?? []
+        ? ((await supabase.rpc("list_app_users")).data ?? []).filter((p) =>
+            topReporterIds.some(([id]) => id === p.id),
+          )
         : [];
 
       return {

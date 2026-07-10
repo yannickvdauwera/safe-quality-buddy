@@ -5,7 +5,12 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ShieldAlert, Plus, Search, FileDown, Loader2, ChevronDown, ChevronRight } from "lucide-react";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "@/components/ui/hover-card";
+import { ShieldAlert, Plus, Search, FileDown, Loader2, ChevronDown, ChevronRight, HelpCircle } from "lucide-react";
 import {
   STATUS_LABELS, TYPE_LABELS, SELECTABLE_TYPES,
   type RiskAnalysisType, type RiskAnalysisStatus, type RiskMethod,
@@ -121,10 +126,21 @@ function RiskAnalysesLibrary() {
         <div>
           <h1 className="text-2xl font-bold">Risicoanalyses</h1>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col items-end gap-2">
           <Button onClick={() => navigate({ to: "/risk-analyses/new", search: { mode: "manual" } })}>
             <Plus className="w-4 h-4" /> Nieuwe analyse
           </Button>
+          <HoverCard openDelay={200} closeDelay={100}>
+            <HoverCardTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground hover:text-foreground">
+                <HelpCircle className="w-3.5 h-3.5 mr-1.5" />
+                Toelichting analysemethode
+              </Button>
+            </HoverCardTrigger>
+            <HoverCardContent align="end" className="w-80 p-0 overflow-hidden">
+              <MethodExplanation />
+            </HoverCardContent>
+          </HoverCard>
         </div>
       </div>
 
@@ -158,6 +174,55 @@ function RiskAnalysesLibrary() {
           onExport={handleExport}
         />
       )}
+    </div>
+  );
+}
+
+function MethodExplanation() {
+  return (
+    <div className="text-sm">
+      <div className="bg-primary/5 px-4 py-3 border-b">
+        <h4 className="font-semibold">Analysemethodiek</h4>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Kans × Ernst (5 × 5) matrix
+        </p>
+      </div>
+      <div className="p-4 space-y-3">
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Elke risico wordt beoordeeld door twee factoren met elkaar te vermenigvuldigen:
+        </p>
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="rounded border bg-muted/40 p-2">
+            <span className="font-medium block mb-1">Kans</span>
+            <span className="text-muted-foreground">1 (zeer onwaarschijnlijk) t.e.m. 5 (zeer kansrijk)</span>
+          </div>
+          <div className="rounded border bg-muted/40 p-2">
+            <span className="font-medium block mb-1">Ernst / Effect</span>
+            <span className="text-muted-foreground">1 (minimaal) t.e.m. 5 (catastrofaal)</span>
+          </div>
+        </div>
+        <div className="text-xs">
+          <span className="font-medium">Risicoscore = Kans × Ernst</span>
+          <span className="text-muted-foreground block mt-0.5">Score ligt tussen 1 en 25.</span>
+        </div>
+        <div className="space-y-1.5 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-3 h-3 rounded-full bg-green-500" />
+            <span className="font-medium">Laag:</span>
+            <span className="text-muted-foreground">1 – 4</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-3 h-3 rounded-full bg-yellow-500" />
+            <span className="font-medium">Gemiddeld:</span>
+            <span className="text-muted-foreground">5 – 12</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-block w-3 h-3 rounded-full bg-red-500" />
+            <span className="font-medium">Hoog:</span>
+            <span className="text-muted-foreground">15 – 25</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

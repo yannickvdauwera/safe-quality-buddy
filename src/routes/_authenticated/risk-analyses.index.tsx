@@ -137,7 +137,7 @@ function RiskAnalysesLibrary() {
                 Toelichting analysemethode
               </Button>
             </HoverCardTrigger>
-            <HoverCardContent align="end" className="w-80 p-0 overflow-hidden">
+            <HoverCardContent align="end" side="bottom" className="w-[42rem] max-w-[95vw] p-0">
               <MethodExplanation />
             </HoverCardContent>
           </HoverCard>

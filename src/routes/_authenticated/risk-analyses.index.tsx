@@ -152,29 +152,87 @@ function RiskAnalysesLibrary() {
           </p>
         </Card>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {SELECTABLE_TYPES.map((t) => (
-            <KanbanColumn
-              key={t}
-              title={TYPE_LABELS[t]}
-              items={columns[t]}
-              exportingId={exportingId}
-              onExport={handleExport}
+        <KanbanBoard
+          columns={columns}
+          exportingId={exportingId}
+          onExport={handleExport}
+        />
+      )}
+    </div>
+  );
+}
+
+function KanbanBoard({
+  columns,
+  exportingId,
+  onExport,
+}: {
+  columns: Record<string, AnalysisRow[]>;
+  exportingId: string | null;
+  onExport: (id: string) => void;
+}) {
+  const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
+  const toggle = (key: string) => setCollapsed((c) => ({ ...c, [key]: !c[key] }));
+
+  const allKeys: { key: string; title: string; muted?: boolean }[] = [
+    ...SELECTABLE_TYPES.map((t) => ({ key: t, title: TYPE_LABELS[t] })),
+  ];
+  if (columns[OTHER_KEY]?.length > 0) {
+    allKeys.push({ key: OTHER_KEY, title: "Overig (verouderd — wijzig type)", muted: true });
+  }
+
+  const openCols = allKeys.filter((c) => !collapsed[c.key]);
+  const collapsedCols = allKeys.filter((c) => collapsed[c.key]);
+
+  return (
+    <div className="space-y-3">
+      {collapsedCols.length > 0 && (
+        <div className="flex flex-col gap-2">
+          {collapsedCols.map((c) => (
+            <CollapsedBar
+              key={c.key}
+              title={c.title}
+              count={columns[c.key].length}
+              muted={c.muted}
+              onExpand={() => toggle(c.key)}
             />
           ))}
-          {columns[OTHER_KEY].length > 0 && (
+        </div>
+      )}
+      {openCols.length > 0 && (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {openCols.map((c) => (
             <KanbanColumn
-              key={OTHER_KEY}
-              title="Overig (verouderd — wijzig type)"
-              items={columns[OTHER_KEY]}
+              key={c.key}
+              title={c.title}
+              items={columns[c.key]}
               exportingId={exportingId}
-              onExport={handleExport}
-              muted
+              onExport={onExport}
+              muted={c.muted}
+              onCollapse={() => toggle(c.key)}
             />
-          )}
+          ))}
         </div>
       )}
     </div>
+  );
+}
+
+function CollapsedBar({
+  title, count, muted, onExpand,
+}: { title: string; count: number; muted?: boolean; onExpand: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onExpand}
+      className={`w-full flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2 text-left hover:bg-muted/50 transition-colors ${muted ? "opacity-90" : ""}`}
+    >
+      <div className="flex items-center gap-1.5">
+        <ChevronRight className="w-4 h-4 text-muted-foreground" />
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>
+      </div>
+      <Badge variant="secondary" className="text-[10px]">{count}</Badge>
+    </button>
   );
 }
 

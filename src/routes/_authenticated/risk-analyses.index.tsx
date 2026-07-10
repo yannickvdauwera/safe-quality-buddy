@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { ShieldAlert, Plus, Search, FileDown, Loader2 } from "lucide-react";
+import { ShieldAlert, Plus, Search, FileDown, Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import {
   STATUS_LABELS, TYPE_LABELS, SELECTABLE_TYPES,
   type RiskAnalysisType, type RiskAnalysisStatus, type RiskMethod,

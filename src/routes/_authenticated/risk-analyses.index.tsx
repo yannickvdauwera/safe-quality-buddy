@@ -126,10 +126,21 @@ function RiskAnalysesLibrary() {
         <div>
           <h1 className="text-2xl font-bold">Risicoanalyses</h1>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col items-end gap-2">
           <Button onClick={() => navigate({ to: "/risk-analyses/new", search: { mode: "manual" } })}>
             <Plus className="w-4 h-4" /> Nieuwe analyse
           </Button>
+          <HoverCard openDelay={200} closeDelay={100}>
+            <HoverCardTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground hover:text-foreground">
+                <HelpCircle className="w-3.5 h-3.5 mr-1.5" />
+                Toelichting analysemethode
+              </Button>
+            </HoverCardTrigger>
+            <HoverCardContent align="end" className="w-80 p-0 overflow-hidden">
+              <MethodExplanation />
+            </HoverCardContent>
+          </HoverCard>
         </div>
       </div>
 

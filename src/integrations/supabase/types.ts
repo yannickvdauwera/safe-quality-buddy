@@ -1027,7 +1027,7 @@ export type Database = {
         | "andere"
         | "kwaliteitscontrole"
       risk_analysis_status: "draft" | "published" | "archived"
-      risk_analysis_type: "werkpost" | "tra" | "lmra" | "rie"
+      risk_analysis_type: "werkpost" | "tra" | "lmra" | "rie" | "organisatie"
       risk_measure_type: "technical" | "organizational" | "human"
       risk_method: "fine_kinney" | "kans_ernst"
       risk_session_status: "planned" | "in_progress" | "completed" | "cancelled"
@@ -1181,7 +1181,7 @@ export const Constants = {
         "kwaliteitscontrole",
       ],
       risk_analysis_status: ["draft", "published", "archived"],
-      risk_analysis_type: ["werkpost", "tra", "lmra", "rie"],
+      risk_analysis_type: ["werkpost", "tra", "lmra", "rie", "organisatie"],
       risk_measure_type: ["technical", "organizational", "human"],
       risk_method: ["fine_kinney", "kans_ernst"],
       risk_session_status: ["planned", "in_progress", "completed", "cancelled"],

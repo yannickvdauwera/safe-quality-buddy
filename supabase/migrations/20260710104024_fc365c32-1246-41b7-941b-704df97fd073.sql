@@ -1,0 +1,1 @@
+ALTER TYPE public.risk_analysis_type ADD VALUE IF NOT EXISTS 'organisatie';

@@ -1,4 +1,4 @@
-export type RiskAnalysisType = "werkpost" | "tra" | "lmra" | "rie";
+export type RiskAnalysisType = "werkpost" | "tra" | "organisatie" | "lmra" | "rie";
 export type RiskAnalysisStatus = "draft" | "published" | "archived";
 export type RiskMeasureType = "technical" | "organizational" | "human";
 export type RiskSessionStatus = "planned" | "in_progress" | "completed" | "cancelled";
@@ -13,6 +13,7 @@ export const METHOD_LABELS: Record<RiskMethod, string> = {
 export const TYPE_LABELS: Record<RiskAnalysisType, string> = {
   werkpost: "Werkpostanalyse",
   tra: "Taakrisicoanalyse (TRA)",
+  organisatie: "Risicoanalyse organisatie",
   lmra: "LMRA (verouderd)",
   rie: "Risico-inventarisatie (verouderd)",
 };
@@ -20,7 +21,7 @@ export const TYPE_LABELS: Record<RiskAnalysisType, string> = {
 // Types die actief geselecteerd kunnen worden bij nieuwe/gewijzigde analyses.
 // LMRA en RIE zijn uitgefaseerd: bestaande records blijven leesbaar via TYPE_LABELS,
 // maar zijn niet meer aan te maken of te kiezen bij wijzigen.
-export const SELECTABLE_TYPES: RiskAnalysisType[] = ["werkpost", "tra"];
+export const SELECTABLE_TYPES: RiskAnalysisType[] = ["werkpost", "tra", "organisatie"];
 
 export const STATUS_LABELS: Record<RiskAnalysisStatus, string> = {
   draft: "Concept",

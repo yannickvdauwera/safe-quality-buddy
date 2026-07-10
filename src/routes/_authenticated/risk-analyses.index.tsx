@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/hover-card";
 import { ShieldAlert, Plus, Search, FileDown, Loader2, ChevronDown, ChevronRight, HelpCircle } from "lucide-react";
 import {
-  STATUS_LABELS, TYPE_LABELS, SELECTABLE_TYPES,
+  STATUS_LABELS, TYPE_LABELS, SELECTABLE_TYPES, K_SCALE, E5_SCALE,
   type RiskAnalysisType, type RiskAnalysisStatus, type RiskMethod,
 } from "@/lib/risk-analysis-types";
 import { exportRiskAnalysisToPdf } from "@/lib/risk-analysis-pdf";

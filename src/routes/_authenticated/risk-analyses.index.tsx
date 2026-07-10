@@ -204,13 +204,22 @@ function KanbanColumn({
   muted?: boolean;
 }) {
   const navigate = useNavigate();
+  const [open, setOpen] = useState(true);
   return (
     <div className={`rounded-lg border bg-muted/30 p-3 flex flex-col gap-3 ${muted ? "opacity-90" : ""}`}>
-      <div className="flex items-center justify-between px-1">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center justify-between px-1 w-full text-left hover:opacity-80"
+        aria-expanded={open}
+      >
+        <div className="flex items-center gap-1.5">
+          {open ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />}
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">{title}</h2>
+        </div>
         <Badge variant="secondary" className="text-[10px]">{items.length}</Badge>
-      </div>
-      {items.length === 0 ? (
+      </button>
+      {open && (items.length === 0 ? (
         <div className="text-xs text-muted-foreground italic px-1 py-6 text-center">
           Geen analyses in deze kolom.
         </div>
@@ -256,7 +265,7 @@ function KanbanColumn({
             </Card>
           ))}
         </div>
-      )}
+      ))}
     </div>
   );
 }

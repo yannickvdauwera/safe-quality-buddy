@@ -137,7 +137,7 @@ function RiskAnalysesLibrary() {
                 Toelichting analysemethode
               </Button>
             </HoverCardTrigger>
-            <HoverCardContent align="end" className="w-80 p-0 overflow-hidden">
+            <HoverCardContent align="end" side="bottom" className="w-[42rem] max-w-[95vw] p-0">
               <MethodExplanation />
             </HoverCardContent>
           </HoverCard>
@@ -180,7 +180,7 @@ function RiskAnalysesLibrary() {
 
 function MethodExplanation() {
   return (
-    <div className="text-sm w-[34rem] max-w-[90vw]">
+    <div className="w-full text-sm">
       <div className="bg-primary/5 px-4 py-3 border-b">
         <h4 className="font-semibold">Analysemethodiek</h4>
         <p className="text-xs text-muted-foreground mt-0.5">
@@ -188,58 +188,58 @@ function MethodExplanation() {
         </p>
       </div>
       <div className="p-4 space-y-4">
-        <p className="text-xs text-muted-foreground leading-relaxed">
+        <p className="text-sm text-muted-foreground leading-relaxed">
           Elke risico wordt beoordeeld door twee factoren met elkaar te vermenigvuldigen. De score bepaalt het prioriteitsniveau.
         </p>
 
-        <div className="rounded border bg-muted/30 p-3 text-xs">
+        <div className="rounded border bg-muted/30 p-3 text-sm">
           <span className="font-medium block mb-1">Risicoscore = Kans × Ernst</span>
           <span className="text-muted-foreground">De totaalscore ligt tussen 1 (minimaal risico) en 25 (maximaal risico).</span>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-2 gap-5">
           <div className="space-y-2">
             <h5 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Kans (1 – 5)</h5>
-            <div className="space-y-1.5">
-              {K_SCALE.map((k) => (
-                <div key={k.value} className="text-xs">
-                  <span className="font-medium">{k.value}</span>
-                  <span className="text-muted-foreground ml-1.5">{k.label.replace(/^\d\s—\s/, "")}</span>
+            <div className="space-y-2">
+              {[...K_SCALE].reverse().map((k) => (
+                <div key={k.value} className="text-sm leading-snug">
+                  <span className="font-medium inline-block w-4">{k.value}</span>
+                  <span className="text-muted-foreground ml-1">{k.label.replace(/^\d\s—\s/, "")}</span>
                 </div>
-              )).reverse()}
+              ))}
             </div>
           </div>
           <div className="space-y-2">
             <h5 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Ernst / Effect (1 – 5)</h5>
-            <div className="space-y-1.5">
-              {E5_SCALE.map((e) => (
-                <div key={e.value} className="text-xs">
-                  <span className="font-medium">{e.value}</span>
-                  <span className="text-muted-foreground ml-1.5">{e.label.replace(/^\d\s—\s/, "")}</span>
+            <div className="space-y-2">
+              {[...E5_SCALE].reverse().map((e) => (
+                <div key={e.value} className="text-sm leading-snug">
+                  <span className="font-medium inline-block w-4">{e.value}</span>
+                  <span className="text-muted-foreground ml-1">{e.label.replace(/^\d\s—\s/, "")}</span>
                 </div>
-              )).reverse()}
+              ))}
             </div>
           </div>
         </div>
 
         <div className="space-y-2 pt-2 border-t">
           <h5 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Risiconiveaus</h5>
-          <div className="grid grid-cols-3 gap-2 text-xs">
-            <div className="rounded border bg-green-50 p-2">
+          <div className="grid grid-cols-3 gap-3 text-sm">
+            <div className="rounded border bg-green-50 p-2.5">
               <div className="flex items-center gap-1.5 mb-1">
                 <span className="inline-block w-2.5 h-2.5 rounded-full bg-green-500" />
                 <span className="font-medium">Laag</span>
               </div>
               <span className="text-muted-foreground">1 – 4</span>
             </div>
-            <div className="rounded border bg-yellow-50 p-2">
+            <div className="rounded border bg-yellow-50 p-2.5">
               <div className="flex items-center gap-1.5 mb-1">
                 <span className="inline-block w-2.5 h-2.5 rounded-full bg-yellow-500" />
                 <span className="font-medium">Gemiddeld</span>
               </div>
               <span className="text-muted-foreground">5 – 12</span>
             </div>
-            <div className="rounded border bg-red-50 p-2">
+            <div className="rounded border bg-red-50 p-2.5">
               <div className="flex items-center gap-1.5 mb-1">
                 <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500" />
                 <span className="font-medium">Hoog</span>

@@ -5,6 +5,45 @@ export type RiskSessionStatus = "planned" | "in_progress" | "completed" | "cance
 export type RiskSignMethod = "kiosk" | "qr" | "login";
 export type RiskMethod = "fine_kinney" | "kans_ernst";
 
+// ============ Organisatie-analyse ============
+// Aparte indeling per thema, met smiley i.p.v. numerieke score.
+
+export type OrgTheme = "ALG" | "AVB" | "GEZ" | "PSY" | "ABH";
+export const ORG_THEMES: OrgTheme[] = ["ALG", "AVB", "GEZ", "PSY", "ABH"];
+export const ORG_THEME_LABELS: Record<OrgTheme, string> = {
+  ALG: "Algemeen",
+  AVB: "Arbeidsveiligheid",
+  GEZ: "Gezondheid",
+  PSY: "Psychosociaal",
+  ABH: "Arbeidshygiëne",
+};
+export const ORG_THEME_COLORS: Record<OrgTheme, string> = {
+  ALG: "#64748b",
+  AVB: "#dc2626",
+  GEZ: "#059669",
+  PSY: "#7c3aed",
+  ABH: "#0891b2",
+};
+
+export type Smiley = "green" | "yellow" | "red";
+export const SMILEY_META: Record<Smiley, { label: string; emoji: string; color: string; badgeClass: string }> = {
+  green: { label: "In orde", emoji: "🙂", color: "#16a34a", badgeClass: "bg-green-100 text-green-800 border-green-300" },
+  yellow: { label: "Aandacht", emoji: "😐", color: "#eab308", badgeClass: "bg-yellow-100 text-yellow-800 border-yellow-300" },
+  red: { label: "Niet in orde", emoji: "🙁", color: "#dc2626", badgeClass: "bg-red-100 text-red-800 border-red-300" },
+};
+
+export type MeasureStatus = "open" | "in_progress" | "done";
+export const MEASURE_STATUS_LABELS: Record<MeasureStatus, string> = {
+  open: "Open",
+  in_progress: "In uitvoering",
+  done: "Afgerond",
+};
+export const MEASURE_STATUS_META: Record<MeasureStatus, { label: string; badgeClass: string }> = {
+  open: { label: "Open", badgeClass: "bg-slate-100 text-slate-800 border-slate-300" },
+  in_progress: { label: "In uitvoering", badgeClass: "bg-blue-100 text-blue-800 border-blue-300" },
+  done: { label: "Afgerond", badgeClass: "bg-green-100 text-green-800 border-green-300" },
+};
+
 export const METHOD_LABELS: Record<RiskMethod, string> = {
   fine_kinney: "Fine & Kinney (W × B × E)",
   kans_ernst: "Kans × Ernst (5 × 5)",

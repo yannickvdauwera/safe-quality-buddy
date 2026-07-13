@@ -448,6 +448,15 @@ function RiskAnalysisDetail() {
             <ShieldAlert className="w-10 h-10 mx-auto mb-2 opacity-40" />
             Nog geen items in deze versie.
           </div>
+        ) : isOrg ? (
+          <OrgAccordion
+            items={items}
+            onEdit={(it) => {
+              const parsed = parseMeasures(it.measures);
+              setEditItem({ ...it, measures_by_type: parsed.byType, measures_legacy: parsed.legacy });
+            }}
+            onDelete={deleteItem}
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

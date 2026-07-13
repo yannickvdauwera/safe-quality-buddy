@@ -54,6 +54,13 @@ export interface RiskAnalysisExportItem {
   residual_b: number | null;
   residual_e: number | null;
   residual_r: number | null;
+  // Organisatie-specifieke velden
+  theme?: OrgTheme | null;
+  current_state?: string | null;
+  legislation?: string | null;
+  measure_status?: MeasureStatus | null;
+  smiley?: Smiley | null;
+  action_item?: string | null;
 }
 
 export interface RiskAnalysisExecutor {

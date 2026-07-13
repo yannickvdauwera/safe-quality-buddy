@@ -85,6 +85,101 @@ export interface RiskAnalysisExport {
   items: RiskAnalysisExportItem[];
 }
 
+function renderOrganisationTables(
+  doc: jsPDF,
+  a: RiskAnalysisExport,
+  startY: number,
+  pageW: number,
+  drawHeader: () => void,
+): number {
+  let y = startY;
+  const items = a.items.slice().sort((x, y2) => (x.position ?? 0) - (y2.position ?? 0));
+  const byTheme = new Map<string, RiskAnalysisExportItem[]>();
+  for (const t of ORG_THEMES) byTheme.set(t, []);
+  const OTHER = "Overig";
+  byTheme.set(OTHER, []);
+  for (const it of items) {
+    const key = (it.theme && ORG_THEMES.includes(it.theme)) ? it.theme : OTHER;
+    byTheme.get(key)!.push(it);
+  }
+
+  const smileyText = (s: Smiley | null | undefined) =>
+    s ? `${SMILEY_META[s].emoji} ${SMILEY_META[s].label}` : "—";
+  const statusText = (s: MeasureStatus | null | undefined) =>
+    s ? MEASURE_STATUS_LABELS[s] : "—";
+  const flatMeasures = (raw: string | null) => {
+    const { byType, legacy } = parseMeasures(raw);
+    const parts: string[] = [];
+    for (const t of MEASURE_TYPE_ORDER) {
+      const v = byType[t];
+      if (v && v.trim()) parts.push(v.trim());
+    }
+    if (legacy) parts.push(legacy.trim());
+    return parts.join("\n\n");
+  };
+
+  for (const theme of [...ORG_THEMES, OTHER] as string[]) {
+    const list = byTheme.get(theme)!;
+    if (list.length === 0) continue;
+
+    if (y > 170) { doc.addPage(); drawHeader(); y = 32; }
+
+    const color = (ORG_THEME_COLORS as Record<string, string>)[theme] ?? "#64748b";
+    const label = (ORG_THEME_LABELS as Record<string, string>)[theme] ?? theme;
+    doc.setFillColor(...hexToRgb(color));
+    doc.rect(12, y, pageW - 24, 7, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(10);
+    doc.text(`${theme} — ${label}  (${list.length})`, 15, y + 5);
+    y += 9;
+
+    autoTable(doc, {
+      startY: y,
+      head: [["#", "Onderwerp", "Huidige toestand", "Maatregelen", "Actie / verbeterpunt", "Wetgeving", "Beoord.", "Status"]],
+      body: list.map((it) => [
+        String(it.position),
+        [it.hazard, it.risk_description].filter(Boolean).join("\n"),
+        it.current_state ?? "—",
+        flatMeasures(it.measures) || "—",
+        it.action_item ?? "—",
+        it.legislation ?? "—",
+        smileyText(it.smiley),
+        statusText(it.measure_status),
+      ]),
+      theme: "grid",
+      styles: { fontSize: 8, cellPadding: 2, lineColor: [229, 229, 229], lineWidth: 0.1, textColor: TSA_DARK, valign: "top" },
+      headStyles: { fillColor: TSA_DARK, textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8.5, halign: "left" },
+      alternateRowStyles: { fillColor: TSA_LIGHT },
+      columnStyles: {
+        0: { cellWidth: 8, halign: "center", fontStyle: "bold" },
+        1: { cellWidth: 45 },
+        2: { cellWidth: 45 },
+        3: { cellWidth: 50 },
+        4: { cellWidth: 45 },
+        5: { cellWidth: 32 },
+        6: { cellWidth: 22, halign: "center" },
+        7: { cellWidth: "auto", halign: "center" },
+      },
+      margin: { left: 12, right: 12, top: 28, bottom: 20 },
+      didDrawPage: () => drawHeader(),
+      didParseCell: (data) => {
+        if (data.section !== "body" || data.column.index !== 6) return;
+        const it = list[data.row.index];
+        if (!it.smiley) return;
+        const c = hexToRgb(SMILEY_META[it.smiley].color);
+        data.cell.styles.fillColor = c;
+        data.cell.styles.textColor = [255, 255, 255];
+        data.cell.styles.fontStyle = "bold";
+      },
+    });
+    // @ts-expect-error jspdf-autotable augments doc
+    y = (doc.lastAutoTable?.finalY ?? y) + 8;
+  }
+  return y;
+}
+
+
 export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
   const doc = new jsPDF({ unit: "mm", format: "a4", orientation: "landscape" });
   const pageW = doc.internal.pageSize.getWidth();

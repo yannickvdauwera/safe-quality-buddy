@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth, type AppRole } from "@/hooks/useAuth";
@@ -6,8 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Users, AlertTriangle, CheckCircle2, Clock, TrendingUp, ShieldAlert, ArrowRight, Activity,
+  AlertTriangle, CheckCircle2, Clock, ShieldAlert, ArrowRight,
+  TrendingUp, Calendar as CalendarIcon,
 } from "lucide-react";
+import {
+  ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
+  BarChart, Bar, PieChart, Pie, Cell, Legend,
+} from "recharts";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — HSE & Kwaliteit" }] }),
@@ -23,17 +29,23 @@ const TYPE_LABELS: Record<string, string> = {
   klacht: "Klacht",
   andere: "Andere",
 };
-
 const STATUS_LABELS: Record<string, string> = {
-  open: "Open",
-  in_behandeling: "In behandeling",
-  opgevolgd: "Opgevolgd",
-  gesloten: "Gesloten",
+  open: "Open", in_behandeling: "In behandeling", opgevolgd: "Opgevolgd", gesloten: "Gesloten",
 };
-
 const SEVERITY_LABELS: Record<string, string> = {
   laag: "Laag", middel: "Middel", hoog: "Hoog", kritiek: "Kritiek",
 };
+const SEVERITY_ORDER = ["laag", "middel", "hoog", "kritiek"] as const;
+const SEVERITY_COLORS: Record<string, string> = {
+  laag: "hsl(142 71% 45%)",
+  middel: "hsl(38 92% 50%)",
+  hoog: "hsl(25 95% 53%)",
+  kritiek: "hsl(0 84% 60%)",
+};
+const TYPE_COLORS = [
+  "hsl(217 91% 60%)", "hsl(262 83% 58%)", "hsl(142 71% 45%)",
+  "hsl(38 92% 50%)", "hsl(0 84% 60%)", "hsl(199 89% 48%)", "hsl(291 64% 42%)",
+];
 
 const severityVariant = (s: string): "default" | "secondary" | "destructive" | "outline" =>
   s === "kritiek" ? "destructive" : s === "hoog" ? "default" : s === "middel" ? "secondary" : "outline";
@@ -43,6 +55,11 @@ function pickRole(roles: AppRole[]): AppRole {
   if (roles.includes("hse_manager")) return "hse_manager";
   if (roles.includes("manager")) return "manager";
   return "operator";
+}
+
+interface Report {
+  id: string; type: string; title: string; status: string; severity: string;
+  observed_at: string; deadline: string | null; assigned_to: string | null; reporter_id: string | null;
 }
 
 function DashboardPage() {
@@ -69,263 +86,238 @@ function DashboardPage() {
         </p>
       </div>
 
-      {primaryRole === "operator" && <OperatorDashboard userId={user.id} />}
-      {primaryRole === "manager" && <ManagerDashboard userId={user.id} />}
-      {primaryRole === "hse_manager" && <HseDashboard />}
-      {primaryRole === "admin" && <AdminDashboard />}
+      <DashboardContent userId={user.id} role={primaryRole} />
     </div>
   );
 }
 
-/* ---------------- OPERATOR ---------------- */
-function OperatorDashboard({ userId }: { userId: string }) {
-  const { data } = useQuery({
-    queryKey: ["dashboard-metrics", "operator", userId],
-    queryFn: async () => {
-      const { data: mine = [] } = await supabase
+function DashboardContent({ userId, role }: { userId: string; role: AppRole }) {
+  const { data: reports, isLoading } = useQuery({
+    queryKey: ["dashboard-reports", role, userId],
+    queryFn: async (): Promise<Report[]> => {
+      const { data } = await supabase
         .from("reports")
-        .select("id, type, title, status, severity, observed_at")
-        .eq("reporter_id", userId)
+        .select("id, type, title, status, severity, observed_at, deadline, assigned_to, reporter_id")
         .order("observed_at", { ascending: false });
-      return {
-        total: mine?.length ?? 0,
-        open: mine?.filter((r) => r.status === "open").length ?? 0,
-        inBehandeling: mine?.filter((r) => r.status === "in_behandeling").length ?? 0,
-        gesloten: mine?.filter((r) => r.status === "gesloten" || r.status === "opgevolgd").length ?? 0,
-        recent: mine?.slice(0, 5) ?? [],
-      };
+      return (data ?? []) as Report[];
     },
   });
 
-  return (
-    <>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={AlertTriangle} label="Mijn meldingen (totaal)" value={data?.total} accent="text-blue-600" />
-        <StatCard icon={Clock} label="Nog open" value={data?.open} accent="text-orange-600" />
-        <StatCard icon={Activity} label="In behandeling" value={data?.inBehandeling} accent="text-purple-600" />
-        <StatCard icon={CheckCircle2} label="Afgerond" value={data?.gesloten} accent="text-green-600" />
-      </div>
+  const scope = useMemo(() => {
+    if (!reports) return [];
+    if (role === "operator") return reports.filter((r) => r.reporter_id === userId);
+    if (role === "manager") return reports.filter((r) => r.assigned_to === userId || r.reporter_id === userId);
+    return reports;
+  }, [reports, role, userId]);
 
-      <RecentReportsCard title="Mijn recente meldingen" reports={data?.recent} emptyText="Je hebt nog geen meldingen gemaakt." />
+  const metrics = useMemo(() => {
+    const now = Date.now();
+    const open = scope.filter((r) => r.status !== "gesloten" && r.status !== "opgevolgd");
+    const overdue = open.filter((r) => r.deadline && new Date(r.deadline).getTime() < now);
+    const critical = open.filter((r) => r.severity === "hoog" || r.severity === "kritiek");
+    const last30 = scope.filter((r) => new Date(r.observed_at).getTime() >= now - 30 * 864e5);
+    return {
+      total: scope.length,
+      open: open.length,
+      overdue: overdue.length,
+      critical: critical.length,
+      last30: last30.length,
+    };
+  }, [scope]);
 
-      <Card className="bg-primary/5 border-primary/20">
-        <CardContent className="p-4 flex items-center justify-between gap-4">
-          <div>
-            <div className="font-medium">Iets vastgesteld op de werf?</div>
-            <div className="text-sm text-muted-foreground">Registreer een MOS-, STOP- of andere melding in enkele klikken.</div>
-          </div>
-          <Button asChild><Link to="/meldingen">Nieuwe melding <ArrowRight className="w-4 h-4" /></Link></Button>
-        </CardContent>
-      </Card>
-    </>
-  );
-}
-
-/* ---------------- MANAGER ---------------- */
-function ManagerDashboard({ userId }: { userId: string }) {
-  const { data } = useQuery({
-    queryKey: ["dashboard-metrics", "manager", userId],
-    queryFn: async () => {
-      const { data: all = [] } = await supabase
-        .from("reports")
-        .select("id, type, title, status, severity, observed_at, reporter_id, assigned_to, deadline");
-      const mine = all?.filter((r) => r.assigned_to === userId) ?? [];
-      const now = Date.now();
-      return {
-        assignedOpen: mine.filter((r) => r.status !== "gesloten" && r.status !== "opgevolgd").length,
-        overdue: mine.filter((r) => r.deadline && new Date(r.deadline).getTime() < now && r.status !== "gesloten").length,
-        needsFollowUp: (all ?? []).filter((r) => r.status === "open" || r.status === "in_behandeling").length,
-        highSeverity: (all ?? []).filter((r) => (r.severity === "hoog" || r.severity === "kritiek") && r.status !== "gesloten").length,
-        toFollow: mine.filter((r) => r.status !== "gesloten").slice(0, 5),
-      };
-    },
-  });
-
-  return (
-    <>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Clock} label="Toegewezen — open" value={data?.assignedOpen} accent="text-orange-600" />
-        <StatCard icon={AlertTriangle} label="Deadline overschreden" value={data?.overdue} accent="text-red-600" />
-        <StatCard icon={Activity} label="Vereist opvolging (org.)" value={data?.needsFollowUp} accent="text-blue-600" />
-        <StatCard icon={ShieldAlert} label="Hoog / kritiek open" value={data?.highSeverity} accent="text-red-600" />
-      </div>
-
-      <RecentReportsCard
-        title="Meldingen die jouw opvolging vereisen"
-        reports={data?.toFollow}
-        emptyText="Geen openstaande meldingen aan jou toegewezen — goed werk."
-      />
-    </>
-  );
-}
-
-/* ---------------- HSE MANAGER ---------------- */
-function HseDashboard() {
-  const { data } = useQuery({
-    queryKey: ["dashboard-metrics", "hse"],
-    queryFn: async () => {
-      const { data: all = [] } = await supabase
-        .from("reports")
-        .select("id, type, title, status, severity, observed_at, reporter_id");
-      const { count: empCount } = await supabase.from("employees").select("*", { count: "exact", head: true }).eq("active", true);
-      const now = new Date();
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 3600 * 1000);
-      const recent = (all ?? []).filter((r) => new Date(r.observed_at) >= thirtyDaysAgo);
-
-      const byType: Record<string, number> = {};
-      recent.forEach((r) => { byType[r.type] = (byType[r.type] ?? 0) + 1; });
-
-      const byReporter: Record<string, number> = {};
-      recent.forEach((r) => {
-        if (r.reporter_id) byReporter[r.reporter_id] = (byReporter[r.reporter_id] ?? 0) + 1;
+  const trend = useMemo(() => {
+    const weeks: { label: string; start: number; end: number; count: number }[] = [];
+    const now = new Date();
+    const monday = new Date(now);
+    monday.setHours(0, 0, 0, 0);
+    monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+    for (let i = 11; i >= 0; i--) {
+      const s = new Date(monday); s.setDate(s.getDate() - i * 7);
+      const e = new Date(s); e.setDate(e.getDate() + 7);
+      weeks.push({
+        label: `${s.getDate()}/${s.getMonth() + 1}`,
+        start: s.getTime(), end: e.getTime(), count: 0,
       });
-      const topReporterIds = Object.entries(byReporter).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    }
+    scope.forEach((r) => {
+      const t = new Date(r.observed_at).getTime();
+      const w = weeks.find((w) => t >= w.start && t < w.end);
+      if (w) w.count++;
+    });
+    return weeks.map(({ label, count }) => ({ label, count }));
+  }, [scope]);
 
-      const profiles = topReporterIds.length
-        ? ((await supabase.rpc("list_app_users")).data ?? []).filter((p) =>
-            topReporterIds.some(([id]) => id === p.id),
-          )
-        : [];
+  const byType = useMemo(() => {
+    const m: Record<string, number> = {};
+    scope.forEach((r) => { m[r.type] = (m[r.type] ?? 0) + 1; });
+    return Object.entries(m).map(([k, v]) => ({ name: TYPE_LABELS[k] ?? k, value: v }));
+  }, [scope]);
 
-      return {
-        total30d: recent.length,
-        open: (all ?? []).filter((r) => r.status === "open").length,
-        critical: (all ?? []).filter((r) => r.severity === "kritiek" && r.status !== "gesloten").length,
-        employees: empCount ?? 0,
-        byType,
-        topReporters: topReporterIds.map(([id, count]) => ({
-          id, count,
-          name: profiles.find((p) => p.id === id)?.full_name ?? profiles.find((p) => p.id === id)?.email ?? "Onbekend",
-        })),
-        recent: (all ?? []).slice(0, 6),
-      };
-    },
-  });
+  const bySeverity = useMemo(() => {
+    const m: Record<string, number> = {};
+    scope.forEach((r) => { m[r.severity] = (m[r.severity] ?? 0) + 1; });
+    return SEVERITY_ORDER.map((s) => ({ name: SEVERITY_LABELS[s], key: s, value: m[s] ?? 0 }));
+  }, [scope]);
 
-  const typeEntries = Object.entries(data?.byType ?? {}).sort((a, b) => b[1] - a[1]);
-  const maxType = Math.max(1, ...typeEntries.map(([, n]) => n));
+  const actions = useMemo(() => {
+    let list = scope.filter((r) => r.status !== "gesloten" && r.status !== "opgevolgd");
+    if (role === "manager") list = list.filter((r) => r.assigned_to === userId);
+    // Sort: overdue first, then by severity (kritiek→laag), then by deadline asc
+    const sevRank = (s: string) => ({ kritiek: 0, hoog: 1, middel: 2, laag: 3 }[s] ?? 4);
+    const now = Date.now();
+    list.sort((a, b) => {
+      const ao = a.deadline && new Date(a.deadline).getTime() < now ? 0 : 1;
+      const bo = b.deadline && new Date(b.deadline).getTime() < now ? 0 : 1;
+      if (ao !== bo) return ao - bo;
+      const sv = sevRank(a.severity) - sevRank(b.severity);
+      if (sv !== 0) return sv;
+      const ad = a.deadline ? new Date(a.deadline).getTime() : Infinity;
+      const bd = b.deadline ? new Date(b.deadline).getTime() : Infinity;
+      return ad - bd;
+    });
+    return list.slice(0, 8);
+  }, [scope, role, userId]);
+
+  const actionsTitle =
+    role === "operator" ? "Mijn openstaande meldingen"
+    : role === "manager" ? "Aan mij toegewezen — openstaand"
+    : "Openstaande acties (prioriteit)";
+
+  if (isLoading) {
+    return <div className="text-sm text-muted-foreground">Cijfers laden…</div>;
+  }
 
   return (
     <>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={TrendingUp} label="Meldingen (30d)" value={data?.total30d} accent="text-blue-600" />
-        <StatCard icon={Clock} label="Nog open" value={data?.open} accent="text-orange-600" />
-        <StatCard icon={ShieldAlert} label="Kritiek open" value={data?.critical} accent="text-red-600" />
-        <StatCard icon={Users} label="Actieve medewerkers" value={data?.employees} accent="text-green-600" />
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <StatCard icon={AlertTriangle} label="Totaal" value={metrics.total} accent="text-blue-600" />
+        <StatCard icon={Clock} label="Open" value={metrics.open} accent="text-orange-600" />
+        <StatCard icon={CalendarIcon} label="Deadline verstreken" value={metrics.overdue} accent="text-red-600" />
+        <StatCard icon={ShieldAlert} label="Hoog/kritiek open" value={metrics.critical} accent="text-red-600" />
+        <StatCard icon={TrendingUp} label="Laatste 30 dagen" value={metrics.last30} accent="text-green-600" />
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
-        <Card>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle className="text-base">Meldingen per type (30d)</CardTitle>
-            <CardDescription>Verdeling van de recent geregistreerde meldingen</CardDescription>
+            <CardTitle className="text-base">Meldingen per week (12 weken)</CardTitle>
+            <CardDescription>Evolutie van het aantal geregistreerde meldingen</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-2.5">
-            {typeEntries.length === 0 ? (
-              <div className="text-sm text-muted-foreground py-8 text-center">Nog geen meldingen deze maand.</div>
-            ) : typeEntries.map(([type, n]) => (
-              <div key={type}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span>{TYPE_LABELS[type] ?? type}</span>
-                  <span className="text-muted-foreground">{n}</span>
-                </div>
-                <div className="h-2 bg-muted rounded-full overflow-hidden">
-                  <div className="h-full bg-primary rounded-full" style={{ width: `${(n / maxType) * 100}%` }} />
-                </div>
-              </div>
-            ))}
+          <CardContent className="h-72">
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={trend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="label" fontSize={12} stroke="hsl(var(--muted-foreground))" />
+                <YAxis fontSize={12} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                <Line type="monotone" dataKey="count" stroke="hsl(217 91% 60%)" strokeWidth={2.5} dot={{ r: 3 }} activeDot={{ r: 5 }} />
+              </LineChart>
+            </ResponsiveContainer>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">Top melders (30d)</CardTitle>
-            <CardDescription>Wie draagt het meest bij aan de meldingscultuur</CardDescription>
+            <CardTitle className="text-base">Verdeling per type</CardTitle>
+            <CardDescription>Alle meldingen in scope</CardDescription>
           </CardHeader>
-          <CardContent>
-            {(data?.topReporters?.length ?? 0) === 0 ? (
-              <div className="text-sm text-muted-foreground py-8 text-center">Nog geen data.</div>
+          <CardContent className="h-72">
+            {byType.length === 0 ? (
+              <div className="h-full flex items-center justify-center text-sm text-muted-foreground">Geen data</div>
             ) : (
-              <div className="space-y-2">
-                {data!.topReporters.map((r, i) => (
-                  <div key={r.id} className="flex items-center gap-3 p-2 rounded-md bg-muted/30">
-                    <div className="w-6 h-6 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-semibold">
-                      {i + 1}
-                    </div>
-                    <div className="flex-1 text-sm font-medium truncate">{r.name}</div>
-                    <Badge variant="secondary">{r.count}</Badge>
-                  </div>
-                ))}
-              </div>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={byType} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} innerRadius={45} paddingAngle={2}>
+                    {byType.map((_, i) => (<Cell key={i} fill={TYPE_COLORS[i % TYPE_COLORS.length]} />))}
+                  </Pie>
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                  <Legend wrapperStyle={{ fontSize: 12 }} />
+                </PieChart>
+              </ResponsiveContainer>
             )}
           </CardContent>
         </Card>
       </div>
 
-      <RecentReportsCard title="Recente meldingen" reports={data?.recent} emptyText="Nog geen meldingen." />
-    </>
-  );
-}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Ernst</CardTitle>
+            <CardDescription>Verdeling per ernstniveau</CardDescription>
+          </CardHeader>
+          <CardContent className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={bySeverity} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="name" fontSize={12} stroke="hsl(var(--muted-foreground))" />
+                <YAxis fontSize={12} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
+                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                  {bySeverity.map((d, i) => (<Cell key={i} fill={SEVERITY_COLORS[d.key]} />))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
 
-/* ---------------- ADMIN ---------------- */
-function AdminDashboard() {
-  const { data } = useQuery({
-    queryKey: ["dashboard-metrics", "admin"],
-    queryFn: async () => {
-      const [{ count: reportCount }, { count: employeeCount }, { data: usersByRole }] = await Promise.all([
-        supabase.from("reports").select("*", { count: "exact", head: true }),
-        supabase.from("employees").select("*", { count: "exact", head: true }).eq("active", true),
-        supabase.from("user_roles").select("role"),
-      ]);
-      const roleCounts: Record<string, number> = {};
-      (usersByRole ?? []).forEach((r) => { roleCounts[r.role] = (roleCounts[r.role] ?? 0) + 1; });
-      const { data: recent = [] } = await supabase
-        .from("reports")
-        .select("id, type, title, status, severity, observed_at")
-        .order("observed_at", { ascending: false })
-        .limit(6);
-      return { reportCount, employeeCount, roleCounts, recent };
-    },
-  });
-
-  return (
-    <>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={AlertTriangle} label="Meldingen (totaal)" value={data?.reportCount} accent="text-blue-600" />
-        <StatCard icon={Users} label="Actieve medewerkers" value={data?.employeeCount} accent="text-green-600" />
-        <StatCard icon={ShieldAlert} label="Admins" value={data?.roleCounts["admin"] ?? 0} accent="text-red-600" />
-        <StatCard icon={Activity} label="Gebruikers m/ rol" value={Object.values(data?.roleCounts ?? {}).reduce((a, b) => a + b, 0)} accent="text-purple-600" />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Rolverdeling</CardTitle>
-          <CardDescription>Aantal gebruikers per rol</CardDescription>
-        </CardHeader>
-        <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {[
-            { key: "admin", label: "Admin" },
-            { key: "hse_manager", label: "HSE-manager" },
-            { key: "manager", label: "Leidinggevende" },
-            { key: "operator", label: "Operator" },
-          ].map((r) => (
-            <div key={r.key} className="p-3 rounded-lg border bg-muted/30">
-              <div className="text-xs text-muted-foreground">{r.label}</div>
-              <div className="text-2xl font-semibold">{data?.roleCounts[r.key] ?? 0}</div>
+        <Card className="lg:col-span-2">
+          <CardHeader className="flex-row items-center justify-between space-y-0">
+            <div>
+              <CardTitle className="text-base">{actionsTitle}</CardTitle>
+              <CardDescription>Overdue en hoge ernst eerst</CardDescription>
             </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      <RecentReportsCard title="Recente meldingen" reports={data?.recent} emptyText="Nog geen meldingen." />
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/meldingen">Alle meldingen <ArrowRight className="w-4 h-4" /></Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {actions.length === 0 ? (
+              <div className="text-sm text-muted-foreground text-center py-8 flex flex-col items-center gap-2">
+                <CheckCircle2 className="w-8 h-8 text-green-600" />
+                Geen openstaande acties — goed werk.
+              </div>
+            ) : (
+              <div className="space-y-1.5">
+                {actions.map((r) => {
+                  const overdue = r.deadline && new Date(r.deadline).getTime() < Date.now();
+                  return (
+                    <Link
+                      key={r.id}
+                      to="/meldingen/$id"
+                      params={{ id: r.id }}
+                      className="flex items-center gap-3 p-2.5 rounded-md hover:bg-muted/50 transition-colors"
+                    >
+                      <Badge variant="outline" className="w-24 justify-center shrink-0">{TYPE_LABELS[r.type] ?? r.type}</Badge>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{r.title}</div>
+                        <div className="text-xs text-muted-foreground flex items-center gap-2">
+                          {r.deadline ? (
+                            <span className={overdue ? "text-red-600 font-medium" : ""}>
+                              Deadline {new Date(r.deadline).toLocaleDateString("nl-BE")}
+                              {overdue ? " — verstreken" : ""}
+                            </span>
+                          ) : (
+                            <span>Geen deadline</span>
+                          )}
+                        </div>
+                      </div>
+                      <Badge variant={severityVariant(r.severity)}>{SEVERITY_LABELS[r.severity]}</Badge>
+                      <Badge variant="secondary" className="hidden sm:inline-flex">{STATUS_LABELS[r.status]}</Badge>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </>
   );
 }
 
-/* ---------------- SHARED ---------------- */
 function StatCard({
   icon: Icon, label, value, accent,
-}: { icon: typeof Users; label: string; value: number | null | undefined; accent: string }) {
+}: { icon: typeof AlertTriangle; label: string; value: number | null | undefined; accent: string }) {
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -336,46 +328,6 @@ function StatCard({
       </CardHeader>
       <CardContent>
         <div className="text-3xl font-semibold">{value ?? "—"}</div>
-      </CardContent>
-    </Card>
-  );
-}
-
-interface MiniReport {
-  id: string; type: string; title: string; status: string; severity: string; observed_at: string;
-}
-
-function RecentReportsCard({ title, reports, emptyText }: { title: string; reports?: MiniReport[] | null; emptyText: string }) {
-  return (
-    <Card>
-      <CardHeader className="flex-row items-center justify-between space-y-0">
-        <div>
-          <CardTitle className="text-base">{title}</CardTitle>
-        </div>
-        <Button variant="ghost" size="sm" asChild>
-          <Link to="/meldingen">Bekijk alle <ArrowRight className="w-4 h-4" /></Link>
-        </Button>
-      </CardHeader>
-      <CardContent>
-        {!reports || reports.length === 0 ? (
-          <div className="text-sm text-muted-foreground text-center py-8">{emptyText}</div>
-        ) : (
-          <div className="space-y-1.5">
-            {reports.map((r) => (
-              <div key={r.id} className="flex items-center gap-3 p-2.5 rounded-md hover:bg-muted/50 transition-colors">
-                <Badge variant="outline" className="w-24 justify-center shrink-0">{TYPE_LABELS[r.type] ?? r.type}</Badge>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">{r.title}</div>
-                  <div className="text-xs text-muted-foreground">
-                    {new Date(r.observed_at).toLocaleDateString("nl-BE")}
-                  </div>
-                </div>
-                <Badge variant={severityVariant(r.severity)}>{SEVERITY_LABELS[r.severity]}</Badge>
-                <Badge variant="secondary" className="hidden sm:inline-flex">{STATUS_LABELS[r.status]}</Badge>
-              </div>
-            ))}
-          </div>
-        )}
       </CardContent>
     </Card>
   );

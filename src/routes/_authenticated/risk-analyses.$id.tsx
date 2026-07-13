@@ -901,11 +901,13 @@ function ExecutorsCard({
 
 // ============ Organisatie-analyse — accordion per thema ============
 function OrgAccordion({
-  items, onEdit, onDelete,
+  items, onEdit, onDelete, selectedIds, onToggleSelect,
 }: {
   items: Item[];
   onEdit: (it: Item) => void;
   onDelete: (id: string) => void;
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string, checked: boolean) => void;
 }) {
   const grouped = new Map<OrgTheme, Item[]>();
   const untagged: Item[] = [];

@@ -88,6 +88,15 @@ function RiskAnalysisDetail() {
   const { user } = useAuth();
 
   const [editItem, setEditItem] = useState<Partial<Item> | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const toggleSelected = (itemId: string, checked: boolean) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (checked) next.add(itemId); else next.delete(itemId);
+      return next;
+    });
+  };
+  const clearSelection = () => setSelectedIds(new Set());
 
   const { data: analysis, isLoading } = useQuery({
     queryKey: ["risk-analysis", id],

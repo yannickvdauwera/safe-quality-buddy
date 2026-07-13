@@ -49,12 +49,19 @@ const AO_BODY_PARTS = [
   "Knie", "Onderbeen", "Enkel", "Voet", "Teen", "Meerdere / algemeen",
 ];
 const KLACHT_OPTIONS = [
-  "Interne klacht",
-  "Externe klacht (klant)",
-  "Kwaliteitsincident",
-  "Communicatie / gedrag",
-  "Materiaal / uitrusting",
-  "Andere",
+  "Te laat",
+  "Overtreden LSR",
+  "NVT",
+  "Flexibiliteit",
+  "Bijna-Ongeval",
+  "Afmelding",
+  "MOS",
+  "Niet aanwezig",
+  "Veiligheidsattitude",
+  "Attitude",
+  "Collegialiteit",
+  "Ernstige verstoring van de arbeidsrelatie",
+  "Gespreksformulier",
 ];
 
 export function MeldingCreateForm({ onClose, onCreated, typeOptions, defaultType }: Props) {

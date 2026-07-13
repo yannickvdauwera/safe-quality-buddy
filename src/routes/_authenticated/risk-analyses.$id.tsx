@@ -438,7 +438,12 @@ function RiskAnalysisDetail() {
       <Card className="p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="font-semibold">Items ({items?.length ?? 0})</h2>
-          <Button size="sm" onClick={() => setEditItem({ position: (items?.length ?? 0) + 1, measure_types: [], measures_by_type: {} })}>
+          <Button size="sm" onClick={() => setEditItem({
+            position: (items?.length ?? 0) + 1,
+            measure_types: [],
+            measures_by_type: {},
+            ...(isOrg ? { theme: "ALG" as OrgTheme, smiley: "green" as Smiley, measure_status: "open" as MeasureStatus } : {}),
+          })}>
             <Plus className="w-4 h-4" /> Item toevoegen
           </Button>
         </div>

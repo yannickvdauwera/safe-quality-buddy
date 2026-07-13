@@ -560,10 +560,11 @@ function ScoreSelect({
 }
 
 function ItemDialog({
-  item, method, onClose, onChange, onSave,
+  item, method, isOrg, onClose, onChange, onSave,
 }: {
   item: Partial<Item> | null;
   method: RiskMethod;
+  isOrg: boolean;
   onClose: () => void;
   onChange: (i: Partial<Item>) => void;
   onSave: () => void;

@@ -199,12 +199,16 @@ function RiskAnalysisDetail() {
       score_e: isOrg ? null : (editItem.score_e ?? null),
       score_r: isOrg ? null : computeRFor(method, editItem.score_w ?? null, editItem.score_b ?? null, editItem.score_e ?? null),
       measures: (() => {
+        if (isOrg) {
+          // Organisatie: één vrij tekstveld, geen indeling per type.
+          return editItem.measures_legacy?.trim() || null;
+        }
         const byType = editItem.measures_by_type ?? {};
         const serialized = serializeMeasures(byType);
         if (serialized) return serialized;
         return editItem.measures_legacy?.trim() || null;
       })(),
-      measure_types: measureTypesFrom(editItem.measures_by_type ?? {}),
+      measure_types: isOrg ? [] : measureTypesFrom(editItem.measures_by_type ?? {}),
       residual_w: isOrg ? null : (editItem.residual_w ?? null),
       residual_b: isOrg || method === "kans_ernst" ? null : (editItem.residual_b ?? null),
       residual_e: isOrg ? null : (editItem.residual_e ?? null),
@@ -214,6 +218,7 @@ function RiskAnalysisDetail() {
       legislation: isOrg ? (editItem.legislation || null) : null,
       measure_status: isOrg ? (editItem.measure_status ?? null) : null,
       smiley: isOrg ? (editItem.smiley ?? null) : null,
+      action_item: isOrg ? (editItem.action_item || null) : null,
     };
     try {
       if (editItem.id) {

@@ -5,7 +5,10 @@ import {
   METHOD_LABELS, MEASURE_TYPE_META, MEASURE_TYPE_ORDER, TYPE_LABELS, STATUS_LABELS,
   classifyRiskFor, levelsFor, highRiskThreshold, parseMeasures,
   W_SCALE, B_SCALE, E_SCALE, K_SCALE, E5_SCALE,
+  ORG_THEMES, ORG_THEME_LABELS, ORG_THEME_COLORS,
+  SMILEY_META, MEASURE_STATUS_LABELS,
   type RiskMethod, type RiskAnalysisType, type RiskAnalysisStatus, type RiskMeasureType,
+  type OrgTheme, type Smiley, type MeasureStatus,
 } from "./risk-analysis-types";
 
 const TSA_RED: [number, number, number] = [227, 6, 19];

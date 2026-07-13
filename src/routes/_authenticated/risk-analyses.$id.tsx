@@ -974,6 +974,15 @@ function OrgItemsTable({
       <table className="w-full text-sm">
         <thead className="text-xs text-muted-foreground uppercase border-b">
           <tr>
+            <th className="py-2 px-2 w-8">
+              <Checkbox
+                checked={items.length > 0 && items.every((it) => selectedIds.has(it.id))}
+                onCheckedChange={(v) => {
+                  items.forEach((it) => onToggleSelect(it.id, !!v));
+                }}
+                aria-label="Alles selecteren"
+              />
+            </th>
             <th className="text-left py-2 px-2 w-16">Score</th>
             <th className="text-left py-2 px-2">Onderwerp</th>
             <th className="text-left py-2 px-2">Huidige toestand</th>

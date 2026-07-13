@@ -998,7 +998,14 @@ function OrgItemsTable({
             const smiley = it.smiley ? SMILEY_META[it.smiley] : null;
             const status = it.measure_status ? MEASURE_STATUS_META[it.measure_status] : null;
             return (
-              <tr key={it.id} className="hover:bg-muted/30 align-top">
+              <tr key={it.id} className={cn("hover:bg-muted/30 align-top", selectedIds.has(it.id) && "bg-muted/40")}>
+                <td className="py-3 px-2">
+                  <Checkbox
+                    checked={selectedIds.has(it.id)}
+                    onCheckedChange={(v) => onToggleSelect(it.id, !!v)}
+                    aria-label={`Selecteer ${it.hazard}`}
+                  />
+                </td>
                 <td className="py-3 px-2">
                   {smiley ? (
                     <span

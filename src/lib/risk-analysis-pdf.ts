@@ -390,6 +390,7 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
     const endY3 = drawScaleTable(scales[2], rightX, row2Y);
     scalesEndY = Math.max(endY1, endY2, endY3);
   }
+  } // end !isOrg
 
   // Uitvoerders — vaste medewerkers vanuit Gebruikers & Rollen.
   const executors = a.executors ?? [];

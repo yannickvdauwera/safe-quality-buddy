@@ -182,32 +182,37 @@ function RiskAnalysisDetail() {
   };
 
   const method: RiskMethod = (analysis?.risk_method as RiskMethod) ?? "fine_kinney";
+  const isOrg = analysis?.analysis_type === "organisatie";
 
   const saveItem = async () => {
     if (!editItem || !currentVersion) return;
-    if (!editItem.hazard?.trim()) return toast.error("Gevaar is verplicht");
+    if (!editItem.hazard?.trim()) return toast.error(isOrg ? "Onderwerp is verplicht" : "Gevaar is verplicht");
     const payload = {
       version_id: currentVersion.id,
       position: editItem.position ?? ((items?.length ?? 0) + 1),
       activity: editItem.activity || null,
       hazard: editItem.hazard.trim(),
       risk_description: editItem.risk_description || null,
-      score_w: editItem.score_w ?? null,
-      score_b: method === "kans_ernst" ? null : (editItem.score_b ?? null),
-      score_e: editItem.score_e ?? null,
-      score_r: computeRFor(method, editItem.score_w ?? null, editItem.score_b ?? null, editItem.score_e ?? null),
+      score_w: isOrg ? null : (editItem.score_w ?? null),
+      score_b: isOrg || method === "kans_ernst" ? null : (editItem.score_b ?? null),
+      score_e: isOrg ? null : (editItem.score_e ?? null),
+      score_r: isOrg ? null : computeRFor(method, editItem.score_w ?? null, editItem.score_b ?? null, editItem.score_e ?? null),
       measures: (() => {
         const byType = editItem.measures_by_type ?? {};
         const serialized = serializeMeasures(byType);
-        // Behoud legacy tekst zolang de gebruiker nog niets in de per-type velden heeft ingevuld.
         if (serialized) return serialized;
         return editItem.measures_legacy?.trim() || null;
       })(),
       measure_types: measureTypesFrom(editItem.measures_by_type ?? {}),
-      residual_w: editItem.residual_w ?? null,
-      residual_b: method === "kans_ernst" ? null : (editItem.residual_b ?? null),
-      residual_e: editItem.residual_e ?? null,
-      residual_r: computeRFor(method, editItem.residual_w ?? null, editItem.residual_b ?? null, editItem.residual_e ?? null),
+      residual_w: isOrg ? null : (editItem.residual_w ?? null),
+      residual_b: isOrg || method === "kans_ernst" ? null : (editItem.residual_b ?? null),
+      residual_e: isOrg ? null : (editItem.residual_e ?? null),
+      residual_r: isOrg ? null : computeRFor(method, editItem.residual_w ?? null, editItem.residual_b ?? null, editItem.residual_e ?? null),
+      theme: isOrg ? (editItem.theme ?? null) : null,
+      current_state: isOrg ? (editItem.current_state || null) : null,
+      legislation: isOrg ? (editItem.legislation || null) : null,
+      measure_status: isOrg ? (editItem.measure_status ?? null) : null,
+      smiley: isOrg ? (editItem.smiley ?? null) : null,
     };
     try {
       if (editItem.id) {

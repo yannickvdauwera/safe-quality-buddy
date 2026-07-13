@@ -961,11 +961,13 @@ function OrgAccordion({
 }
 
 function OrgItemsTable({
-  items, onEdit, onDelete,
+  items, onEdit, onDelete, selectedIds, onToggleSelect,
 }: {
   items: Item[];
   onEdit: (it: Item) => void;
   onDelete: (id: string) => void;
+  selectedIds: Set<string>;
+  onToggleSelect: (id: string, checked: boolean) => void;
 }) {
   return (
     <div className="overflow-x-auto">

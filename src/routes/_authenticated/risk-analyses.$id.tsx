@@ -952,7 +952,7 @@ function OrgAccordion({
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <OrgItemsTable items={untagged} onEdit={onEdit} onDelete={onDelete} />
+            <OrgItemsTable items={untagged} onEdit={onEdit} onDelete={onDelete} selectedIds={selectedIds} onToggleSelect={onToggleSelect} />
           </AccordionContent>
         </AccordionItem>
       )}

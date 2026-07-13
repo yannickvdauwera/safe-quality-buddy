@@ -467,16 +467,27 @@ function RiskAnalysisDetail() {
 
 
       <Card className="p-5">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
           <h2 className="font-semibold">Items ({items?.length ?? 0})</h2>
-          <Button size="sm" onClick={() => setEditItem({
-            position: (items?.length ?? 0) + 1,
-            measure_types: [],
-            measures_by_type: {},
-            ...(isOrg ? { theme: "ALG" as OrgTheme, smiley: "green" as Smiley, measure_status: "open" as MeasureStatus } : {}),
-          })}>
-            <Plus className="w-4 h-4" /> Item toevoegen
-          </Button>
+          <div className="flex items-center gap-2">
+            {selectedIds.size > 0 && (
+              <>
+                <span className="text-xs text-muted-foreground">{selectedIds.size} geselecteerd</span>
+                <Button size="sm" variant="outline" onClick={clearSelection}>Selectie wissen</Button>
+                <Button size="sm" variant="destructive" onClick={bulkDeleteSelected}>
+                  <Trash2 className="w-4 h-4" /> Verwijderen
+                </Button>
+              </>
+            )}
+            <Button size="sm" onClick={() => setEditItem({
+              position: (items?.length ?? 0) + 1,
+              measure_types: [],
+              measures_by_type: {},
+              ...(isOrg ? { theme: "ALG" as OrgTheme, smiley: "green" as Smiley, measure_status: "open" as MeasureStatus } : {}),
+            })}>
+              <Plus className="w-4 h-4" /> Item toevoegen
+            </Button>
+          </div>
         </div>
 
         {!items || items.length === 0 ? (
@@ -487,6 +498,8 @@ function RiskAnalysisDetail() {
         ) : isOrg ? (
           <OrgAccordion
             items={items}
+            selectedIds={selectedIds}
+            onToggleSelect={toggleSelected}
             onEdit={(it) => {
               const parsed = parseMeasures(it.measures);
               // Organisatie gebruikt één tekstveld — flatten eventuele per-type of legacy inhoud.
@@ -503,6 +516,16 @@ function RiskAnalysisDetail() {
             <table className="w-full text-sm">
               <thead className="text-xs text-muted-foreground uppercase border-b">
                 <tr>
+                  <th className="py-2 px-2 w-8">
+                    <Checkbox
+                      checked={items.length > 0 && items.every((it) => selectedIds.has(it.id))}
+                      onCheckedChange={(v) => {
+                        if (v) setSelectedIds(new Set(items.map((it) => it.id)));
+                        else clearSelection();
+                      }}
+                      aria-label="Alles selecteren"
+                    />
+                  </th>
                   <th className="text-left py-2 px-2 w-10">#</th>
                   <th className="text-left py-2 px-2">Activiteit / Gevaar</th>
                   <th className="text-left py-2 px-2 w-32">Bruto risico</th>
@@ -513,7 +536,14 @@ function RiskAnalysisDetail() {
               </thead>
               <tbody className="divide-y">
                 {items.map((it) => (
-                  <tr key={it.id} className="hover:bg-muted/30">
+                  <tr key={it.id} className={cn("hover:bg-muted/30", selectedIds.has(it.id) && "bg-muted/40")}>
+                    <td className="py-3 px-2">
+                      <Checkbox
+                        checked={selectedIds.has(it.id)}
+                        onCheckedChange={(v) => toggleSelected(it.id, !!v)}
+                        aria-label={`Selecteer item ${it.position}`}
+                      />
+                    </td>
                     <td className="py-3 px-2 text-muted-foreground font-mono text-xs">{it.position}</td>
                     <td className="py-3 px-2">
                       {it.activity && <div className="text-xs text-muted-foreground">{it.activity}</div>}
@@ -549,7 +579,6 @@ function RiskAnalysisDetail() {
                           const parsed = parseMeasures(it.measures);
                           setEditItem({ ...it, measures_by_type: parsed.byType, measures_legacy: parsed.legacy });
                         }}>
-
                           <Edit className="w-3.5 h-3.5" />
                         </Button>
                         <Button size="icon" variant="ghost" onClick={() => deleteItem(it.id)}>

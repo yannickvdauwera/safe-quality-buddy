@@ -570,6 +570,9 @@ function ItemDialog({
   onSave: () => void;
 }) {
   if (!item) return null;
+  if (isOrg) {
+    return <OrgItemDialog item={item} onClose={onClose} onChange={onChange} onSave={onSave} />;
+  }
   const isKE = method === "kans_ernst";
   const grossR = computeRFor(method, item.score_w ?? null, item.score_b ?? null, item.score_e ?? null);
   const netR = computeRFor(method, item.residual_w ?? null, item.residual_b ?? null, item.residual_e ?? null);

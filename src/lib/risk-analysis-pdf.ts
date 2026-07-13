@@ -145,10 +145,15 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
   ].filter(Boolean).join("  •  ");
   doc.text(metaBits, 12, y);
   y += 5;
-  doc.setFontSize(8);
-  doc.setTextColor(120, 120, 120);
-  doc.text(`Methodiek: ${METHOD_LABELS[a.risk_method]}`, 12, y);
-  y += 6;
+  const isOrg = a.analysis_type === "organisatie";
+  if (!isOrg) {
+    doc.setFontSize(8);
+    doc.setTextColor(120, 120, 120);
+    doc.text(`Methodiek: ${METHOD_LABELS[a.risk_method]}`, 12, y);
+    y += 6;
+  } else {
+    y += 1;
+  }
 
   if (a.description) {
     doc.setFontSize(9);

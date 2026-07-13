@@ -62,6 +62,7 @@ interface Item {
   legislation: string | null;
   measure_status: MeasureStatus | null;
   smiley: Smiley | null;
+  action_item: string | null;
   // In-memory werkveld voor de dialog: per type een tekstblok. Wordt bij
   // opslaan geserialiseerd naar `measures` (JSON) en `measure_types`.
   measures_by_type?: MeasuresByType;

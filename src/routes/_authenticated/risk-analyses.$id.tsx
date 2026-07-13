@@ -948,7 +948,10 @@ function OrgItemsTable({
                   <div className="text-xs whitespace-pre-line">{it.current_state || <span className="text-muted-foreground">—</span>}</div>
                 </td>
                 <td className="py-3 px-2 max-w-md">
-                  <MeasuresCell raw={it.measures} />
+                  <OrgMeasuresCell raw={it.measures} />
+                </td>
+                <td className="py-3 px-2 max-w-xs">
+                  <div className="text-xs whitespace-pre-line">{it.action_item || <span className="text-muted-foreground">—</span>}</div>
                 </td>
                 <td className="py-3 px-2">
                   <div className="text-xs whitespace-pre-line">{it.legislation || <span className="text-muted-foreground">—</span>}</div>

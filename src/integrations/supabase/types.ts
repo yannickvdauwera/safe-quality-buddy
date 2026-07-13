@@ -398,8 +398,11 @@ export type Database = {
         Row: {
           activity: string | null
           created_at: string
+          current_state: string | null
           hazard: string
           id: string
+          legislation: string | null
+          measure_status: string | null
           measure_types: Database["public"]["Enums"]["risk_measure_type"][]
           measures: string | null
           notes: string | null
@@ -413,14 +416,19 @@ export type Database = {
           score_e: number | null
           score_r: number | null
           score_w: number | null
+          smiley: string | null
+          theme: string | null
           updated_at: string
           version_id: string
         }
         Insert: {
           activity?: string | null
           created_at?: string
+          current_state?: string | null
           hazard: string
           id?: string
+          legislation?: string | null
+          measure_status?: string | null
           measure_types?: Database["public"]["Enums"]["risk_measure_type"][]
           measures?: string | null
           notes?: string | null
@@ -434,14 +442,19 @@ export type Database = {
           score_e?: number | null
           score_r?: number | null
           score_w?: number | null
+          smiley?: string | null
+          theme?: string | null
           updated_at?: string
           version_id: string
         }
         Update: {
           activity?: string | null
           created_at?: string
+          current_state?: string | null
           hazard?: string
           id?: string
+          legislation?: string | null
+          measure_status?: string | null
           measure_types?: Database["public"]["Enums"]["risk_measure_type"][]
           measures?: string | null
           notes?: string | null
@@ -455,6 +468,8 @@ export type Database = {
           score_e?: number | null
           score_r?: number | null
           score_w?: number | null
+          smiley?: string | null
+          theme?: string | null
           updated_at?: string
           version_id?: string
         }

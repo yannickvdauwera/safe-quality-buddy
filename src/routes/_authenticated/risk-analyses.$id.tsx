@@ -56,6 +56,12 @@ interface Item {
   residual_b: number | null;
   residual_e: number | null;
   residual_r: number | null;
+  // Organisatie-specifieke velden
+  theme: OrgTheme | null;
+  current_state: string | null;
+  legislation: string | null;
+  measure_status: MeasureStatus | null;
+  smiley: Smiley | null;
   // In-memory werkveld voor de dialog: per type een tekstblok. Wordt bij
   // opslaan geserialiseerd naar `measures` (JSON) en `measure_types`.
   measures_by_type?: MeasuresByType;

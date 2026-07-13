@@ -937,7 +937,7 @@ function OrgAccordion({
               </div>
             </AccordionTrigger>
             <AccordionContent>
-              <OrgItemsTable items={list} onEdit={onEdit} onDelete={onDelete} />
+              <OrgItemsTable items={list} onEdit={onEdit} onDelete={onDelete} selectedIds={selectedIds} onToggleSelect={onToggleSelect} />
             </AccordionContent>
           </AccordionItem>
         );

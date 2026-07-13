@@ -916,6 +916,7 @@ function OrgItemsTable({
             <th className="text-left py-2 px-2">Onderwerp</th>
             <th className="text-left py-2 px-2">Huidige toestand</th>
             <th className="text-left py-2 px-2">Maatregelen</th>
+            <th className="text-left py-2 px-2">Actie / verbeterpunt</th>
             <th className="text-left py-2 px-2 w-40">Wetgeving</th>
             <th className="text-left py-2 px-2 w-32">Status</th>
             <th className="w-20"></th>

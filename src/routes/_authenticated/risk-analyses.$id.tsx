@@ -833,3 +833,272 @@ function ExecutorsCard({
     </Card>
   );
 }
+
+// ============ Organisatie-analyse — accordion per thema ============
+function OrgAccordion({
+  items, onEdit, onDelete,
+}: {
+  items: Item[];
+  onEdit: (it: Item) => void;
+  onDelete: (id: string) => void;
+}) {
+  const grouped = new Map<OrgTheme, Item[]>();
+  const untagged: Item[] = [];
+  for (const it of items) {
+    const t = it.theme;
+    if (t && ORG_THEMES.includes(t)) {
+      if (!grouped.has(t)) grouped.set(t, []);
+      grouped.get(t)!.push(it);
+    } else {
+      untagged.push(it);
+    }
+  }
+  const themes = ORG_THEMES.filter((t) => grouped.has(t));
+
+  return (
+    <Accordion type="multiple" defaultValue={themes} className="w-full">
+      {themes.map((t) => {
+        const list = grouped.get(t)!;
+        const color = ORG_THEME_COLORS[t];
+        return (
+          <AccordionItem key={t} value={t}>
+            <AccordionTrigger className="hover:no-underline">
+              <div className="flex items-center gap-3">
+                <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: color }} />
+                <span className="font-semibold">{t} — {ORG_THEME_LABELS[t]}</span>
+                <Badge variant="outline" className="text-[10px]">{list.length}</Badge>
+              </div>
+            </AccordionTrigger>
+            <AccordionContent>
+              <OrgItemsTable items={list} onEdit={onEdit} onDelete={onDelete} />
+            </AccordionContent>
+          </AccordionItem>
+        );
+      })}
+      {untagged.length > 0 && (
+        <AccordionItem value="__untagged">
+          <AccordionTrigger className="hover:no-underline">
+            <div className="flex items-center gap-3">
+              <span className="inline-block w-2.5 h-2.5 rounded-full bg-slate-400" />
+              <span className="font-semibold">Zonder thema</span>
+              <Badge variant="outline" className="text-[10px]">{untagged.length}</Badge>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent>
+            <OrgItemsTable items={untagged} onEdit={onEdit} onDelete={onDelete} />
+          </AccordionContent>
+        </AccordionItem>
+      )}
+    </Accordion>
+  );
+}
+
+function OrgItemsTable({
+  items, onEdit, onDelete,
+}: {
+  items: Item[];
+  onEdit: (it: Item) => void;
+  onDelete: (id: string) => void;
+}) {
+  return (
+    <div className="overflow-x-auto">
+      <table className="w-full text-sm">
+        <thead className="text-xs text-muted-foreground uppercase border-b">
+          <tr>
+            <th className="text-left py-2 px-2 w-16">Score</th>
+            <th className="text-left py-2 px-2">Onderwerp</th>
+            <th className="text-left py-2 px-2">Huidige toestand</th>
+            <th className="text-left py-2 px-2">Maatregelen</th>
+            <th className="text-left py-2 px-2 w-40">Wetgeving</th>
+            <th className="text-left py-2 px-2 w-32">Status</th>
+            <th className="w-20"></th>
+          </tr>
+        </thead>
+        <tbody className="divide-y">
+          {items.map((it) => {
+            const smiley = it.smiley ? SMILEY_META[it.smiley] : null;
+            const status = it.measure_status ? MEASURE_STATUS_META[it.measure_status] : null;
+            return (
+              <tr key={it.id} className="hover:bg-muted/30 align-top">
+                <td className="py-3 px-2">
+                  {smiley ? (
+                    <span
+                      title={smiley.label}
+                      className={cn("inline-flex items-center justify-center w-9 h-9 rounded-full text-lg border", smiley.badgeClass)}
+                    >
+                      {smiley.emoji}
+                    </span>
+                  ) : <span className="text-xs text-muted-foreground">—</span>}
+                </td>
+                <td className="py-3 px-2">
+                  <div className="font-medium">{it.hazard}</div>
+                  {it.risk_description && (
+                    <div className="text-xs text-muted-foreground italic mt-0.5">{it.risk_description}</div>
+                  )}
+                </td>
+                <td className="py-3 px-2 max-w-xs">
+                  <div className="text-xs whitespace-pre-line">{it.current_state || <span className="text-muted-foreground">—</span>}</div>
+                </td>
+                <td className="py-3 px-2 max-w-md">
+                  <MeasuresCell raw={it.measures} />
+                </td>
+                <td className="py-3 px-2">
+                  <div className="text-xs whitespace-pre-line">{it.legislation || <span className="text-muted-foreground">—</span>}</div>
+                </td>
+                <td className="py-3 px-2">
+                  {status ? (
+                    <Badge variant="outline" className={cn("text-[10px]", status.badgeClass)}>{status.label}</Badge>
+                  ) : <span className="text-xs text-muted-foreground">—</span>}
+                </td>
+                <td className="py-3 px-2">
+                  <div className="flex gap-1">
+                    <Button size="icon" variant="ghost" onClick={() => onEdit(it)}>
+                      <Edit className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => onDelete(it.id)}>
+                      <Trash2 className="w-3.5 h-3.5 text-destructive" />
+                    </Button>
+                  </div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function OrgItemDialog({
+  item, onClose, onChange, onSave,
+}: {
+  item: Partial<Item>;
+  onClose: () => void;
+  onChange: (i: Partial<Item>) => void;
+  onSave: () => void;
+}) {
+  const byType: MeasuresByType = item.measures_by_type ?? {};
+  const setByType = (t: RiskMeasureType, v: string) => {
+    onChange({ ...item, measures_by_type: { ...byType, [t]: v } });
+  };
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>{item.id ? "Item bewerken" : "Nieuw item"}</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="space-y-1.5">
+              <Label className="text-xs">Thema</Label>
+              <Select
+                value={item.theme ?? "ALG"}
+                onValueChange={(v) => onChange({ ...item, theme: v as OrgTheme })}
+              >
+                <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {ORG_THEMES.map((t) => (
+                    <SelectItem key={t} value={t} className="text-xs">
+                      {t} — {ORG_THEME_LABELS[t]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Beoordeling</Label>
+              <Select
+                value={item.smiley ?? "green"}
+                onValueChange={(v) => onChange({ ...item, smiley: v as Smiley })}
+              >
+                <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(["green", "yellow", "red"] as Smiley[]).map((s) => (
+                    <SelectItem key={s} value={s} className="text-xs">
+                      {SMILEY_META[s].emoji} {SMILEY_META[s].label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Status maatregel</Label>
+              <Select
+                value={item.measure_status ?? "open"}
+                onValueChange={(v) => onChange({ ...item, measure_status: v as MeasureStatus })}
+              >
+                <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {(Object.keys(MEASURE_STATUS_LABELS) as MeasureStatus[]).map((s) => (
+                    <SelectItem key={s} value={s} className="text-xs">{MEASURE_STATUS_LABELS[s]}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs">Onderwerp *</Label>
+            <Input value={item.hazard ?? ""} onChange={(e) => onChange({ ...item, hazard: e.target.value })} />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Toelichting / risico</Label>
+            <Textarea rows={2} value={item.risk_description ?? ""} onChange={(e) => onChange({ ...item, risk_description: e.target.value })} />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs">Huidige toestand</Label>
+            <Textarea rows={3} value={item.current_state ?? ""} onChange={(e) => onChange({ ...item, current_state: e.target.value })} />
+          </div>
+
+          <div className="space-y-2">
+            <Label className="text-xs">Maatregelen — per type</Label>
+            <div className="grid gap-3 md:grid-cols-3">
+              {MEASURE_TYPE_ORDER.map((t) => {
+                const meta = MEASURE_TYPE_META[t];
+                return (
+                  <div key={t} className="border rounded-md overflow-hidden">
+                    <div
+                      className="px-3 py-2 text-xs font-semibold flex items-center gap-2 border-b"
+                      style={{ background: meta.swatch + "18", color: meta.swatch }}
+                    >
+                      <span
+                        className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold text-white"
+                        style={{ background: meta.swatch }}
+                      >
+                        {meta.short}
+                      </span>
+                      {meta.label}
+                    </div>
+                    <Textarea
+                      rows={4}
+                      className="border-0 rounded-none focus-visible:ring-0 text-sm"
+                      placeholder={meta.hint}
+                      value={byType[t] ?? ""}
+                      onChange={(e) => setByType(t, e.target.value)}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            {item.measures_legacy && (
+              <div className="border rounded-md p-3 bg-yellow-50 border-yellow-200 text-xs space-y-1">
+                <div className="font-semibold text-yellow-900">Bestaande omschrijving (nog niet ingedeeld per type)</div>
+                <div className="whitespace-pre-line text-yellow-900/80">{item.measures_legacy}</div>
+              </div>
+            )}
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs">Wetgeving / referentie</Label>
+            <Textarea rows={2} value={item.legislation ?? ""} onChange={(e) => onChange({ ...item, legislation: e.target.value })} />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="ghost" onClick={onClose}>Annuleer</Button>
+          <Button onClick={onSave}><Save className="w-4 h-4" /> Opslaan</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

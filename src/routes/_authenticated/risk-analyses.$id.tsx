@@ -465,7 +465,12 @@ function RiskAnalysisDetail() {
             items={items}
             onEdit={(it) => {
               const parsed = parseMeasures(it.measures);
-              setEditItem({ ...it, measures_by_type: parsed.byType, measures_legacy: parsed.legacy });
+              // Organisatie gebruikt één tekstveld — flatten eventuele per-type of legacy inhoud.
+              const flat = [
+                ...MEASURE_TYPE_ORDER.map((t) => (parsed.byType[t] ?? "").trim()).filter(Boolean),
+                (parsed.legacy ?? "").trim(),
+              ].filter(Boolean).join("\n\n");
+              setEditItem({ ...it, measures_by_type: {}, measures_legacy: flat });
             }}
             onDelete={deleteItem}
           />

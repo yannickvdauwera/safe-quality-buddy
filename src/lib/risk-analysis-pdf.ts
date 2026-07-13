@@ -377,7 +377,7 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
     return doc.lastAutoTable?.finalY ?? tableStart;
   };
 
-  let scalesEndY: number;
+  
   if (scales.length === 2) {
     scalesEndY = Math.max(
       drawScaleTable(scales[0], rightX, sy),

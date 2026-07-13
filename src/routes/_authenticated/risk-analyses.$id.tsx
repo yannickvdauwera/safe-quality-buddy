@@ -290,6 +290,11 @@ function RiskAnalysisDetail() {
             residual_b: it.residual_b,
             residual_e: it.residual_e,
             residual_r: it.residual_r,
+            theme: it.theme,
+            current_state: it.current_state,
+            legislation: it.legislation,
+            measure_status: it.measure_status,
+            smiley: it.smiley,
           })),
         );
         if (cErr) throw cErr;

@@ -163,6 +163,11 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
     y += wrapped.length * 4 + 2;
   }
 
+  let scalesEndY = y;
+
+  if (isOrg) {
+    scalesEndY = renderOrganisationTables(doc, a, y, pageW, drawHeader);
+  } else {
   // Stats strip
   const threshold = highRiskThreshold(a.risk_method);
   const grossHigh = a.items.filter((i) => (i.score_r ?? 0) >= threshold).length;

@@ -1,376 +1,257 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, redirect } from "@tanstack/react-router";
 import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { z } from "zod";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import {
+  listWorkers, inviteWorker, setWorkerRole, deleteWorker, ensureEmployeeForUser,
+} from "@/lib/admin-users.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Search, UserPlus, UserCheck, UserX, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
-import { EmployeesImportDialog } from "@/components/EmployeesImportDialog";
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
+  DropdownMenuLabel, DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Users, UserPlus, MoreHorizontal, Search, Trash2, Shield, IdCard, Mail,
+} from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/employees/")({
-  head: () => ({ meta: [{ title: "Personeelsfiches — HSE & Kwaliteit" }] }),
-  component: EmployeesPage,
+  head: () => ({ meta: [{ title: "Medewerkers — HSE & Kwaliteit" }] }),
+  beforeLoad: async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw redirect({ to: "/auth" });
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .in("role", ["admin", "hse_manager"]);
+    if (!data || data.length === 0) throw redirect({ to: "/dashboard" });
+  },
+  component: MedewerkersPage,
 });
 
-const employeeSchema = z.object({
-  first_name: z.string().trim().min(1, "Voornaam is verplicht").max(100),
-  last_name: z.string().trim().min(1, "Naam is verplicht").max(100),
-  employer: z.string().trim().max(150).optional().or(z.literal("")),
-  email: z.string().trim().email("Ongeldig e-mailadres").max(255).optional().or(z.literal("")),
-  phone: z.string().trim().max(30).optional().or(z.literal("")),
-  function_title: z.string().trim().max(300).optional().or(z.literal("")),
-});
+type WorkerRole = "operator" | "manager";
+const ROLE_LABELS: Record<WorkerRole, string> = { operator: "Gebruiker (operator)", manager: "Manager" };
+const ROLE_BADGE: Record<WorkerRole, string> = {
+  operator: "bg-muted text-foreground",
+  manager: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200",
+};
 
-function parseFunctions(v?: string | null): string[] {
-  if (!v) return [];
-  return v.split(",").map((s) => s.trim()).filter(Boolean);
+interface Worker {
+  id: string;
+  email: string | null;
+  full_name: string | null;
+  function_title: string | null;
+  roles: string[];
+  last_sign_in_at: string | null;
+  email_confirmed_at: string | null;
+  employee: { id: string; name: string; employer: string | null; active: boolean } | null;
 }
 
-function EmployeesPage() {
+function MedewerkersPage() {
   const navigate = useNavigate();
-  const { hasAnyRole } = useAuth();
-  const canEdit = hasAnyRole(["admin", "hse_manager"]);
-  const canImport = hasAnyRole(["admin"]);
   const queryClient = useQueryClient();
+  const listFn = useServerFn(listWorkers);
+  const inviteFn = useServerFn(inviteWorker);
+  const roleFn = useServerFn(setWorkerRole);
+  const deleteFn = useServerFn(deleteWorker);
+  const ensureFicheFn = useServerFn(ensureEmployeeForUser);
+
   const [search, setSearch] = useState("");
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [bulkBusy, setBulkBusy] = useState(false);
-  const [colFilters, setColFilters] = useState({
-    name: "",
-    employer: "",
-    email: "",
-    phone: "",
-    function_title: "",
-    status: "all" as "all" | "active" | "inactive",
-  });
-  const [sort, setSort] = useState<{ column: string; dir: "asc" | "desc" } | null>(null);
+  const [roleFilter, setRoleFilter] = useState<"all" | WorkerRole>("all");
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState<{ userId: string; name: string } | null>(null);
 
-  const toggleSort = (column: string) => {
-    setSort((prev) => {
-      if (!prev || prev.column !== column) return { column, dir: "asc" };
-      if (prev.dir === "asc") return { column, dir: "desc" };
-      return null;
-    });
-  };
-
-  const { data: employees = [], isLoading } = useQuery({
-    queryKey: ["employees"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("employees")
-        .select("*")
-        .order("last_name");
-      if (error) throw error;
-      return data;
-    },
+  const { data: workers = [], isLoading } = useQuery<Worker[]>({
+    queryKey: ["medewerkers"],
+    queryFn: () => listFn() as Promise<Worker[]>,
   });
 
-  const match = (val: string | null | undefined, q: string) =>
-    !q || (val ?? "").toLowerCase().includes(q.toLowerCase());
-
-  const filtered = employees.filter((e) => {
-    const q = search.toLowerCase();
-    const globalOk =
-      !q ||
-      e.first_name?.toLowerCase().includes(q) ||
-      e.last_name?.toLowerCase().includes(q) ||
-      e.employer?.toLowerCase().includes(q) ||
-      e.email?.toLowerCase().includes(q) ||
-      e.function_title?.toLowerCase().includes(q);
-    if (!globalOk) return false;
-    const fullName = `${e.last_name ?? ""} ${e.first_name ?? ""}`;
-    if (!match(fullName, colFilters.name)) return false;
-    if (!match(e.employer, colFilters.employer)) return false;
-    if (!match(e.email, colFilters.email)) return false;
-    if (!match(e.phone, colFilters.phone)) return false;
-    if (!match(e.function_title, colFilters.function_title)) return false;
-    if (colFilters.status === "active" && !e.active) return false;
-    if (colFilters.status === "inactive" && e.active) return false;
-    return true;
-  });
-
-  const sorted = [...filtered].sort((a, b) => {
-    if (!sort) return 0;
-    const dir = sort.dir === "asc" ? 1 : -1;
-    const av = sort.column === "name" ? `${a.last_name ?? ""} ${a.first_name ?? ""}`.trim().toLowerCase()
-      : sort.column === "status" ? (a.active ? "actief" : "uit dienst")
-      : (a[sort.column as keyof typeof a] ?? "").toString().toLowerCase();
-    const bv = sort.column === "name" ? `${b.last_name ?? ""} ${b.first_name ?? ""}`.trim().toLowerCase()
-      : sort.column === "status" ? (b.active ? "actief" : "uit dienst")
-      : (b[sort.column as keyof typeof b] ?? "").toString().toLowerCase();
-    if (av < bv) return -1 * dir;
-    if (av > bv) return 1 * dir;
-    return 0;
-  });
-
-  const filteredIds = sorted.map((e) => e.id);
-  const allSelected = filteredIds.length > 0 && filteredIds.every((id) => selected.has(id));
-  const someSelected = selected.size > 0 && !allSelected;
-  const toggleAll = () => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (allSelected) filteredIds.forEach((id) => next.delete(id));
-      else filteredIds.forEach((id) => next.add(id));
-      return next;
-    });
-  };
-  const toggleOne = (id: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
-
-  const bulkSetActive = async (active: boolean) => {
-    if (selected.size === 0) return;
-    const ids = Array.from(selected);
-    setBulkBusy(true);
-    const { error } = await supabase.from("employees").update({ active }).in("id", ids);
-    setBulkBusy(false);
-    if (error) return toast.error(error.message);
-    toast.success(`${ids.length} medewerker(s) ${active ? "in dienst" : "uit dienst"} gezet`);
-    setSelected(new Set());
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["medewerkers"] });
     queryClient.invalidateQueries({ queryKey: ["employees"] });
-    queryClient.invalidateQueries({ queryKey: ["employees-count"] });
+    queryClient.invalidateQueries({ queryKey: ["admin-users"] });
   };
 
-  const handleAdd = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const fd = new FormData(e.currentTarget);
-    const parsed = employeeSchema.safeParse(Object.fromEntries(fd));
-    if (!parsed.success) return toast.error(parsed.error.errors[0].message);
-    setSaving(true);
-    const payload = Object.fromEntries(
-      Object.entries(parsed.data).map(([k, v]) => [k, v === "" ? null : v]),
+  const inviteMut = useMutation({
+    mutationFn: (data: { email: string; full_name: string; role: WorkerRole; function_title: string }) =>
+      inviteFn({ data }),
+    onSuccess: () => { toast.success("Uitnodiging verzonden"); setInviteOpen(false); invalidate(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const roleMut = useMutation({
+    mutationFn: (data: { user_id: string; role: WorkerRole }) => roleFn({ data }),
+    onSuccess: () => { toast.success("Rol bijgewerkt"); invalidate(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (data: { user_id: string }) => deleteFn({ data }),
+    onSuccess: () => { toast.success("Medewerker verwijderd"); setDeleteDialog(null); invalidate(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const openFicheMut = useMutation({
+    mutationFn: (user_id: string) => ensureFicheFn({ data: { user_id } }),
+    onSuccess: (res) => navigate({ to: "/employees/$id", params: { id: res.employee_id } }),
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const filtered = workers.filter((w) => {
+    if (roleFilter !== "all" && !w.roles.includes(roleFilter)) return false;
+    const q = search.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      w.full_name?.toLowerCase().includes(q) ||
+      w.email?.toLowerCase().includes(q) ||
+      w.function_title?.toLowerCase().includes(q) ||
+      w.employee?.employer?.toLowerCase().includes(q)
     );
-    const { error } = await supabase.from("employees").insert(payload as never);
-    setSaving(false);
-    if (error) return toast.error(error.message);
-    toast.success("Personeelsfiche aangemaakt");
-    setDialogOpen(false);
-    queryClient.invalidateQueries({ queryKey: ["employees"] });
-    queryClient.invalidateQueries({ queryKey: ["employees-count"] });
-  };
+  });
 
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Personeelsfiches</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Beheer van medewerkers — koppeling aan toolboxen, meldingen en RA's.
+          <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
+            <Users className="w-6 h-6" /> Medewerkers
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
+            Beheer accounts met rol <em>Gebruiker</em> of <em>Manager</em>. Admins en HSE-managers beheer je onder{" "}
+            <button className="underline" onClick={() => navigate({ to: "/users" })}>Instellingen › Gebruikers &amp; rollen</button>.
           </p>
         </div>
-        {canEdit && (
-          <div className="flex flex-wrap items-center gap-2">
-            {canImport && <EmployeesImportDialog />}
-            <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogTrigger asChild>
-              <Button><Plus className="w-4 h-4" /> Nieuwe fiche</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-lg">
-              <DialogHeader>
-                <DialogTitle className="flex items-center gap-2"><UserPlus className="w-5 h-5" /> Nieuwe personeelsfiche</DialogTitle>
-                <DialogDescription>Basisgegevens van de medewerker.</DialogDescription>
-              </DialogHeader>
-              <form onSubmit={handleAdd} className="space-y-3">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="first_name">Voornaam *</Label>
-                    <Input id="first_name" name="first_name" required maxLength={100} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="last_name">Naam *</Label>
-                    <Input id="last_name" name="last_name" required maxLength={100} />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="employer">Werkgever</Label>
-                  <Input id="employer" name="employer" maxLength={150} placeholder="TSA Safety, uitzendbureau, …" />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="email">E-mail</Label>
-                    <Input id="email" name="email" type="email" maxLength={255} />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="phone">Telefoon</Label>
-                    <Input id="phone" name="phone" maxLength={30} />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="function_title">Functies</Label>
-                  <Input
-                    id="function_title"
-                    name="function_title"
-                    maxLength={300}
-                    placeholder="Brandwacht, Veiligheidswacht, Gasanalist"
-                  />
-                  <p className="text-xs text-muted-foreground">Meerdere functies scheiden met een komma.</p>
-                </div>
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>Annuleren</Button>
-                  <Button type="submit" disabled={saving}>Opslaan</Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-            </Dialog>
-          </div>
-        )}
+        <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+          <DialogTrigger asChild>
+            <Button><UserPlus className="w-4 h-4" /> Medewerker uitnodigen</Button>
+          </DialogTrigger>
+          <InviteDialog onSubmit={(v) => inviteMut.mutate(v)} loading={inviteMut.isPending} />
+        </Dialog>
       </div>
 
       <Card>
         <CardContent className="p-0">
-          <div className="p-4 border-b flex flex-wrap items-center gap-3 justify-between">
-            <div className="relative max-w-sm w-full">
+          <div className="p-4 border-b flex flex-wrap items-center gap-3">
+            <div className="relative flex-1 min-w-[220px] max-w-sm">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Zoek op naam, werkgever, e-mail of functie…"
+                placeholder="Zoek op naam, e-mail, functie…"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
               />
             </div>
-            {canEdit && selected.size > 0 && (
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">{selected.size} geselecteerd</span>
-                <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkSetActive(true)}>
-                  <UserCheck className="w-4 h-4" /> In dienst
-                </Button>
-                <Button size="sm" variant="outline" disabled={bulkBusy} onClick={() => bulkSetActive(false)}>
-                  <UserX className="w-4 h-4" /> Uit dienst
-                </Button>
-                <Button size="sm" variant="ghost" onClick={() => setSelected(new Set())}>Wis</Button>
-              </div>
-            )}
+            <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as any)}>
+              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Alle rollen</SelectItem>
+                <SelectItem value="operator">Gebruikers</SelectItem>
+                <SelectItem value="manager">Managers</SelectItem>
+              </SelectContent>
+            </Select>
+            <div className="ml-auto text-sm text-muted-foreground">
+              {filtered.length} van {workers.length}
+            </div>
           </div>
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
-                  {canEdit && (
-                    <TableHead className="w-10">
-                      <Checkbox
-                        checked={allSelected ? true : someSelected ? "indeterminate" : false}
-                        onCheckedChange={toggleAll}
-                        aria-label="Alles selecteren"
-                      />
-                    </TableHead>
-                  )}
-                  {([
-                    { key: "name", label: "Naam" },
-                    { key: "employer", label: "Werkgever" },
-                    { key: "email", label: "E-mail" },
-                    { key: "phone", label: "Telefoon" },
-                    { key: "function_title", label: "Functies" },
-                    { key: "status", label: "Status" },
-                  ] as const).map(({ key, label }) => {
-                    const active = sort?.column === key;
-                    const Icon = active ? (sort.dir === "asc" ? ArrowUp : ArrowDown) : ArrowUpDown;
-                    return (
-                      <TableHead key={key} className="cursor-pointer select-none" onClick={() => toggleSort(key)}>
-                        <div className="flex items-center gap-1">
-                          {label}
-                          <Icon className={`w-3.5 h-3.5 ${active ? "text-foreground" : "text-muted-foreground/50"}`} />
-                        </div>
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-                <TableRow className="bg-muted/30">
-                  {canEdit && <TableHead className="py-2" />}
-                  {([
-                    { key: "name", values: employees.map((e) => `${e.last_name ?? ""} ${e.first_name ?? ""}`.trim()) },
-                    { key: "employer", values: employees.map((e) => e.employer ?? "") },
-                    { key: "email", values: employees.map((e) => e.email ?? "") },
-                    { key: "phone", values: employees.map((e) => e.phone ?? "") },
-                    { key: "function_title", values: employees.flatMap((e) => parseFunctions(e.function_title)) },
-                  ] as const).map(({ key, values }) => {
-                    const listId = `filter-${key}`;
-                    const unique = Array.from(new Set(values.filter(Boolean))).sort();
-                    return (
-                      <TableHead key={key} className="py-2">
-                        <Input
-                          list={listId}
-                          value={colFilters[key]}
-                          onChange={(e) => setColFilters((f) => ({ ...f, [key]: e.target.value }))}
-                          placeholder="Filter…"
-                          className="h-8"
-                        />
-                        <datalist id={listId}>
-                          {unique.map((v) => <option key={v} value={v} />)}
-                        </datalist>
-                      </TableHead>
-                    );
-                  })}
-                  <TableHead className="py-2">
-                    <select
-                      value={colFilters.status}
-                      onChange={(e) => setColFilters((f) => ({ ...f, status: e.target.value as typeof f.status }))}
-                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-sm"
-                    >
-                      <option value="all">Alle</option>
-                      <option value="active">Actief</option>
-                      <option value="inactive">Uit dienst</option>
-                    </select>
-                  </TableHead>
+                  <TableHead>Naam</TableHead>
+                  <TableHead>E-mail</TableHead>
+                  <TableHead>Functie</TableHead>
+                  <TableHead>Rol</TableHead>
+                  <TableHead>Fiche</TableHead>
+                  <TableHead>Laatste aanmelding</TableHead>
+                  <TableHead className="w-10" />
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
-                  <TableRow><TableCell colSpan={canEdit ? 7 : 6} className="text-center text-muted-foreground py-8">Laden…</TableCell></TableRow>
+                  <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-8">Laden…</TableCell></TableRow>
                 ) : filtered.length === 0 ? (
-                  <TableRow><TableCell colSpan={canEdit ? 7 : 6} className="text-center text-muted-foreground py-12">
-                    {employees.length === 0 ? "Nog geen personeelsfiches. Maak er een aan om te starten." : "Geen resultaten voor je zoekopdracht."}
-                  </TableCell></TableRow>
-                ) : sorted.map((e) => {
-                  const functies = parseFunctions(e.function_title);
-                  const isChecked = selected.has(e.id);
+                  <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12">Geen medewerkers gevonden.</TableCell></TableRow>
+                ) : filtered.map((w) => {
+                  const primaryRole = (w.roles.find((r) => r === "manager") ?? w.roles[0] ?? "operator") as WorkerRole;
                   return (
-                    <TableRow
-                      key={e.id}
-                      className="cursor-pointer hover:bg-muted/50"
-                      data-state={isChecked ? "selected" : undefined}
-                      onClick={() => navigate({ to: "/employees/$id", params: { id: e.id } })}
-                    >
-                      {canEdit && (
-                        <TableCell onClick={(ev) => ev.stopPropagation()}>
-                          <Checkbox
-                            checked={isChecked}
-                            onCheckedChange={() => toggleOne(e.id)}
-                            aria-label={`Selecteer ${e.last_name} ${e.first_name}`}
-                          />
-                        </TableCell>
-                      )}
-                      <TableCell className="font-medium">{e.last_name} {e.first_name}</TableCell>
-                      <TableCell>{e.employer ?? "—"}</TableCell>
-                      <TableCell className="text-muted-foreground">{e.email ?? "—"}</TableCell>
-                      <TableCell className="text-muted-foreground">{e.phone ?? "—"}</TableCell>
-                      <TableCell>
-                        {functies.length === 0 ? "—" : (
-                          <div className="flex flex-wrap gap-1">
-                            {functies.map((f) => (
-                              <Badge key={f} variant="secondary" className="font-normal">{f}</Badge>
-                            ))}
-                          </div>
+                    <TableRow key={w.id}>
+                      <TableCell className="font-medium">
+                        {w.full_name ?? "—"}
+                        {!w.email_confirmed_at && (
+                          <Badge variant="outline" className="ml-2 text-xs">Uitgenodigd</Badge>
                         )}
                       </TableCell>
+                      <TableCell className="text-muted-foreground">{w.email ?? "—"}</TableCell>
+                      <TableCell className="text-sm">{w.function_title ?? "—"}</TableCell>
                       <TableCell>
-                        {e.active ? <Badge variant="secondary">Actief</Badge> : <Badge variant="outline">Uit dienst</Badge>}
+                        <Select
+                          value={primaryRole}
+                          onValueChange={(v) => roleMut.mutate({ user_id: w.id, role: v as WorkerRole })}
+                          disabled={roleMut.isPending}
+                        >
+                          <SelectTrigger className={`h-7 text-xs w-40 border-0 ${ROLE_BADGE[primaryRole]}`}>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="operator">{ROLE_LABELS.operator}</SelectItem>
+                            <SelectItem value="manager">{ROLE_LABELS.manager}</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell>
+                        {w.employee ? (
+                          <Button variant="link" size="sm" className="h-auto p-0 text-sm"
+                            onClick={() => navigate({ to: "/employees/$id", params: { id: w.employee!.id } })}>
+                            Bekijk fiche
+                          </Button>
+                        ) : (
+                          <Button variant="ghost" size="sm" className="h-7 text-xs"
+                            onClick={() => openFicheMut.mutate(w.id)}
+                            disabled={openFicheMut.isPending}>
+                            <IdCard className="w-3.5 h-3.5" /> Fiche openen
+                          </Button>
+                        )}
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {w.last_sign_in_at ? new Date(w.last_sign_in_at).toLocaleDateString("nl-BE") : "—"}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon"><MoreHorizontal className="w-4 h-4" /></Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Acties</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => openFicheMut.mutate(w.id)}>
+                              <IdCard className="w-4 h-4" /> Ga naar fiche
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => setDeleteDialog({ userId: w.id, name: w.full_name ?? w.email ?? "medewerker" })}
+                            >
+                              <Trash2 className="w-4 h-4" /> Verwijder medewerker
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   );
@@ -380,6 +261,88 @@ function EmployeesPage() {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog open={!!deleteDialog} onOpenChange={(o) => !o && setDeleteDialog(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Medewerker verwijderen?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Je staat op het punt <strong>{deleteDialog?.name}</strong> definitief te verwijderen.
+              Het account en de rollen worden verwijderd; de personeelsfiche blijft bestaan
+              (zonder gebruikerskoppeling). Deze actie kan niet ongedaan gemaakt worden.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuleren</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deleteMut.isPending}
+              onClick={(e) => { e.preventDefault(); if (deleteDialog) deleteMut.mutate({ user_id: deleteDialog.userId }); }}
+            >Verwijderen</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+  );
+}
+
+function InviteDialog({
+  onSubmit, loading,
+}: {
+  onSubmit: (v: { email: string; full_name: string; role: WorkerRole; function_title: string }) => void;
+  loading: boolean;
+}) {
+  const [role, setRole] = useState<WorkerRole>("operator");
+
+  const handle = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const email = String(fd.get("email") ?? "").trim();
+    const full_name = String(fd.get("full_name") ?? "").trim();
+    const function_title = String(fd.get("function_title") ?? "").trim();
+    if (!email || !full_name) return toast.error("Naam en e-mail zijn verplicht");
+    onSubmit({ email, full_name, role, function_title });
+  };
+
+  return (
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2"><Mail className="w-5 h-5" /> Medewerker uitnodigen</DialogTitle>
+        <DialogDescription>De medewerker ontvangt een uitnodigingsmail om een wachtwoord in te stellen.</DialogDescription>
+      </DialogHeader>
+      <form onSubmit={handle} className="space-y-3">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <Label htmlFor="inv-name">Volledige naam</Label>
+            <Input id="inv-name" name="full_name" required maxLength={100} />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="inv-func">Functie / rol op werf</Label>
+            <Input id="inv-func" name="function_title" maxLength={200} placeholder="Bv. Werfleider" />
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="inv-email">E-mail</Label>
+          <Input id="inv-email" name="email" type="email" required maxLength={255} />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Rol</Label>
+          <Select value={role} onValueChange={(v) => setRole(v as WorkerRole)}>
+            <SelectTrigger><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="operator">{ROLE_LABELS.operator}</SelectItem>
+              <SelectItem value="manager">{ROLE_LABELS.manager}</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground flex items-start gap-1.5">
+            <Shield className="w-3 h-3 mt-0.5 shrink-0" />
+            Admin- en HSE-manager-rollen worden beheerd onder Instellingen › Gebruikers &amp; rollen.
+          </p>
+        </div>
+        <DialogFooter>
+          <Button type="submit" disabled={loading}>Uitnodigen</Button>
+        </DialogFooter>
+      </form>
+    </DialogContent>
   );
 }

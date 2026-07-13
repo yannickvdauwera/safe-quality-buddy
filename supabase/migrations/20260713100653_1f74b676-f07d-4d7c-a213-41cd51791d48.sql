@@ -1,0 +1,1 @@
+ALTER TABLE public.risk_analysis_items ADD COLUMN IF NOT EXISTS action_item TEXT;

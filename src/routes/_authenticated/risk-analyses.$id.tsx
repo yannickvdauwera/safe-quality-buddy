@@ -33,6 +33,7 @@ import {
   type MeasuresByType, type OrgTheme, type Smiley, type MeasureStatus,
 } from "@/lib/risk-analysis-types";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 

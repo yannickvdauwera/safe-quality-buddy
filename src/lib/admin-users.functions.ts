@@ -17,6 +17,27 @@ async function assertAdmin(supabase: SupabaseClient, userId: string) {
   if (!data) throw new Response("Forbidden", { status: 403 });
 }
 
+// Returns 'admin' if the caller is admin, 'hse_manager' if only hse_manager,
+// otherwise throws 403. Used by the Medewerkers module so HSE-managers can
+// manage operator/manager accounts, without gaining admin privileges.
+async function assertWorkerManager(
+  supabase: SupabaseClient,
+  userId: string,
+): Promise<"admin" | "hse_manager"> {
+  const { data, error } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .in("role", ["admin", "hse_manager"]);
+  if (error) throw new Error(error.message);
+  const roles = (data ?? []).map((r) => r.role);
+  if (roles.includes("admin")) return "admin";
+  if (roles.includes("hse_manager")) return "hse_manager";
+  throw new Response("Forbidden", { status: 403 });
+}
+
+const WORKER_ROLES = new Set<AppRole>(["operator", "manager"]);
+
 export const listUsersWithRoles = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {

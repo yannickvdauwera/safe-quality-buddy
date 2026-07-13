@@ -988,10 +988,6 @@ function OrgItemDialog({
   onChange: (i: Partial<Item>) => void;
   onSave: () => void;
 }) {
-  const byType: MeasuresByType = item.measures_by_type ?? {};
-  const setByType = (t: RiskMeasureType, v: string) => {
-    onChange({ ...item, measures_by_type: { ...byType, [t]: v } });
-  };
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -1062,42 +1058,24 @@ function OrgItemDialog({
             <Textarea rows={3} value={item.current_state ?? ""} onChange={(e) => onChange({ ...item, current_state: e.target.value })} />
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-xs">Maatregelen — per type</Label>
-            <div className="grid gap-3 md:grid-cols-3">
-              {MEASURE_TYPE_ORDER.map((t) => {
-                const meta = MEASURE_TYPE_META[t];
-                return (
-                  <div key={t} className="border rounded-md overflow-hidden">
-                    <div
-                      className="px-3 py-2 text-xs font-semibold flex items-center gap-2 border-b"
-                      style={{ background: meta.swatch + "18", color: meta.swatch }}
-                    >
-                      <span
-                        className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold text-white"
-                        style={{ background: meta.swatch }}
-                      >
-                        {meta.short}
-                      </span>
-                      {meta.label}
-                    </div>
-                    <Textarea
-                      rows={4}
-                      className="border-0 rounded-none focus-visible:ring-0 text-sm"
-                      placeholder={meta.hint}
-                      value={byType[t] ?? ""}
-                      onChange={(e) => setByType(t, e.target.value)}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            {item.measures_legacy && (
-              <div className="border rounded-md p-3 bg-yellow-50 border-yellow-200 text-xs space-y-1">
-                <div className="font-semibold text-yellow-900">Bestaande omschrijving (nog niet ingedeeld per type)</div>
-                <div className="whitespace-pre-line text-yellow-900/80">{item.measures_legacy}</div>
-              </div>
-            )}
+          <div className="space-y-1.5">
+            <Label className="text-xs">Maatregelen</Label>
+            <Textarea
+              rows={4}
+              placeholder="Bestaande beheersmaatregelen, procedures, afspraken…"
+              value={item.measures_legacy ?? ""}
+              onChange={(e) => onChange({ ...item, measures_legacy: e.target.value, measures_by_type: {} })}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs">Actie / verbeterpunt</Label>
+            <Textarea
+              rows={3}
+              placeholder="Concrete actie of verbeterpunt (bv. procedure herzien, opleiding plannen, …)"
+              value={item.action_item ?? ""}
+              onChange={(e) => onChange({ ...item, action_item: e.target.value })}
+            />
           </div>
 
           <div className="space-y-1.5">
@@ -1112,4 +1090,18 @@ function OrgItemDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+// Voor organisatie-items: één vrij tekstblok (samengevoegd als er nog legacy per-type opslag bestaat).
+function OrgMeasuresCell({ raw }: { raw: string | null }) {
+  if (!raw) return <span className="text-xs text-muted-foreground">—</span>;
+  const parsed = parseMeasures(raw);
+  const parts: string[] = [];
+  for (const t of MEASURE_TYPE_ORDER) {
+    const v = parsed.byType[t];
+    if (v && v.trim()) parts.push(v.trim());
+  }
+  if (parsed.legacy) parts.push(parsed.legacy);
+  const text = parts.join("\n\n");
+  return <div className="text-xs whitespace-pre-line">{text || <span className="text-muted-foreground">—</span>}</div>;
 }

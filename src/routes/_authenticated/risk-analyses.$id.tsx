@@ -249,7 +249,21 @@ function RiskAnalysisDetail() {
     if (!confirm("Item verwijderen?")) return;
     const { error } = await supabase.from("risk_analysis_items").delete().eq("id", itemId);
     if (error) toast.error(error.message);
-    else invalidate();
+    else {
+      toggleSelected(itemId, false);
+      invalidate();
+    }
+  };
+
+  const bulkDeleteSelected = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) return;
+    if (!confirm(`${ids.length} item(s) verwijderen?`)) return;
+    const { error } = await supabase.from("risk_analysis_items").delete().in("id", ids);
+    if (error) return toast.error(error.message);
+    toast.success(`${ids.length} item(s) verwijderd`);
+    clearSelection();
+    invalidate();
   };
 
   const updateStatus = async (status: RiskAnalysisStatus) => {

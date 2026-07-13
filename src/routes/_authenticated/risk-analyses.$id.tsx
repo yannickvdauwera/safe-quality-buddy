@@ -301,6 +301,7 @@ function RiskAnalysisDetail() {
             legislation: it.legislation,
             measure_status: it.measure_status,
             smiley: it.smiley,
+            action_item: it.action_item,
           })),
         );
         if (cErr) throw cErr;

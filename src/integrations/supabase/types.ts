@@ -396,6 +396,7 @@ export type Database = {
       }
       risk_analysis_items: {
         Row: {
+          action_item: string | null
           activity: string | null
           created_at: string
           current_state: string | null
@@ -422,6 +423,7 @@ export type Database = {
           version_id: string
         }
         Insert: {
+          action_item?: string | null
           activity?: string | null
           created_at?: string
           current_state?: string | null
@@ -448,6 +450,7 @@ export type Database = {
           version_id: string
         }
         Update: {
+          action_item?: string | null
           activity?: string | null
           created_at?: string
           current_state?: string | null

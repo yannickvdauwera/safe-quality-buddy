@@ -62,6 +62,7 @@ interface Item {
   legislation: string | null;
   measure_status: MeasureStatus | null;
   smiley: Smiley | null;
+  action_item: string | null;
   // In-memory werkveld voor de dialog: per type een tekstblok. Wordt bij
   // opslaan geserialiseerd naar `measures` (JSON) en `measure_types`.
   measures_by_type?: MeasuresByType;
@@ -198,12 +199,16 @@ function RiskAnalysisDetail() {
       score_e: isOrg ? null : (editItem.score_e ?? null),
       score_r: isOrg ? null : computeRFor(method, editItem.score_w ?? null, editItem.score_b ?? null, editItem.score_e ?? null),
       measures: (() => {
+        if (isOrg) {
+          // Organisatie: één vrij tekstveld, geen indeling per type.
+          return editItem.measures_legacy?.trim() || null;
+        }
         const byType = editItem.measures_by_type ?? {};
         const serialized = serializeMeasures(byType);
         if (serialized) return serialized;
         return editItem.measures_legacy?.trim() || null;
       })(),
-      measure_types: measureTypesFrom(editItem.measures_by_type ?? {}),
+      measure_types: isOrg ? [] : measureTypesFrom(editItem.measures_by_type ?? {}),
       residual_w: isOrg ? null : (editItem.residual_w ?? null),
       residual_b: isOrg || method === "kans_ernst" ? null : (editItem.residual_b ?? null),
       residual_e: isOrg ? null : (editItem.residual_e ?? null),
@@ -213,6 +218,7 @@ function RiskAnalysisDetail() {
       legislation: isOrg ? (editItem.legislation || null) : null,
       measure_status: isOrg ? (editItem.measure_status ?? null) : null,
       smiley: isOrg ? (editItem.smiley ?? null) : null,
+      action_item: isOrg ? (editItem.action_item || null) : null,
     };
     try {
       if (editItem.id) {
@@ -295,6 +301,7 @@ function RiskAnalysisDetail() {
             legislation: it.legislation,
             measure_status: it.measure_status,
             smiley: it.smiley,
+            action_item: it.action_item,
           })),
         );
         if (cErr) throw cErr;
@@ -458,7 +465,12 @@ function RiskAnalysisDetail() {
             items={items}
             onEdit={(it) => {
               const parsed = parseMeasures(it.measures);
-              setEditItem({ ...it, measures_by_type: parsed.byType, measures_legacy: parsed.legacy });
+              // Organisatie gebruikt één tekstveld — flatten eventuele per-type of legacy inhoud.
+              const flat = [
+                ...MEASURE_TYPE_ORDER.map((t) => (parsed.byType[t] ?? "").trim()).filter(Boolean),
+                (parsed.legacy ?? "").trim(),
+              ].filter(Boolean).join("\n\n");
+              setEditItem({ ...it, measures_by_type: {}, measures_legacy: flat });
             }}
             onDelete={deleteItem}
           />
@@ -909,6 +921,7 @@ function OrgItemsTable({
             <th className="text-left py-2 px-2">Onderwerp</th>
             <th className="text-left py-2 px-2">Huidige toestand</th>
             <th className="text-left py-2 px-2">Maatregelen</th>
+            <th className="text-left py-2 px-2">Actie / verbeterpunt</th>
             <th className="text-left py-2 px-2 w-40">Wetgeving</th>
             <th className="text-left py-2 px-2 w-32">Status</th>
             <th className="w-20"></th>
@@ -940,7 +953,10 @@ function OrgItemsTable({
                   <div className="text-xs whitespace-pre-line">{it.current_state || <span className="text-muted-foreground">—</span>}</div>
                 </td>
                 <td className="py-3 px-2 max-w-md">
-                  <MeasuresCell raw={it.measures} />
+                  <OrgMeasuresCell raw={it.measures} />
+                </td>
+                <td className="py-3 px-2 max-w-xs">
+                  <div className="text-xs whitespace-pre-line">{it.action_item || <span className="text-muted-foreground">—</span>}</div>
                 </td>
                 <td className="py-3 px-2">
                   <div className="text-xs whitespace-pre-line">{it.legislation || <span className="text-muted-foreground">—</span>}</div>
@@ -977,10 +993,6 @@ function OrgItemDialog({
   onChange: (i: Partial<Item>) => void;
   onSave: () => void;
 }) {
-  const byType: MeasuresByType = item.measures_by_type ?? {};
-  const setByType = (t: RiskMeasureType, v: string) => {
-    onChange({ ...item, measures_by_type: { ...byType, [t]: v } });
-  };
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
@@ -1051,42 +1063,24 @@ function OrgItemDialog({
             <Textarea rows={3} value={item.current_state ?? ""} onChange={(e) => onChange({ ...item, current_state: e.target.value })} />
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-xs">Maatregelen — per type</Label>
-            <div className="grid gap-3 md:grid-cols-3">
-              {MEASURE_TYPE_ORDER.map((t) => {
-                const meta = MEASURE_TYPE_META[t];
-                return (
-                  <div key={t} className="border rounded-md overflow-hidden">
-                    <div
-                      className="px-3 py-2 text-xs font-semibold flex items-center gap-2 border-b"
-                      style={{ background: meta.swatch + "18", color: meta.swatch }}
-                    >
-                      <span
-                        className="inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold text-white"
-                        style={{ background: meta.swatch }}
-                      >
-                        {meta.short}
-                      </span>
-                      {meta.label}
-                    </div>
-                    <Textarea
-                      rows={4}
-                      className="border-0 rounded-none focus-visible:ring-0 text-sm"
-                      placeholder={meta.hint}
-                      value={byType[t] ?? ""}
-                      onChange={(e) => setByType(t, e.target.value)}
-                    />
-                  </div>
-                );
-              })}
-            </div>
-            {item.measures_legacy && (
-              <div className="border rounded-md p-3 bg-yellow-50 border-yellow-200 text-xs space-y-1">
-                <div className="font-semibold text-yellow-900">Bestaande omschrijving (nog niet ingedeeld per type)</div>
-                <div className="whitespace-pre-line text-yellow-900/80">{item.measures_legacy}</div>
-              </div>
-            )}
+          <div className="space-y-1.5">
+            <Label className="text-xs">Maatregelen</Label>
+            <Textarea
+              rows={4}
+              placeholder="Bestaande beheersmaatregelen, procedures, afspraken…"
+              value={item.measures_legacy ?? ""}
+              onChange={(e) => onChange({ ...item, measures_legacy: e.target.value, measures_by_type: {} })}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs">Actie / verbeterpunt</Label>
+            <Textarea
+              rows={3}
+              placeholder="Concrete actie of verbeterpunt (bv. procedure herzien, opleiding plannen, …)"
+              value={item.action_item ?? ""}
+              onChange={(e) => onChange({ ...item, action_item: e.target.value })}
+            />
           </div>
 
           <div className="space-y-1.5">
@@ -1101,4 +1095,18 @@ function OrgItemDialog({
       </DialogContent>
     </Dialog>
   );
+}
+
+// Voor organisatie-items: één vrij tekstblok (samengevoegd als er nog legacy per-type opslag bestaat).
+function OrgMeasuresCell({ raw }: { raw: string | null }) {
+  if (!raw) return <span className="text-xs text-muted-foreground">—</span>;
+  const parsed = parseMeasures(raw);
+  const parts: string[] = [];
+  for (const t of MEASURE_TYPE_ORDER) {
+    const v = parsed.byType[t];
+    if (v && v.trim()) parts.push(v.trim());
+  }
+  if (parsed.legacy) parts.push(parsed.legacy);
+  const text = parts.join("\n\n");
+  return <div className="text-xs whitespace-pre-line">{text || <span className="text-muted-foreground">—</span>}</div>;
 }

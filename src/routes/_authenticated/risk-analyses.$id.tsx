@@ -27,9 +27,12 @@ import {
   classifyRiskFor, computeRFor, levelsFor, highRiskThreshold,
   parseMeasures, serializeMeasures, measureTypesFrom,
   W_SCALE, B_SCALE, E_SCALE, K_SCALE, E5_SCALE,
+  ORG_THEMES, ORG_THEME_LABELS, ORG_THEME_COLORS,
+  SMILEY_META, MEASURE_STATUS_META, MEASURE_STATUS_LABELS,
   type RiskAnalysisType, type RiskAnalysisStatus, type RiskMeasureType, type RiskMethod,
-  type MeasuresByType,
+  type MeasuresByType, type OrgTheme, type Smiley, type MeasureStatus,
 } from "@/lib/risk-analysis-types";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 

@@ -271,7 +271,7 @@ function EmployeeDetailPage() {
             <CardHeader className="flex-row items-center justify-between pb-3">
               <CardTitle className="text-base">Gegevens</CardTitle>
               {canEdit && (
-                <Button size="sm" variant="outline" onClick={() => setEditFicheOpen(true)}>
+                <Button size="sm" variant="outline" onClick={() => { setFicheFunctions(functies); setEditFicheOpen(true); }}>
                   <Pencil className="w-4 h-4" /> Bewerken
                 </Button>
               )}

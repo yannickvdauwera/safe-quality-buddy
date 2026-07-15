@@ -91,20 +91,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
-  const nav: NavItem[] = hasRole("admin")
-    ? [
-        ...baseNav,
-        {
-          kind: "group",
-          basePath: "/instellingen-hub",
-          label: "Instellingen",
-          icon: Wrench,
-          children: [
-            { to: "/users", label: "Gebruikers & rollen", icon: Shield },
-          ],
-        },
-      ]
-    : baseNav;
+  const nav: NavItem[] = [
+    ...(hasRole("gebruiker") && !hasAnyRole(["admin", "hse_manager", "manager"])
+      ? []
+      : [{ to: "/employees", label: "Medewerkers", icon: Users } as NavLeaf]),
+    ...baseNav.slice(1 - 1), // keep rest
+  ];
 
   const handleSignOut = async () => {
     await queryClient.cancelQueries();

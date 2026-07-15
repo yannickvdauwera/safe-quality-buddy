@@ -51,7 +51,7 @@ type NavItem = NavLeaf | NavGroup;
 
 const baseNav: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/employees", label: "Medewerkers", icon: Users },
+  
   {
     kind: "group",
     basePath: "/meldingen-hub",

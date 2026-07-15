@@ -89,14 +89,13 @@ function MedewerkersPage() {
   const [manageFuncs, setManageFuncs] = useState(false);
 
   const [isAdmin, setIsAdmin] = useState(false);
-  useState(() => {
+  useEffect(() => {
     supabase.auth.getUser().then(async ({ data }) => {
       if (!data.user) return;
       const { data: r } = await supabase.from("user_roles").select("role").eq("user_id", data.user.id).eq("role", "admin").maybeSingle();
       setIsAdmin(!!r);
     });
-    return 0;
-  });
+  }, []);
 
   const { data: workers = [], isLoading } = useQuery<Worker[]>({
     queryKey: ["medewerkers"],

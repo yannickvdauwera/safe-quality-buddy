@@ -51,7 +51,7 @@ type NavItem = NavLeaf | NavGroup;
 
 const baseNav: NavItem[] = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { to: "/employees", label: "Medewerkers", icon: Users },
+  
   {
     kind: "group",
     basePath: "/meldingen-hub",
@@ -83,7 +83,7 @@ const baseNav: NavItem[] = [
 
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { user, roles, hasRole, realRoles, previewRole, isPreviewing, setPreviewRole } = useAuth();
+  const { user, roles, hasRole, hasAnyRole, realRoles, previewRole, isPreviewing, setPreviewRole } = useAuth();
   const isRealAdmin = realRoles.includes("admin");
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -91,20 +91,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({});
 
-  const nav: NavItem[] = hasRole("admin")
-    ? [
-        ...baseNav,
-        {
-          kind: "group",
+  const canSeeEmployees = hasAnyRole(["admin", "hse_manager", "manager"]);
+  const nav: NavItem[] = [
+    ...(canSeeEmployees ? [{ to: "/employees", label: "Medewerkers", icon: Users } as NavLeaf] : []),
+    ...baseNav,
+    ...(hasRole("admin")
+      ? [{
+          kind: "group" as const,
           basePath: "/instellingen-hub",
           label: "Instellingen",
           icon: Wrench,
-          children: [
-            { to: "/users", label: "Gebruikers & rollen", icon: Shield },
-          ],
-        },
-      ]
-    : baseNav;
+          children: [{ to: "/users", label: "Gebruikers & rollen", icon: Shield }],
+        }]
+      : []),
+  ];
 
   const handleSignOut = async () => {
     await queryClient.cancelQueries();

@@ -7,11 +7,15 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   listWorkers, inviteWorker, setWorkerRole, deleteWorker, ensureEmployeeForUser,
 } from "@/lib/admin-users.functions";
+import {
+  listJobFunctions, createJobFunction, updateJobFunction, deleteJobFunction, setUserFunctionTitles,
+} from "@/lib/job-functions.functions";
+import { MultiFunctionSelect } from "@/components/MultiFunctionSelect";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -28,7 +32,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import {
-  Users, UserPlus, MoreHorizontal, Search, Trash2, Shield, IdCard, Mail,
+  Users, UserPlus, MoreHorizontal, Search, Trash2, Shield, IdCard, Mail, Briefcase, Plus, Pencil,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/employees/")({
@@ -46,10 +50,10 @@ export const Route = createFileRoute("/_authenticated/employees/")({
   component: MedewerkersPage,
 });
 
-type WorkerRole = "operator" | "manager";
-const ROLE_LABELS: Record<WorkerRole, string> = { operator: "Gebruiker (operator)", manager: "Manager" };
+type WorkerRole = "gebruiker" | "manager";
+const ROLE_LABELS: Record<WorkerRole, string> = { gebruiker: "Gebruiker", manager: "Manager" };
 const ROLE_BADGE: Record<WorkerRole, string> = {
-  operator: "bg-muted text-foreground",
+  gebruiker: "bg-muted text-foreground",
   manager: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200",
 };
 
@@ -58,6 +62,7 @@ interface Worker {
   email: string | null;
   full_name: string | null;
   function_title: string | null;
+  function_titles: string[];
   roles: string[];
   last_sign_in_at: string | null;
   email_confirmed_at: string | null;
@@ -72,16 +77,36 @@ function MedewerkersPage() {
   const roleFn = useServerFn(setWorkerRole);
   const deleteFn = useServerFn(deleteWorker);
   const ensureFicheFn = useServerFn(ensureEmployeeForUser);
+  const listFuncsFn = useServerFn(listJobFunctions);
+  const setTitlesFn = useServerFn(setUserFunctionTitles);
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState<"all" | WorkerRole>("all");
   const [inviteOpen, setInviteOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{ userId: string; name: string } | null>(null);
+  const [functionsDialog, setFunctionsDialog] = useState<{ userId: string; name: string; current: string[] } | null>(null);
+  const [manageFuncs, setManageFuncs] = useState(false);
+
+  const [isAdmin, setIsAdmin] = useState(false);
+  useState(() => {
+    supabase.auth.getUser().then(async ({ data }) => {
+      if (!data.user) return;
+      const { data: r } = await supabase.from("user_roles").select("role").eq("user_id", data.user.id).eq("role", "admin").maybeSingle();
+      setIsAdmin(!!r);
+    });
+    return 0;
+  });
 
   const { data: workers = [], isLoading } = useQuery<Worker[]>({
     queryKey: ["medewerkers"],
     queryFn: () => listFn() as Promise<Worker[]>,
   });
+
+  const { data: jobFunctions = [] } = useQuery({
+    queryKey: ["job-functions"],
+    queryFn: () => listFuncsFn(),
+  });
+  const jobFunctionNames = jobFunctions.map((f: { name: string }) => f.name);
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ["medewerkers"] });
@@ -90,7 +115,7 @@ function MedewerkersPage() {
   };
 
   const inviteMut = useMutation({
-    mutationFn: (data: { email: string; full_name: string; role: WorkerRole; function_title: string }) =>
+    mutationFn: (data: { email: string; full_name: string; role: WorkerRole; function_titles: string[] }) =>
       inviteFn({ data }),
     onSuccess: () => { toast.success("Uitnodiging verzonden"); setInviteOpen(false); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
@@ -114,6 +139,12 @@ function MedewerkersPage() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const setTitlesMut = useMutation({
+    mutationFn: (data: { user_id: string; function_titles: string[] }) => setTitlesFn({ data }),
+    onSuccess: () => { toast.success("Functies bijgewerkt"); setFunctionsDialog(null); invalidate(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const filtered = workers.filter((w) => {
     if (roleFilter !== "all" && !w.roles.includes(roleFilter)) return false;
     const q = search.toLowerCase().trim();
@@ -121,7 +152,7 @@ function MedewerkersPage() {
     return (
       w.full_name?.toLowerCase().includes(q) ||
       w.email?.toLowerCase().includes(q) ||
-      w.function_title?.toLowerCase().includes(q) ||
+      (w.function_titles ?? []).some((t) => t.toLowerCase().includes(q)) ||
       w.employee?.employer?.toLowerCase().includes(q)
     );
   });
@@ -138,18 +169,29 @@ function MedewerkersPage() {
             <button className="underline" onClick={() => navigate({ to: "/users" })}>Instellingen › Gebruikers &amp; rollen</button>.
           </p>
         </div>
-        <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-          <DialogTrigger asChild>
-            <Button><UserPlus className="w-4 h-4" /> Medewerker uitnodigen</Button>
-          </DialogTrigger>
-          <InviteDialog onSubmit={(v) => inviteMut.mutate(v)} loading={inviteMut.isPending} />
-        </Dialog>
+        <div className="flex gap-2">
+          {isAdmin && (
+            <Button variant="outline" onClick={() => setManageFuncs(true)}>
+              <Briefcase className="w-4 h-4" /> Beheer functies
+            </Button>
+          )}
+          <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+            <DialogTrigger asChild>
+              <Button><UserPlus className="w-4 h-4" /> Medewerker uitnodigen</Button>
+            </DialogTrigger>
+            <InviteDialog
+              onSubmit={(v) => inviteMut.mutate(v)}
+              loading={inviteMut.isPending}
+              jobFunctions={jobFunctionNames}
+            />
+          </Dialog>
+        </div>
       </div>
 
       <Card>
         <CardContent className="p-0">
-          <div className="p-4 border-b flex flex-wrap items-center gap-3">
-            <div className="relative flex-1 min-w-[220px] max-w-sm">
+          <div className="p-4 border-b flex flex-wrap gap-3">
+            <div className="relative flex-1 min-w-[240px] max-w-sm">
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Zoek op naam, e-mail, functie…"
@@ -158,17 +200,14 @@ function MedewerkersPage() {
                 className="pl-9"
               />
             </div>
-            <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as any)}>
-              <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+            <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as "all" | WorkerRole)}>
+              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Alle rollen</SelectItem>
-                <SelectItem value="operator">Gebruikers</SelectItem>
+                <SelectItem value="gebruiker">Gebruikers</SelectItem>
                 <SelectItem value="manager">Managers</SelectItem>
               </SelectContent>
             </Select>
-            <div className="ml-auto text-sm text-muted-foreground">
-              {filtered.length} van {workers.length}
-            </div>
           </div>
           <div className="overflow-x-auto">
             <Table>
@@ -176,7 +215,7 @@ function MedewerkersPage() {
                 <TableRow>
                   <TableHead>Naam</TableHead>
                   <TableHead>E-mail</TableHead>
-                  <TableHead>Functie</TableHead>
+                  <TableHead>Functies</TableHead>
                   <TableHead>Rol</TableHead>
                   <TableHead>Fiche</TableHead>
                   <TableHead>Laatste aanmelding</TableHead>
@@ -189,7 +228,8 @@ function MedewerkersPage() {
                 ) : filtered.length === 0 ? (
                   <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12">Geen medewerkers gevonden.</TableCell></TableRow>
                 ) : filtered.map((w) => {
-                  const primaryRole = (w.roles.find((r) => r === "manager") ?? w.roles[0] ?? "operator") as WorkerRole;
+                  const primaryRole = (w.roles.find((r) => r === "manager") ?? w.roles[0] ?? "gebruiker") as WorkerRole;
+                  const titles = w.function_titles?.length ? w.function_titles : (w.function_title ? [w.function_title] : []);
                   return (
                     <TableRow key={w.id}>
                       <TableCell className="font-medium">
@@ -199,18 +239,30 @@ function MedewerkersPage() {
                         )}
                       </TableCell>
                       <TableCell className="text-muted-foreground">{w.email ?? "—"}</TableCell>
-                      <TableCell className="text-sm">{w.function_title ?? "—"}</TableCell>
+                      <TableCell>
+                        <button
+                          type="button"
+                          className="flex flex-wrap gap-1 text-left hover:opacity-80"
+                          onClick={() => setFunctionsDialog({ userId: w.id, name: w.full_name ?? w.email ?? "medewerker", current: titles })}
+                        >
+                          {titles.length === 0 ? (
+                            <span className="text-xs text-muted-foreground italic">— klik om toe te wijzen —</span>
+                          ) : titles.map((t) => (
+                            <Badge key={t} variant="secondary" className="text-xs">{t}</Badge>
+                          ))}
+                        </button>
+                      </TableCell>
                       <TableCell>
                         <Select
                           value={primaryRole}
                           onValueChange={(v) => roleMut.mutate({ user_id: w.id, role: v as WorkerRole })}
                           disabled={roleMut.isPending}
                         >
-                          <SelectTrigger className={`h-7 text-xs w-40 border-0 ${ROLE_BADGE[primaryRole]}`}>
+                          <SelectTrigger className={`h-7 text-xs w-32 border-0 ${ROLE_BADGE[primaryRole]}`}>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="operator">{ROLE_LABELS.operator}</SelectItem>
+                            <SelectItem value="gebruiker">{ROLE_LABELS.gebruiker}</SelectItem>
                             <SelectItem value="manager">{ROLE_LABELS.manager}</SelectItem>
                           </SelectContent>
                         </Select>
@@ -240,6 +292,9 @@ function MedewerkersPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Acties</DropdownMenuLabel>
                             <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setFunctionsDialog({ userId: w.id, name: w.full_name ?? w.email ?? "medewerker", current: titles })}>
+                              <Briefcase className="w-4 h-4" /> Functies aanpassen
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => openFicheMut.mutate(w.id)}>
                               <IdCard className="w-4 h-4" /> Ga naar fiche
                             </DropdownMenuItem>
@@ -261,6 +316,26 @@ function MedewerkersPage() {
           </div>
         </CardContent>
       </Card>
+
+      {!isAdmin && (
+        <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+          <Shield className="w-3 h-3" /> Alleen administrators kunnen de lijst van functies wijzigen.
+        </p>
+      )}
+
+      {functionsDialog && (
+        <FunctionsDialog
+          initial={functionsDialog}
+          options={jobFunctionNames}
+          loading={setTitlesMut.isPending}
+          onClose={() => setFunctionsDialog(null)}
+          onSave={(v) => setTitlesMut.mutate({ user_id: functionsDialog.userId, function_titles: v })}
+        />
+      )}
+
+      {manageFuncs && (
+        <ManageFunctionsDialog onClose={() => setManageFuncs(false)} />
+      )}
 
       <AlertDialog open={!!deleteDialog} onOpenChange={(o) => !o && setDeleteDialog(null)}>
         <AlertDialogContent>
@@ -287,21 +362,22 @@ function MedewerkersPage() {
 }
 
 function InviteDialog({
-  onSubmit, loading,
+  onSubmit, loading, jobFunctions,
 }: {
-  onSubmit: (v: { email: string; full_name: string; role: WorkerRole; function_title: string }) => void;
+  onSubmit: (v: { email: string; full_name: string; role: WorkerRole; function_titles: string[] }) => void;
   loading: boolean;
+  jobFunctions: string[];
 }) {
-  const [role, setRole] = useState<WorkerRole>("operator");
+  const [role, setRole] = useState<WorkerRole>("gebruiker");
+  const [titles, setTitles] = useState<string[]>(["Brand- en veiligheidswacht"]);
 
   const handle = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const fd = new FormData(e.currentTarget);
     const email = String(fd.get("email") ?? "").trim();
     const full_name = String(fd.get("full_name") ?? "").trim();
-    const function_title = String(fd.get("function_title") ?? "").trim();
     if (!email || !full_name) return toast.error("Naam en e-mail zijn verplicht");
-    onSubmit({ email, full_name, role, function_title });
+    onSubmit({ email, full_name, role, function_titles: titles });
   };
 
   return (
@@ -317,20 +393,25 @@ function InviteDialog({
             <Input id="inv-name" name="full_name" required maxLength={100} />
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="inv-func">Functie / rol op werf</Label>
-            <Input id="inv-func" name="function_title" maxLength={200} placeholder="Bv. Werfleider" />
+            <Label htmlFor="inv-email">E-mail</Label>
+            <Input id="inv-email" name="email" type="email" required maxLength={255} />
           </div>
         </div>
         <div className="space-y-1.5">
-          <Label htmlFor="inv-email">E-mail</Label>
-          <Input id="inv-email" name="email" type="email" required maxLength={255} />
+          <Label>Functies</Label>
+          <MultiFunctionSelect
+            options={jobFunctions}
+            value={titles}
+            onChange={setTitles}
+            emptyText="Geen functies. Vraag een admin om ze aan te maken."
+          />
         </div>
         <div className="space-y-1.5">
           <Label>Rol</Label>
           <Select value={role} onValueChange={(v) => setRole(v as WorkerRole)}>
             <SelectTrigger><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="operator">{ROLE_LABELS.operator}</SelectItem>
+              <SelectItem value="gebruiker">{ROLE_LABELS.gebruiker}</SelectItem>
               <SelectItem value="manager">{ROLE_LABELS.manager}</SelectItem>
             </SelectContent>
           </Select>
@@ -344,5 +425,133 @@ function InviteDialog({
         </DialogFooter>
       </form>
     </DialogContent>
+  );
+}
+
+function FunctionsDialog({
+  initial, options, loading, onClose, onSave,
+}: {
+  initial: { userId: string; name: string; current: string[] };
+  options: string[];
+  loading: boolean;
+  onClose: () => void;
+  onSave: (v: string[]) => void;
+}) {
+  const [value, setValue] = useState<string[]>(initial.current);
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Functies voor {initial.name}</DialogTitle>
+          <DialogDescription>Kies één of meerdere functies uit de beheerde lijst.</DialogDescription>
+        </DialogHeader>
+        <MultiFunctionSelect
+          options={options}
+          value={value}
+          onChange={setValue}
+          emptyText="Geen functies. Vraag een admin om ze aan te maken."
+        />
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Annuleren</Button>
+          <Button onClick={() => onSave(value)} disabled={loading}>Opslaan</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function ManageFunctionsDialog({ onClose }: { onClose: () => void }) {
+  const queryClient = useQueryClient();
+  const listFn = useServerFn(listJobFunctions);
+  const createFn = useServerFn(createJobFunction);
+  const updateFn = useServerFn(updateJobFunction);
+  const deleteFn = useServerFn(deleteJobFunction);
+
+  const { data = [] } = useQuery({ queryKey: ["job-functions"], queryFn: () => listFn() });
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: ["job-functions"] });
+    queryClient.invalidateQueries({ queryKey: ["medewerkers"] });
+  };
+
+  const [newName, setNewName] = useState("");
+  const [editing, setEditing] = useState<{ id: string; name: string } | null>(null);
+
+  const createMut = useMutation({
+    mutationFn: (name: string) => createFn({ data: { name } }),
+    onSuccess: () => { toast.success("Functie toegevoegd"); setNewName(""); invalidate(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const updateMut = useMutation({
+    mutationFn: (v: { id: string; name: string }) => updateFn({ data: v }),
+    onSuccess: () => { toast.success("Functie bijgewerkt"); setEditing(null); invalidate(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => deleteFn({ data: { id } }),
+    onSuccess: () => { toast.success("Functie verwijderd"); invalidate(); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><Briefcase className="w-5 h-5" /> Functies beheren</DialogTitle>
+          <DialogDescription>Beheer de dropdown-lijst met functies. Alleen administrators kunnen deze wijzigen.</DialogDescription>
+        </DialogHeader>
+        <div className="flex gap-2">
+          <Input
+            placeholder="Nieuwe functie…"
+            value={newName}
+            onChange={(e) => setNewName(e.target.value)}
+            maxLength={200}
+          />
+          <Button
+            onClick={() => { const n = newName.trim(); if (n) createMut.mutate(n); }}
+            disabled={createMut.isPending || !newName.trim()}
+          >
+            <Plus className="w-4 h-4" /> Toevoegen
+          </Button>
+        </div>
+        <div className="border rounded-md divide-y max-h-80 overflow-y-auto">
+          {data.length === 0 ? (
+            <div className="p-6 text-center text-sm text-muted-foreground">Nog geen functies aangemaakt.</div>
+          ) : data.map((f: { id: string; name: string }) => (
+            <div key={f.id} className="flex items-center gap-2 px-3 py-2">
+              {editing?.id === f.id ? (
+                <>
+                  <Input
+                    value={editing.name}
+                    onChange={(e) => setEditing({ ...editing, name: e.target.value })}
+                    className="h-8"
+                    maxLength={200}
+                  />
+                  <Button size="sm" onClick={() => updateMut.mutate({ id: editing.id, name: editing.name.trim() })} disabled={updateMut.isPending}>Opslaan</Button>
+                  <Button size="sm" variant="ghost" onClick={() => setEditing(null)}>Annuleren</Button>
+                </>
+              ) : (
+                <>
+                  <span className="flex-1 text-sm">{f.name}</span>
+                  <Button size="icon" variant="ghost" onClick={() => setEditing({ id: f.id, name: f.name })}>
+                    <Pencil className="w-3.5 h-3.5" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="text-destructive"
+                    onClick={() => {
+                      if (confirm(`"${f.name}" verwijderen? Deze functie wordt ook van alle profielen verwijderd.`)) {
+                        deleteMut.mutate(f.id);
+                      }
+                    }}>
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </Button>
+                </>
+              )}
+            </div>
+          ))}
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Sluiten</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

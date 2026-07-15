@@ -54,7 +54,7 @@ function pickRole(roles: AppRole[]): AppRole {
   if (roles.includes("admin")) return "admin";
   if (roles.includes("hse_manager")) return "hse_manager";
   if (roles.includes("manager")) return "manager";
-  return "operator";
+  return "gebruiker";
 }
 
 interface Report {
@@ -105,7 +105,7 @@ function DashboardContent({ userId, role }: { userId: string; role: AppRole }) {
 
   const scope = useMemo(() => {
     if (!reports) return [];
-    if (role === "operator") return reports.filter((r) => r.reporter_id === userId);
+    if (role === "gebruiker") return reports.filter((r) => r.reporter_id === userId);
     if (role === "manager") return reports.filter((r) => r.assigned_to === userId || r.reporter_id === userId);
     return reports;
   }, [reports, role, userId]);
@@ -179,7 +179,7 @@ function DashboardContent({ userId, role }: { userId: string; role: AppRole }) {
   }, [scope, role, userId]);
 
   const actionsTitle =
-    role === "operator" ? "Mijn openstaande meldingen"
+    role === "gebruiker" ? "Mijn openstaande meldingen"
     : role === "manager" ? "Aan mij toegewezen — openstaand"
     : "Openstaande acties (prioriteit)";
 

@@ -54,7 +54,7 @@ const ROLE_OPTIONS = [
   { value: "admin", label: "Admin", description: "Volledige beheerrechten" },
   { value: "hse_manager", label: "HSE-manager", description: "HSE- en kwaliteitsbeheer" },
   { value: "manager", label: "Manager", description: "Leidinggevende, teamweergave" },
-  { value: "operator", label: "Operator", description: "Standaardgebruiker" },
+  { value: "gebruiker", label: "Gebruiker", description: "Standaardgebruiker" },
 ] as const;
 type RoleValue = (typeof ROLE_OPTIONS)[number]["value"];
 
@@ -62,7 +62,7 @@ const roleBadge: Record<RoleValue, string> = {
   admin: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
   hse_manager: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
   manager: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200",
-  operator: "bg-muted text-foreground",
+  gebruiker: "bg-muted text-foreground",
 };
 
 function UsersPage() {
@@ -317,7 +317,7 @@ function InviteDialog({
   onSubmit: (v: { email: string; full_name: string; roles: RoleValue[] }) => void;
   loading: boolean;
 }) {
-  const [roles, setRoles] = useState<RoleValue[]>(["operator"]);
+  const [roles, setRoles] = useState<RoleValue[]>(["gebruiker"]);
 
   const toggle = (r: RoleValue) =>
     setRoles((cur) => (cur.includes(r) ? cur.filter((x) => x !== r) : [...cur, r]));

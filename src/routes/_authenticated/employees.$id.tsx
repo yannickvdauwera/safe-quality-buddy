@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,8 @@ import { ArrowLeft, Plus, Pencil, Trash2, ClipboardList, ClipboardCheck, Message
 import { toast } from "sonner";
 import { EvaluationForm } from "@/components/EvaluationForm";
 import { EVALUATION_SECTIONS, SCORE_OPTIONS, evaluationAverage } from "@/lib/evaluation-criteria";
+import { MultiFunctionSelect } from "@/components/MultiFunctionSelect";
+import { listJobFunctions } from "@/lib/job-functions.functions";
 
 export const Route = createFileRoute("/_authenticated/employees/$id")({
   head: () => ({ meta: [{ title: "Personeelsfiche — HSE & Kwaliteit" }] }),

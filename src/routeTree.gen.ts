@@ -23,6 +23,7 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedToolboxesIndexRouteImport } from './routes/_authenticated/toolboxes.index'
 import { Route as AuthenticatedRiskAnalysesIndexRouteImport } from './routes/_authenticated/risk-analyses.index'
 import { Route as AuthenticatedMeldingenIndexRouteImport } from './routes/_authenticated/meldingen.index'
+import { Route as AuthenticatedLerenIndexRouteImport } from './routes/_authenticated/leren.index'
 import { Route as AuthenticatedInspectiesIndexRouteImport } from './routes/_authenticated/inspecties.index'
 import { Route as AuthenticatedEmployeesIndexRouteImport } from './routes/_authenticated/employees.index'
 import { Route as ApiPublicToolboxSignRouteImport } from './routes/api/public/toolbox-sign'
@@ -33,11 +34,14 @@ import { Route as AuthenticatedRiskAnalysesIdRouteImport } from './routes/_authe
 import { Route as AuthenticatedMeldingenOngevallenRouteImport } from './routes/_authenticated/meldingen.ongevallen'
 import { Route as AuthenticatedMeldingenInternRouteImport } from './routes/_authenticated/meldingen.intern'
 import { Route as AuthenticatedMeldingenIdRouteImport } from './routes/_authenticated/meldingen.$id'
+import { Route as AuthenticatedLerenBeheerRouteImport } from './routes/_authenticated/leren.beheer'
 import { Route as AuthenticatedInspectiesWpiRouteImport } from './routes/_authenticated/inspecties.wpi'
 import { Route as AuthenticatedInspectiesKwaliteitRouteImport } from './routes/_authenticated/inspecties.kwaliteit'
 import { Route as AuthenticatedInspectiesIdRouteImport } from './routes/_authenticated/inspecties.$id'
 import { Route as AuthenticatedEmployeesIdRouteImport } from './routes/_authenticated/employees.$id'
 import { Route as AuthenticatedToolboxesSessionsIdRouteImport } from './routes/_authenticated/toolboxes.sessions.$id'
+import { Route as AuthenticatedLerenVideoIdRouteImport } from './routes/_authenticated/leren.video.$id'
+import { Route as AuthenticatedLerenQuizIdRouteImport } from './routes/_authenticated/leren.quiz.$id'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -111,6 +115,11 @@ const AuthenticatedMeldingenIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedMeldingenRoute,
   } as any)
+const AuthenticatedLerenIndexRoute = AuthenticatedLerenIndexRouteImport.update({
+  id: '/leren/',
+  path: '/leren/',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedInspectiesIndexRoute =
   AuthenticatedInspectiesIndexRouteImport.update({
     id: '/',
@@ -170,6 +179,12 @@ const AuthenticatedMeldingenIdRoute =
     path: '/$id',
     getParentRoute: () => AuthenticatedMeldingenRoute,
   } as any)
+const AuthenticatedLerenBeheerRoute =
+  AuthenticatedLerenBeheerRouteImport.update({
+    id: '/leren/beheer',
+    path: '/leren/beheer',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedInspectiesWpiRoute =
   AuthenticatedInspectiesWpiRouteImport.update({
     id: '/wpi',
@@ -200,6 +215,18 @@ const AuthenticatedToolboxesSessionsIdRoute =
     path: '/toolboxes/sessions/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedLerenVideoIdRoute =
+  AuthenticatedLerenVideoIdRouteImport.update({
+    id: '/leren/video/$id',
+    path: '/leren/video/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedLerenQuizIdRoute =
+  AuthenticatedLerenQuizIdRouteImport.update({
+    id: '/leren/quiz/$id',
+    path: '/leren/quiz/$id',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -216,6 +243,7 @@ export interface FileRoutesByFullPath {
   '/inspecties/$id': typeof AuthenticatedInspectiesIdRoute
   '/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
   '/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
+  '/leren/beheer': typeof AuthenticatedLerenBeheerRoute
   '/meldingen/$id': typeof AuthenticatedMeldingenIdRoute
   '/meldingen/intern': typeof AuthenticatedMeldingenInternRoute
   '/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
@@ -226,9 +254,12 @@ export interface FileRoutesByFullPath {
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
   '/employees/': typeof AuthenticatedEmployeesIndexRoute
   '/inspecties/': typeof AuthenticatedInspectiesIndexRoute
+  '/leren/': typeof AuthenticatedLerenIndexRoute
   '/meldingen/': typeof AuthenticatedMeldingenIndexRoute
   '/risk-analyses/': typeof AuthenticatedRiskAnalysesIndexRoute
   '/toolboxes/': typeof AuthenticatedToolboxesIndexRoute
+  '/leren/quiz/$id': typeof AuthenticatedLerenQuizIdRoute
+  '/leren/video/$id': typeof AuthenticatedLerenVideoIdRoute
   '/toolboxes/sessions/$id': typeof AuthenticatedToolboxesSessionsIdRoute
 }
 export interface FileRoutesByTo {
@@ -244,6 +275,7 @@ export interface FileRoutesByTo {
   '/inspecties/$id': typeof AuthenticatedInspectiesIdRoute
   '/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
   '/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
+  '/leren/beheer': typeof AuthenticatedLerenBeheerRoute
   '/meldingen/$id': typeof AuthenticatedMeldingenIdRoute
   '/meldingen/intern': typeof AuthenticatedMeldingenInternRoute
   '/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
@@ -254,9 +286,12 @@ export interface FileRoutesByTo {
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
   '/employees': typeof AuthenticatedEmployeesIndexRoute
   '/inspecties': typeof AuthenticatedInspectiesIndexRoute
+  '/leren': typeof AuthenticatedLerenIndexRoute
   '/meldingen': typeof AuthenticatedMeldingenIndexRoute
   '/risk-analyses': typeof AuthenticatedRiskAnalysesIndexRoute
   '/toolboxes': typeof AuthenticatedToolboxesIndexRoute
+  '/leren/quiz/$id': typeof AuthenticatedLerenQuizIdRoute
+  '/leren/video/$id': typeof AuthenticatedLerenVideoIdRoute
   '/toolboxes/sessions/$id': typeof AuthenticatedToolboxesSessionsIdRoute
 }
 export interface FileRoutesById {
@@ -276,6 +311,7 @@ export interface FileRoutesById {
   '/_authenticated/inspecties/$id': typeof AuthenticatedInspectiesIdRoute
   '/_authenticated/inspecties/kwaliteit': typeof AuthenticatedInspectiesKwaliteitRoute
   '/_authenticated/inspecties/wpi': typeof AuthenticatedInspectiesWpiRoute
+  '/_authenticated/leren/beheer': typeof AuthenticatedLerenBeheerRoute
   '/_authenticated/meldingen/$id': typeof AuthenticatedMeldingenIdRoute
   '/_authenticated/meldingen/intern': typeof AuthenticatedMeldingenInternRoute
   '/_authenticated/meldingen/ongevallen': typeof AuthenticatedMeldingenOngevallenRoute
@@ -286,9 +322,12 @@ export interface FileRoutesById {
   '/api/public/toolbox-sign': typeof ApiPublicToolboxSignRoute
   '/_authenticated/employees/': typeof AuthenticatedEmployeesIndexRoute
   '/_authenticated/inspecties/': typeof AuthenticatedInspectiesIndexRoute
+  '/_authenticated/leren/': typeof AuthenticatedLerenIndexRoute
   '/_authenticated/meldingen/': typeof AuthenticatedMeldingenIndexRoute
   '/_authenticated/risk-analyses/': typeof AuthenticatedRiskAnalysesIndexRoute
   '/_authenticated/toolboxes/': typeof AuthenticatedToolboxesIndexRoute
+  '/_authenticated/leren/quiz/$id': typeof AuthenticatedLerenQuizIdRoute
+  '/_authenticated/leren/video/$id': typeof AuthenticatedLerenVideoIdRoute
   '/_authenticated/toolboxes/sessions/$id': typeof AuthenticatedToolboxesSessionsIdRoute
 }
 export interface FileRouteTypes {
@@ -308,6 +347,7 @@ export interface FileRouteTypes {
     | '/inspecties/$id'
     | '/inspecties/kwaliteit'
     | '/inspecties/wpi'
+    | '/leren/beheer'
     | '/meldingen/$id'
     | '/meldingen/intern'
     | '/meldingen/ongevallen'
@@ -318,9 +358,12 @@ export interface FileRouteTypes {
     | '/api/public/toolbox-sign'
     | '/employees/'
     | '/inspecties/'
+    | '/leren/'
     | '/meldingen/'
     | '/risk-analyses/'
     | '/toolboxes/'
+    | '/leren/quiz/$id'
+    | '/leren/video/$id'
     | '/toolboxes/sessions/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -336,6 +379,7 @@ export interface FileRouteTypes {
     | '/inspecties/$id'
     | '/inspecties/kwaliteit'
     | '/inspecties/wpi'
+    | '/leren/beheer'
     | '/meldingen/$id'
     | '/meldingen/intern'
     | '/meldingen/ongevallen'
@@ -346,9 +390,12 @@ export interface FileRouteTypes {
     | '/api/public/toolbox-sign'
     | '/employees'
     | '/inspecties'
+    | '/leren'
     | '/meldingen'
     | '/risk-analyses'
     | '/toolboxes'
+    | '/leren/quiz/$id'
+    | '/leren/video/$id'
     | '/toolboxes/sessions/$id'
   id:
     | '__root__'
@@ -367,6 +414,7 @@ export interface FileRouteTypes {
     | '/_authenticated/inspecties/$id'
     | '/_authenticated/inspecties/kwaliteit'
     | '/_authenticated/inspecties/wpi'
+    | '/_authenticated/leren/beheer'
     | '/_authenticated/meldingen/$id'
     | '/_authenticated/meldingen/intern'
     | '/_authenticated/meldingen/ongevallen'
@@ -377,9 +425,12 @@ export interface FileRouteTypes {
     | '/api/public/toolbox-sign'
     | '/_authenticated/employees/'
     | '/_authenticated/inspecties/'
+    | '/_authenticated/leren/'
     | '/_authenticated/meldingen/'
     | '/_authenticated/risk-analyses/'
     | '/_authenticated/toolboxes/'
+    | '/_authenticated/leren/quiz/$id'
+    | '/_authenticated/leren/video/$id'
     | '/_authenticated/toolboxes/sessions/$id'
   fileRoutesById: FileRoutesById
 }
@@ -491,6 +542,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMeldingenIndexRouteImport
       parentRoute: typeof AuthenticatedMeldingenRoute
     }
+    '/_authenticated/leren/': {
+      id: '/_authenticated/leren/'
+      path: '/leren'
+      fullPath: '/leren/'
+      preLoaderRoute: typeof AuthenticatedLerenIndexRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/inspecties/': {
       id: '/_authenticated/inspecties/'
       path: '/'
@@ -561,6 +619,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMeldingenIdRouteImport
       parentRoute: typeof AuthenticatedMeldingenRoute
     }
+    '/_authenticated/leren/beheer': {
+      id: '/_authenticated/leren/beheer'
+      path: '/leren/beheer'
+      fullPath: '/leren/beheer'
+      preLoaderRoute: typeof AuthenticatedLerenBeheerRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/inspecties/wpi': {
       id: '/_authenticated/inspecties/wpi'
       path: '/wpi'
@@ -594,6 +659,20 @@ declare module '@tanstack/react-router' {
       path: '/toolboxes/sessions/$id'
       fullPath: '/toolboxes/sessions/$id'
       preLoaderRoute: typeof AuthenticatedToolboxesSessionsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/leren/video/$id': {
+      id: '/_authenticated/leren/video/$id'
+      path: '/leren/video/$id'
+      fullPath: '/leren/video/$id'
+      preLoaderRoute: typeof AuthenticatedLerenVideoIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/leren/quiz/$id': {
+      id: '/_authenticated/leren/quiz/$id'
+      path: '/leren/quiz/$id'
+      fullPath: '/leren/quiz/$id'
+      preLoaderRoute: typeof AuthenticatedLerenQuizIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
   }
@@ -650,13 +729,17 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedStopRoute: typeof AuthenticatedStopRoute
   AuthenticatedUsersRoute: typeof AuthenticatedUsersRoute
   AuthenticatedEmployeesIdRoute: typeof AuthenticatedEmployeesIdRoute
+  AuthenticatedLerenBeheerRoute: typeof AuthenticatedLerenBeheerRoute
   AuthenticatedRiskAnalysesIdRoute: typeof AuthenticatedRiskAnalysesIdRoute
   AuthenticatedRiskAnalysesNewRoute: typeof AuthenticatedRiskAnalysesNewRoute
   AuthenticatedToolboxesIdRoute: typeof AuthenticatedToolboxesIdRoute
   AuthenticatedToolboxesNewRoute: typeof AuthenticatedToolboxesNewRoute
   AuthenticatedEmployeesIndexRoute: typeof AuthenticatedEmployeesIndexRoute
+  AuthenticatedLerenIndexRoute: typeof AuthenticatedLerenIndexRoute
   AuthenticatedRiskAnalysesIndexRoute: typeof AuthenticatedRiskAnalysesIndexRoute
   AuthenticatedToolboxesIndexRoute: typeof AuthenticatedToolboxesIndexRoute
+  AuthenticatedLerenQuizIdRoute: typeof AuthenticatedLerenQuizIdRoute
+  AuthenticatedLerenVideoIdRoute: typeof AuthenticatedLerenVideoIdRoute
   AuthenticatedToolboxesSessionsIdRoute: typeof AuthenticatedToolboxesSessionsIdRoute
 }
 
@@ -669,13 +752,17 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedStopRoute: AuthenticatedStopRoute,
   AuthenticatedUsersRoute: AuthenticatedUsersRoute,
   AuthenticatedEmployeesIdRoute: AuthenticatedEmployeesIdRoute,
+  AuthenticatedLerenBeheerRoute: AuthenticatedLerenBeheerRoute,
   AuthenticatedRiskAnalysesIdRoute: AuthenticatedRiskAnalysesIdRoute,
   AuthenticatedRiskAnalysesNewRoute: AuthenticatedRiskAnalysesNewRoute,
   AuthenticatedToolboxesIdRoute: AuthenticatedToolboxesIdRoute,
   AuthenticatedToolboxesNewRoute: AuthenticatedToolboxesNewRoute,
   AuthenticatedEmployeesIndexRoute: AuthenticatedEmployeesIndexRoute,
+  AuthenticatedLerenIndexRoute: AuthenticatedLerenIndexRoute,
   AuthenticatedRiskAnalysesIndexRoute: AuthenticatedRiskAnalysesIndexRoute,
   AuthenticatedToolboxesIndexRoute: AuthenticatedToolboxesIndexRoute,
+  AuthenticatedLerenQuizIdRoute: AuthenticatedLerenQuizIdRoute,
+  AuthenticatedLerenVideoIdRoute: AuthenticatedLerenVideoIdRoute,
   AuthenticatedToolboxesSessionsIdRoute: AuthenticatedToolboxesSessionsIdRoute,
 }
 

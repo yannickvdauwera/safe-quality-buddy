@@ -49,6 +49,14 @@ function EmployeeDetailPage() {
   const [editing, setEditing] = useState<Evaluation | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editFicheOpen, setEditFicheOpen] = useState(false);
+  const [ficheFunctions, setFicheFunctions] = useState<string[]>([]);
+  const listFuncsFn = useServerFn(listJobFunctions);
+  const { data: jobFunctions = [] } = useQuery({
+    queryKey: ["job-functions"],
+    queryFn: () => listFuncsFn(),
+  });
+  const jobFunctionNames = jobFunctions.map((f: { name: string }) => f.name);
+
 
   const { data: employee, isLoading } = useQuery({
     queryKey: ["employee", id],

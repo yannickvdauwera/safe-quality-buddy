@@ -252,6 +252,147 @@ export type Database = {
         }
         Relationships: []
       }
+      quiz_attempts: {
+        Row: {
+          answers: Json
+          completed_at: string
+          correct_count: number
+          created_at: string
+          id: string
+          passed: boolean
+          points_awarded: number
+          quiz_id: string
+          score: number
+          total_questions: number
+          user_id: string
+        }
+        Insert: {
+          answers?: Json
+          completed_at?: string
+          correct_count?: number
+          created_at?: string
+          id?: string
+          passed?: boolean
+          points_awarded?: number
+          quiz_id: string
+          score?: number
+          total_questions?: number
+          user_id: string
+        }
+        Update: {
+          answers?: Json
+          completed_at?: string
+          correct_count?: number
+          created_at?: string
+          id?: string
+          passed?: boolean
+          points_awarded?: number
+          quiz_id?: string
+          score?: number
+          total_questions?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_attempts_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quiz_questions: {
+        Row: {
+          created_at: string
+          explanation: string | null
+          id: string
+          options: Json
+          order_index: number
+          question: string
+          quiz_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          options?: Json
+          order_index?: number
+          question: string
+          quiz_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          explanation?: string | null
+          id?: string
+          options?: Json
+          order_index?: number
+          question?: string
+          quiz_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quiz_questions_quiz_id_fkey"
+            columns: ["quiz_id"]
+            isOneToOne: false
+            referencedRelation: "quizzes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quizzes: {
+        Row: {
+          bonus_points_perfect: number
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_published: boolean
+          pass_score: number
+          points: number
+          title: string
+          updated_at: string
+          werf_id: string | null
+        }
+        Insert: {
+          bonus_points_perfect?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          pass_score?: number
+          points?: number
+          title: string
+          updated_at?: string
+          werf_id?: string | null
+        }
+        Update: {
+          bonus_points_perfect?: number
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_published?: boolean
+          pass_score?: number
+          points?: number
+          title?: string
+          updated_at?: string
+          werf_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quizzes_werf_id_fkey"
+            columns: ["werf_id"]
+            isOneToOne: false
+            referencedRelation: "werven"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reports: {
         Row: {
           assigned_to: string | null
@@ -984,6 +1125,62 @@ export type Database = {
         }
         Relationships: []
       }
+      training_videos: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          duration_seconds: number | null
+          external_id: string | null
+          id: string
+          is_published: boolean
+          points: number
+          provider: Database["public"]["Enums"]["video_provider"]
+          title: string
+          updated_at: string
+          url: string
+          werf_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          external_id?: string | null
+          id?: string
+          is_published?: boolean
+          points?: number
+          provider?: Database["public"]["Enums"]["video_provider"]
+          title: string
+          updated_at?: string
+          url: string
+          werf_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          duration_seconds?: number | null
+          external_id?: string | null
+          id?: string
+          is_published?: boolean
+          points?: number
+          provider?: Database["public"]["Enums"]["video_provider"]
+          title?: string
+          updated_at?: string
+          url?: string
+          werf_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "training_videos_werf_id_fkey"
+            columns: ["werf_id"]
+            isOneToOne: false
+            referencedRelation: "werven"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1005,6 +1202,86 @@ export type Database = {
         }
         Relationships: []
       }
+      video_views: {
+        Row: {
+          completed: boolean
+          completed_at: string | null
+          created_at: string
+          id: string
+          points_awarded: number
+          progress_seconds: number
+          updated_at: string
+          user_id: string
+          video_id: string
+        }
+        Insert: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          points_awarded?: number
+          progress_seconds?: number
+          updated_at?: string
+          user_id: string
+          video_id: string
+        }
+        Update: {
+          completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          points_awarded?: number
+          progress_seconds?: number
+          updated_at?: string
+          user_id?: string
+          video_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_views_video_id_fkey"
+            columns: ["video_id"]
+            isOneToOne: false
+            referencedRelation: "training_videos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      werven: {
+        Row: {
+          address: string | null
+          code: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          code?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          code?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1013,6 +1290,19 @@ export type Database = {
       can_access_risk_analysis: {
         Args: { _analysis_id: string }
         Returns: boolean
+      }
+      get_leaderboard: {
+        Args: { _limit?: number }
+        Returns: {
+          email: string
+          full_name: string
+          quiz_points: number
+          quizzes_passed: number
+          total_points: number
+          user_id: string
+          video_points: number
+          videos_completed: number
+        }[]
       }
       has_role: {
         Args: {
@@ -1058,6 +1348,7 @@ export type Database = {
         | "cancelled"
       toolbox_sign_method: "kiosk" | "qr" | "login"
       toolbox_status: "draft" | "published" | "archived"
+      video_provider: "youtube" | "vimeo" | "url"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1213,6 +1504,7 @@ export const Constants = {
       ],
       toolbox_sign_method: ["kiosk", "qr", "login"],
       toolbox_status: ["draft", "published", "archived"],
+      video_provider: ["youtube", "vimeo", "url"],
     },
   },
 } as const

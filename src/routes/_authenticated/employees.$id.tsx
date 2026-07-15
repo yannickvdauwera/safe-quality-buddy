@@ -319,7 +319,7 @@ function EmployeeDetailPage() {
                     employer: str("employer") || null,
                     email: str("email").toLowerCase() || null,
                     phone: str("phone") || null,
-                    function_title: str("function_title") || null,
+                    function_title: ficheFunctions.length ? ficheFunctions.join(", ") : null,
                     active: (fd.get("active") as string) === "on",
                   });
                 }}

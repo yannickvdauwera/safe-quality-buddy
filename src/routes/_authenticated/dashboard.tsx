@@ -14,6 +14,7 @@ import {
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   BarChart, Bar, PieChart, Pie, Cell, Legend,
 } from "recharts";
+import { Trophy } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({ meta: [{ title: "Dashboard — HSE & Kwaliteit" }] }),
@@ -240,25 +241,29 @@ function DashboardContent({ userId, role }: { userId: string; role: AppRole }) {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Ernst</CardTitle>
-            <CardDescription>Verdeling per ernstniveau</CardDescription>
-          </CardHeader>
-          <CardContent className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={bySeverity} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" fontSize={12} stroke="hsl(var(--muted-foreground))" />
-                <YAxis fontSize={12} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
-                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                  {bySeverity.map((d, i) => (<Cell key={i} fill={SEVERITY_COLORS[d.key]} />))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        {role === "gebruiker" ? (
+          <LeaderboardCard userId={userId} />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Ernst</CardTitle>
+              <CardDescription>Verdeling per ernstniveau</CardDescription>
+            </CardHeader>
+            <CardContent className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={bySeverity} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" fontSize={12} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis fontSize={12} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                  <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                    {bySeverity.map((d, i) => (<Cell key={i} fill={SEVERITY_COLORS[d.key]} />))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="lg:col-span-2">
           <CardHeader className="flex-row items-center justify-between space-y-0">
@@ -328,6 +333,57 @@ function StatCard({
       </CardHeader>
       <CardContent>
         <div className="text-3xl font-semibold">{value ?? "—"}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function LeaderboardCard({ userId }: { userId: string }) {
+  const { data: leaderboard = [], isLoading } = useQuery({
+    queryKey: ["dashboard-leaderboard"],
+    queryFn: async () => {
+      const { data } = await (supabase as any).rpc("get_leaderboard", { _limit: 10 });
+      return (data ?? []) as Array<{
+        user_id: string; full_name: string | null; email: string | null;
+        total_points: number; videos_completed: number; quizzes_passed: number;
+      }>;
+    },
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Trophy className="w-4 h-4 text-primary" /> Klassement
+        </CardTitle>
+        <CardDescription>Top 10 — leren & quizzen</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="text-sm text-muted-foreground">Laden…</div>
+        ) : leaderboard.length === 0 ? (
+          <div className="text-sm text-muted-foreground text-center py-6">Nog geen scores.</div>
+        ) : (
+          <div className="space-y-1">
+            {leaderboard.map((row, i) => (
+              <div
+                key={row.user_id}
+                className={`flex items-center gap-3 p-2 rounded-md ${
+                  row.user_id === userId ? "bg-accent/40 border" : "hover:bg-muted/50"
+                }`}
+              >
+                <div className="w-6 text-center text-sm font-semibold text-muted-foreground">{i + 1}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">{row.full_name ?? row.email ?? "—"}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {row.videos_completed} video's · {row.quizzes_passed} quizzen
+                  </div>
+                </div>
+                <div className="text-sm font-semibold">{row.total_points} pt</div>
+              </div>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

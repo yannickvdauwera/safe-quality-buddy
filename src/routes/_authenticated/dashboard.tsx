@@ -337,3 +337,54 @@ function StatCard({
     </Card>
   );
 }
+
+function LeaderboardCard({ userId }: { userId: string }) {
+  const { data: leaderboard = [], isLoading } = useQuery({
+    queryKey: ["dashboard-leaderboard"],
+    queryFn: async () => {
+      const { data } = await (supabase as any).rpc("get_leaderboard", { _limit: 10 });
+      return (data ?? []) as Array<{
+        user_id: string; full_name: string | null; email: string | null;
+        total_points: number; videos_completed: number; quizzes_passed: number;
+      }>;
+    },
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Trophy className="w-4 h-4 text-primary" /> Klassement
+        </CardTitle>
+        <CardDescription>Top 10 — leren & quizzen</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <div className="text-sm text-muted-foreground">Laden…</div>
+        ) : leaderboard.length === 0 ? (
+          <div className="text-sm text-muted-foreground text-center py-6">Nog geen scores.</div>
+        ) : (
+          <div className="space-y-1">
+            {leaderboard.map((row, i) => (
+              <div
+                key={row.user_id}
+                className={`flex items-center gap-3 p-2 rounded-md ${
+                  row.user_id === userId ? "bg-accent/40 border" : "hover:bg-muted/50"
+                }`}
+              >
+                <div className="w-6 text-center text-sm font-semibold text-muted-foreground">{i + 1}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium truncate">{row.full_name ?? row.email ?? "—"}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {row.videos_completed} video's · {row.quizzes_passed} quizzen
+                  </div>
+                </div>
+                <div className="text-sm font-semibold">{row.total_points} pt</div>
+              </div>
+            ))}
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}

@@ -345,12 +345,12 @@ function EmployeeDetailPage() {
                   <Input id="ef_phone" name="phone" defaultValue={employee.phone ?? ""} maxLength={50} />
                 </div>
                 <div className="space-y-1 md:col-span-2">
-                  <Label htmlFor="ef_function_title">Functies (komma-gescheiden)</Label>
-                  <Input
-                    id="ef_function_title"
-                    name="function_title"
-                    defaultValue={employee.function_title ?? ""}
-                    placeholder="bv. Brandwacht, Gasanalist"
+                  <Label>Functies</Label>
+                  <MultiFunctionSelect
+                    options={jobFunctionNames}
+                    value={ficheFunctions}
+                    onChange={setFicheFunctions}
+                    emptyText="Geen functies. Laat een admin ze aanmaken via Medewerkers › Beheer functies."
                   />
                 </div>
                 <label className="flex items-center gap-2 text-sm md:col-span-2">

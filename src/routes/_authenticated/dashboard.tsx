@@ -241,25 +241,29 @@ function DashboardContent({ userId, role }: { userId: string; role: AppRole }) {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Ernst</CardTitle>
-            <CardDescription>Verdeling per ernstniveau</CardDescription>
-          </CardHeader>
-          <CardContent className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={bySeverity} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="name" fontSize={12} stroke="hsl(var(--muted-foreground))" />
-                <YAxis fontSize={12} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
-                <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
-                <Bar dataKey="value" radius={[6, 6, 0, 0]}>
-                  {bySeverity.map((d, i) => (<Cell key={i} fill={SEVERITY_COLORS[d.key]} />))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
+        {role === "gebruiker" ? (
+          <LeaderboardCard userId={userId} />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Ernst</CardTitle>
+              <CardDescription>Verdeling per ernstniveau</CardDescription>
+            </CardHeader>
+            <CardContent className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={bySeverity} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="name" fontSize={12} stroke="hsl(var(--muted-foreground))" />
+                  <YAxis fontSize={12} stroke="hsl(var(--muted-foreground))" allowDecimals={false} />
+                  <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8 }} />
+                  <Bar dataKey="value" radius={[6, 6, 0, 0]}>
+                    {bySeverity.map((d, i) => (<Cell key={i} fill={SEVERITY_COLORS[d.key]} />))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="lg:col-span-2">
           <CardHeader className="flex-row items-center justify-between space-y-0">

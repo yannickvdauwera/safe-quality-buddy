@@ -19,6 +19,8 @@ import {
   ChevronDown,
   ChevronRight,
   FileEdit,
+  GraduationCap,
+  
   
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -75,6 +77,7 @@ const baseNav: NavItem[] = [
   { to: "/drafts", label: "Mijn concepten", icon: FileEdit },
   { to: "/documents", label: "Documenten", icon: FileText, disabled: true },
   { to: "/toolboxes", label: "Toolboxen", icon: ClipboardCheck },
+  { to: "/leren", label: "Leren & Klassement", icon: GraduationCap },
   { to: "/risk-analyses", label: "Risicoanalyses", icon: ShieldAlert },
 ];
 

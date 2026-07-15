@@ -175,6 +175,27 @@ export type Database = {
         }
         Relationships: []
       }
+      job_functions: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       monday_sync_events: {
         Row: {
           employee_id: string | null
@@ -226,6 +247,7 @@ export type Database = {
           email: string | null
           full_name: string | null
           function_title: string | null
+          function_titles: string[]
           id: string
           phone: string | null
           updated_at: string
@@ -236,6 +258,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           function_title?: string | null
+          function_titles?: string[]
           id: string
           phone?: string | null
           updated_at?: string
@@ -246,6 +269,7 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           function_title?: string | null
+          function_titles?: string[]
           id?: string
           phone?: string | null
           updated_at?: string
@@ -1322,7 +1346,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "hse_manager" | "manager" | "operator"
+      app_role: "admin" | "hse_manager" | "manager" | "gebruiker"
       report_severity: "laag" | "middel" | "hoog" | "kritiek"
       report_status: "open" | "in_behandeling" | "opgevolgd" | "gesloten"
       report_type:
@@ -1476,7 +1500,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "hse_manager", "manager", "operator"],
+      app_role: ["admin", "hse_manager", "manager", "gebruiker"],
       report_severity: ["laag", "middel", "hoog", "kritiek"],
       report_status: ["open", "in_behandeling", "opgevolgd", "gesloten"],
       report_type: [

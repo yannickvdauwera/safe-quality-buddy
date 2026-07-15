@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppRole = "admin" | "hse_manager" | "manager" | "operator";
+export type AppRole = "admin" | "hse_manager" | "manager" | "gebruiker";
 
 const PREVIEW_KEY = "roles.preview";
 const PREVIEW_EVENT = "roles.preview.changed";
@@ -10,7 +10,7 @@ const PREVIEW_EVENT = "roles.preview.changed";
 function readPreview(): AppRole | null {
   if (typeof window === "undefined") return null;
   const v = window.localStorage.getItem(PREVIEW_KEY);
-  return v === "admin" || v === "hse_manager" || v === "manager" || v === "operator" ? v : null;
+  return v === "admin" || v === "hse_manager" || v === "manager" || v === "gebruiker" ? v : null;
 }
 
 export function setPreviewRole(role: AppRole | null) {

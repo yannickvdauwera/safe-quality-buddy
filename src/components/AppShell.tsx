@@ -224,7 +224,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                 <SelectItem value="admin">Admin</SelectItem>
                 <SelectItem value="hse_manager">HSE-manager</SelectItem>
                 <SelectItem value="manager">Manager</SelectItem>
-                <SelectItem value="operator">Operator</SelectItem>
+                <SelectItem value="gebruiker">Operator</SelectItem>
               </SelectContent>
             </Select>
             {isPreviewing && (

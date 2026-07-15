@@ -3,7 +3,7 @@ import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
-const APP_ROLES = ["admin", "hse_manager", "manager", "operator"] as const;
+const APP_ROLES = ["admin", "hse_manager", "manager", "gebruiker"] as const;
 type AppRole = (typeof APP_ROLES)[number];
 
 async function assertAdmin(supabase: SupabaseClient, userId: string) {
@@ -19,7 +19,7 @@ async function assertAdmin(supabase: SupabaseClient, userId: string) {
 
 // Returns 'admin' if the caller is admin, 'hse_manager' if only hse_manager,
 // otherwise throws 403. Used by the Medewerkers module so HSE-managers can
-// manage operator/manager accounts, without gaining admin privileges.
+// manage gebruiker/manager accounts, without gaining admin privileges.
 async function assertWorkerManager(
   supabase: SupabaseClient,
   userId: string,
@@ -36,7 +36,7 @@ async function assertWorkerManager(
   throw new Response("Forbidden", { status: 403 });
 }
 
-const WORKER_ROLES = new Set<AppRole>(["operator", "manager"]);
+const WORKER_ROLES = new Set<AppRole>(["gebruiker", "manager"]);
 
 export const listUsersWithRoles = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -201,7 +201,7 @@ export const deleteUser = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/* -------- Medewerkers module (operator/manager) -------- */
+/* -------- Medewerkers module (gebruiker/manager) -------- */
 // Accessible by admin OR hse_manager. Non-admin callers can only
 // touch users whose current roles are a subset of {operator, manager},
 // and can only assign roles from that same set.
@@ -220,7 +220,7 @@ export const listWorkers = createServerFn({ method: "GET" })
 
     const userIds = authList.users.map((u) => u.id);
     const [{ data: profiles }, { data: roles }, { data: employees }] = await Promise.all([
-      supabaseAdmin.from("profiles").select("id, full_name, email, function_title").in("id", userIds),
+      supabaseAdmin.from("profiles").select("id, full_name, email, function_title, function_titles").in("id", userIds),
       supabaseAdmin.from("user_roles").select("user_id, role").in("user_id", userIds),
       supabaseAdmin.from("employees").select("id, first_name, last_name, employer, user_id, active").in("user_id", userIds),
     ]);
@@ -244,6 +244,7 @@ export const listWorkers = createServerFn({ method: "GET" })
           email: u.email ?? p?.email ?? null,
           full_name: p?.full_name ?? (u.user_metadata as any)?.full_name ?? null,
           function_title: p?.function_title ?? null,
+          function_titles: (p?.function_titles ?? []) as string[],
           created_at: u.created_at,
           last_sign_in_at: u.last_sign_in_at ?? null,
           email_confirmed_at: u.email_confirmed_at ?? null,
@@ -253,7 +254,7 @@ export const listWorkers = createServerFn({ method: "GET" })
             : null,
         };
       })
-      // Only workers: users with operator or manager role and NO elevated role
+      // Only workers: users with gebruiker or manager role and NO elevated role
       .filter((u) =>
         u.roles.length > 0 &&
         u.roles.every((r) => WORKER_ROLES.has(r)),
@@ -283,8 +284,8 @@ export const inviteWorker = createServerFn({ method: "POST" })
     z.object({
       email: z.string().trim().email().max(255),
       full_name: z.string().trim().min(1).max(100),
-      role: z.enum(["operator", "manager"]),
-      function_title: z.string().trim().max(200).optional().or(z.literal("")),
+      role: z.enum(["gebruiker", "manager"]),
+      function_titles: z.array(z.string().trim().min(1).max(200)).max(20).default([]),
     }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -298,25 +299,30 @@ export const inviteWorker = createServerFn({ method: "POST" })
     const newUserId = created.user?.id;
     if (!newUserId) throw new Error("Aanmaken gebruiker mislukt.");
 
-    // Replace the default operator role from handle_new_user trigger with the requested one
+    // Replace the default gebruiker role from handle_new_user trigger with the requested one
     await supabaseAdmin.from("user_roles").delete().eq("user_id", newUserId);
     const { error: insErr } = await supabaseAdmin
       .from("user_roles")
       .insert([{ user_id: newUserId, role: data.role }]);
     if (insErr) throw new Error(insErr.message);
 
-    if (data.function_title) {
-      await supabaseAdmin.from("profiles").update({ function_title: data.function_title }).eq("id", newUserId);
+    const titles = Array.from(new Set(data.function_titles));
+    if (titles.length > 0) {
+      await supabaseAdmin.from("profiles").update({
+        function_titles: titles,
+        function_title: titles[0],
+      }).eq("id", newUserId);
     }
     return { ok: true, user_id: newUserId };
   });
+
 
 export const setWorkerRole = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z.object({
       user_id: z.string().uuid(),
-      role: z.enum(["operator", "manager"]),
+      role: z.enum(["gebruiker", "manager"]),
     }).parse(data),
   )
   .handler(async ({ context, data }) => {

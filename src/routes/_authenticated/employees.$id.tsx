@@ -1,6 +1,7 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,8 @@ import { ArrowLeft, Plus, Pencil, Trash2, ClipboardList, ClipboardCheck, Message
 import { toast } from "sonner";
 import { EvaluationForm } from "@/components/EvaluationForm";
 import { EVALUATION_SECTIONS, SCORE_OPTIONS, evaluationAverage } from "@/lib/evaluation-criteria";
+import { MultiFunctionSelect } from "@/components/MultiFunctionSelect";
+import { listJobFunctions } from "@/lib/job-functions.functions";
 
 export const Route = createFileRoute("/_authenticated/employees/$id")({
   head: () => ({ meta: [{ title: "Personeelsfiche — HSE & Kwaliteit" }] }),
@@ -46,6 +49,14 @@ function EmployeeDetailPage() {
   const [editing, setEditing] = useState<Evaluation | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [editFicheOpen, setEditFicheOpen] = useState(false);
+  const [ficheFunctions, setFicheFunctions] = useState<string[]>([]);
+  const listFuncsFn = useServerFn(listJobFunctions);
+  const { data: jobFunctions = [] } = useQuery({
+    queryKey: ["job-functions"],
+    queryFn: () => listFuncsFn(),
+  });
+  const jobFunctionNames = jobFunctions.map((f: { name: string }) => f.name);
+
 
   const { data: employee, isLoading } = useQuery({
     queryKey: ["employee", id],
@@ -260,7 +271,7 @@ function EmployeeDetailPage() {
             <CardHeader className="flex-row items-center justify-between pb-3">
               <CardTitle className="text-base">Gegevens</CardTitle>
               {canEdit && (
-                <Button size="sm" variant="outline" onClick={() => setEditFicheOpen(true)}>
+                <Button size="sm" variant="outline" onClick={() => { setFicheFunctions(functies); setEditFicheOpen(true); }}>
                   <Pencil className="w-4 h-4" /> Bewerken
                 </Button>
               )}
@@ -308,7 +319,7 @@ function EmployeeDetailPage() {
                     employer: str("employer") || null,
                     email: str("email").toLowerCase() || null,
                     phone: str("phone") || null,
-                    function_title: str("function_title") || null,
+                    function_title: ficheFunctions.length ? ficheFunctions.join(", ") : null,
                     active: (fd.get("active") as string) === "on",
                   });
                 }}
@@ -334,12 +345,12 @@ function EmployeeDetailPage() {
                   <Input id="ef_phone" name="phone" defaultValue={employee.phone ?? ""} maxLength={50} />
                 </div>
                 <div className="space-y-1 md:col-span-2">
-                  <Label htmlFor="ef_function_title">Functies (komma-gescheiden)</Label>
-                  <Input
-                    id="ef_function_title"
-                    name="function_title"
-                    defaultValue={employee.function_title ?? ""}
-                    placeholder="bv. Brandwacht, Gasanalist"
+                  <Label>Functies</Label>
+                  <MultiFunctionSelect
+                    options={jobFunctionNames}
+                    value={ficheFunctions}
+                    onChange={setFicheFunctions}
+                    emptyText="Geen functies. Laat een admin ze aanmaken via Medewerkers › Beheer functies."
                   />
                 </div>
                 <label className="flex items-center gap-2 text-sm md:col-span-2">

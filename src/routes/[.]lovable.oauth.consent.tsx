@@ -107,7 +107,7 @@ function Consent() {
               <div className="text-sm">
                 <div className="font-medium mb-1">Gevraagde rechten</div>
                 <ul className="list-disc pl-5 text-muted-foreground space-y-0.5">
-                  {scopes.map((s) => (
+                  {scopes.map((s: string) => (
                     <li key={s}>{s}</li>
                   ))}
                 </ul>

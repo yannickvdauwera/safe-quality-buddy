@@ -1,0 +1,119 @@
+{
+  "version": 1,
+  "sdk_version": "0.22.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://axdjdfecnwpodmeztijj.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "hse-kwaliteit-mcp",
+      "version": "0.1.0",
+      "title": "HSE & Kwaliteit"
+    },
+    "tools": [
+      {
+        "name": "whoami",
+        "title": "Wie ben ik",
+        "description": "Toon de ingelogde gebruiker (naam, e-mail, functies) en toegewezen rollen.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {}
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_recent_reports",
+        "title": "Recente meldingen",
+        "description": "Lijst met recente interne meldingen en (bijna-)ongevallen waar de gebruiker toegang toe heeft (RLS).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "Aantal resultaten, standaard 10.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_safety_observations",
+        "title": "Recente MOS / STOP",
+        "description": "Lijst met recente veiligheidsobservaties (MOS-meldingen en STOP-reflexen) waar de gebruiker toegang toe heeft.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "Aantal resultaten, standaard 10.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 50
+            },
+            "kind": {
+              "description": "Filter op type observatie.",
+              "type": "string",
+              "enum": [
+                "mos",
+                "stop",
+                "all"
+              ]
+            }
+          }
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_toolboxes",
+        "title": "Toolboxen",
+        "description": "Lijst met beschikbare toolboxen (titel, categorie, beschrijving).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "type": "object",
+          "properties": {
+            "limit": {
+              "description": "Aantal resultaten, standaard 20.",
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            },
+            "search": {
+              "description": "Zoekterm in titel of beschrijving.",
+              "type": "string"
+            }
+          }
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}

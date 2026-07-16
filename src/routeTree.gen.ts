@@ -43,6 +43,7 @@ import { Route as AuthenticatedInspectiesKwaliteitRouteImport } from './routes/_
 import { Route as AuthenticatedInspectiesIdRouteImport } from './routes/_authenticated/inspecties.$id'
 import { Route as AuthenticatedEmployeesIdRouteImport } from './routes/_authenticated/employees.$id'
 import { Route as Char91DotmcpChar93InvokeToolToolRouteImport } from './routes/[.mcp]/invoke-tool/$tool'
+import { Route as DotlovableOauthConsentRouteImport } from './routes/[.]lovable.oauth.consent'
 import { Route as AuthenticatedToolboxesSessionsIdRouteImport } from './routes/_authenticated/toolboxes.sessions.$id'
 import { Route as AuthenticatedLerenVideoIdRouteImport } from './routes/_authenticated/leren.video.$id'
 import { Route as AuthenticatedLerenQuizIdRouteImport } from './routes/_authenticated/leren.quiz.$id'
@@ -236,6 +237,11 @@ const Char91DotmcpChar93InvokeToolToolRoute =
     path: '/.mcp/invoke-tool/$tool',
     getParentRoute: () => rootRouteImport,
   } as any)
+const DotlovableOauthConsentRoute = DotlovableOauthConsentRouteImport.update({
+  id: '/.lovable/oauth/consent',
+  path: '/.lovable/oauth/consent',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedToolboxesSessionsIdRoute =
   AuthenticatedToolboxesSessionsIdRouteImport.update({
     id: '/toolboxes/sessions/$id',
@@ -269,6 +275,7 @@ export interface FileRoutesByFullPath {
   '/stop': typeof AuthenticatedStopRoute
   '/users': typeof AuthenticatedUsersRoute
   '/sign/$token': typeof SignTokenRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/employees/$id': typeof AuthenticatedEmployeesIdRoute
   '/inspecties/$id': typeof AuthenticatedInspectiesIdRoute
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/stop': typeof AuthenticatedStopRoute
   '/users': typeof AuthenticatedUsersRoute
   '/sign/$token': typeof SignTokenRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/employees/$id': typeof AuthenticatedEmployeesIdRoute
   '/inspecties/$id': typeof AuthenticatedInspectiesIdRoute
@@ -345,6 +353,7 @@ export interface FileRoutesById {
   '/_authenticated/stop': typeof AuthenticatedStopRoute
   '/_authenticated/users': typeof AuthenticatedUsersRoute
   '/sign/$token': typeof SignTokenRoute
+  '/.lovable/oauth/consent': typeof DotlovableOauthConsentRoute
   '/.mcp/invoke-tool/$tool': typeof Char91DotmcpChar93InvokeToolToolRoute
   '/_authenticated/employees/$id': typeof AuthenticatedEmployeesIdRoute
   '/_authenticated/inspecties/$id': typeof AuthenticatedInspectiesIdRoute
@@ -385,6 +394,7 @@ export interface FileRouteTypes {
     | '/stop'
     | '/users'
     | '/sign/$token'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/employees/$id'
     | '/inspecties/$id'
@@ -421,6 +431,7 @@ export interface FileRouteTypes {
     | '/stop'
     | '/users'
     | '/sign/$token'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/employees/$id'
     | '/inspecties/$id'
@@ -460,6 +471,7 @@ export interface FileRouteTypes {
     | '/_authenticated/stop'
     | '/_authenticated/users'
     | '/sign/$token'
+    | '/.lovable/oauth/consent'
     | '/.mcp/invoke-tool/$tool'
     | '/_authenticated/employees/$id'
     | '/_authenticated/inspecties/$id'
@@ -493,6 +505,7 @@ export interface RootRouteChildren {
   Char91DotmcpChar93ListToolsRoute: typeof Char91DotmcpChar93ListToolsRoute
   Char91DotwellKnownChar93OauthProtectedResourceRoute: typeof Char91DotwellKnownChar93OauthProtectedResourceRoute
   SignTokenRoute: typeof SignTokenRoute
+  DotlovableOauthConsentRoute: typeof DotlovableOauthConsentRoute
   Char91DotmcpChar93InvokeToolToolRoute: typeof Char91DotmcpChar93InvokeToolToolRoute
   ApiPublicToolboxSignRoute: typeof ApiPublicToolboxSignRoute
 }
@@ -737,6 +750,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof Char91DotmcpChar93InvokeToolToolRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/.lovable/oauth/consent': {
+      id: '/.lovable/oauth/consent'
+      path: '/.lovable/oauth/consent'
+      fullPath: '/.lovable/oauth/consent'
+      preLoaderRoute: typeof DotlovableOauthConsentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/toolboxes/sessions/$id': {
       id: '/_authenticated/toolboxes/sessions/$id'
       path: '/toolboxes/sessions/$id'
@@ -861,6 +881,7 @@ const rootRouteChildren: RootRouteChildren = {
   Char91DotwellKnownChar93OauthProtectedResourceRoute:
     Char91DotwellKnownChar93OauthProtectedResourceRoute,
   SignTokenRoute: SignTokenRoute,
+  DotlovableOauthConsentRoute: DotlovableOauthConsentRoute,
   Char91DotmcpChar93InvokeToolToolRoute: Char91DotmcpChar93InvokeToolToolRoute,
   ApiPublicToolboxSignRoute: ApiPublicToolboxSignRoute,
 }

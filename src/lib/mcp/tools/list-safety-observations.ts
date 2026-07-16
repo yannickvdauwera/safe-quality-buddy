@@ -17,10 +17,10 @@ export default defineTool({
     const sb = supabaseForUser(ctx);
     let q = sb
       .from("safety_observations")
-      .select("id,observation_type,situation_description,location,plant,status,created_at")
+      .select("id,type,situation_description,location,plant,status,created_at")
       .order("created_at", { ascending: false })
       .limit(limit ?? 10);
-    if (kind && kind !== "all") q = q.eq("observation_type", kind);
+    if (kind && kind !== "all") q = q.eq("type", kind);
     const { data, error } = await q;
     if (error) return { content: [{ type: "text", text: error.message }], isError: true };
     return {

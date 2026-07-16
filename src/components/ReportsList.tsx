@@ -205,7 +205,7 @@ export function ReportsList({
     if (!user) return;
     const fd = new FormData(e.currentTarget);
     const parsed = schema.safeParse(Object.fromEntries(fd));
-    if (!parsed.success) return toast.error(parsed.error.errors[0].message);
+    if (!parsed.success) return toast.error(parsed.error.issues[0].message);
     setSaving(true);
     const payload = {
       ...parsed.data,

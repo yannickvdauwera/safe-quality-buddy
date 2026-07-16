@@ -55,8 +55,8 @@ function AuthPage() {
     const fd = new FormData(e.currentTarget);
     const emailP = emailSchema.safeParse(fd.get("email"));
     const pwdP = passwordSchema.safeParse(fd.get("password"));
-    if (!emailP.success) return toast.error(emailP.error.errors[0].message);
-    if (!pwdP.success) return toast.error(pwdP.error.errors[0].message);
+    if (!emailP.success) return toast.error(emailP.error.issues[0].message);
+    if (!pwdP.success) return toast.error(pwdP.error.issues[0].message);
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({
       email: emailP.data,
@@ -73,9 +73,9 @@ function AuthPage() {
     const nameP = nameSchema.safeParse(fd.get("name"));
     const emailP = emailSchema.safeParse(fd.get("email"));
     const pwdP = passwordSchema.safeParse(fd.get("password"));
-    if (!nameP.success) return toast.error(nameP.error.errors[0].message);
-    if (!emailP.success) return toast.error(emailP.error.errors[0].message);
-    if (!pwdP.success) return toast.error(pwdP.error.errors[0].message);
+    if (!nameP.success) return toast.error(nameP.error.issues[0].message);
+    if (!emailP.success) return toast.error(emailP.error.issues[0].message);
+    if (!pwdP.success) return toast.error(pwdP.error.issues[0].message);
     setLoading(true);
     const { error } = await supabase.auth.signUp({
       email: emailP.data,

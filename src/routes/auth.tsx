@@ -12,6 +12,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ShieldCheck } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
+  validateSearch: (s: Record<string, unknown>) => ({
+    next: typeof s.next === "string" ? s.next : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Aanmelden — HSE & Kwaliteitsplatform" },
@@ -25,24 +28,41 @@ const emailSchema = z.string().trim().email({ message: "Ongeldig e-mailadres" })
 const passwordSchema = z.string().min(8, { message: "Wachtwoord moet minimaal 8 tekens hebben" }).max(72);
 const nameSchema = z.string().trim().min(2, { message: "Naam is te kort" }).max(100);
 
+// Only allow same-origin relative paths as post-login destinations.
+function safeNext(next: string | undefined): string | null {
+  if (!next || !next.startsWith("/") || next.startsWith("//")) return null;
+  return next;
+}
+
 function AuthPage() {
   const navigate = useNavigate();
+  const { next } = Route.useSearch();
   const [loading, setLoading] = useState(false);
+
+  const goNext = () => {
+    const target = safeNext(next);
+    if (target) window.location.assign(target);
+    else navigate({ to: "/dashboard", replace: true });
+  };
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/dashboard", replace: true });
+      if (data.session) goNext();
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === "SIGNED_IN" && session) navigate({ to: "/dashboard", replace: true });
+      if (event === "SIGNED_IN" && session) goNext();
     });
     return () => sub.subscription.unsubscribe();
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [next]);
 
   const handleGoogle = async () => {
     setLoading(true);
+    const target = safeNext(next);
+    const redirect =
+      target ? `${window.location.origin}/auth?next=${encodeURIComponent(target)}` : window.location.origin;
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: redirect,
     });
     if (result.error) {
       toast.error("Aanmelden met Google mislukt");
@@ -77,11 +97,15 @@ function AuthPage() {
     if (!emailP.success) return toast.error(emailP.error.issues[0].message);
     if (!pwdP.success) return toast.error(pwdP.error.issues[0].message);
     setLoading(true);
+    const target = safeNext(next);
+    const emailRedirectTo = target
+      ? `${window.location.origin}/auth?next=${encodeURIComponent(target)}`
+      : window.location.origin;
     const { error } = await supabase.auth.signUp({
       email: emailP.data,
       password: pwdP.data,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo,
         data: { full_name: nameP.data },
       },
     });

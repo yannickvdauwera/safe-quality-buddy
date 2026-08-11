@@ -28,7 +28,7 @@ import {
   parseMeasures, serializeMeasures, measureTypesFrom,
   W_SCALE, B_SCALE, E_SCALE, K_SCALE, E5_SCALE,
   ORG_THEMES, ORG_THEME_LABELS, ORG_THEME_COLORS, ORG_THEME_EMOJIS, ORG_SUBTHEMES, normalizeOrgTheme,
-  SMILEY_META, MEASURE_STATUS_META, MEASURE_STATUS_LABELS,
+  SMILEY_META, MEASURE_STATUS_META, MEASURE_STATUS_LABELS, buildItemCodes,
   type RiskAnalysisType, type RiskAnalysisStatus, type RiskMeasureType, type RiskMethod,
   type MeasuresByType, type OrgTheme, type Smiley, type MeasureStatus,
 } from "@/lib/risk-analysis-types";
@@ -144,6 +144,8 @@ function RiskAnalysisDetail() {
       return data as unknown as Item[];
     },
   });
+
+  const itemCodes = useMemo(() => buildItemCodes(items ?? []), [items]);
 
   // Alle app-gebruikers (Gebruikers & Rollen) — bron voor de uitvoerders-picker.
   const { data: appUsers } = useQuery({
@@ -513,6 +515,7 @@ function RiskAnalysisDetail() {
               setEditItem({ ...it, measures_by_type: {}, measures_legacy: flat });
             }}
             onDelete={deleteItem}
+            codes={itemCodes}
           />
         ) : (
           <div className="overflow-x-auto">
@@ -547,7 +550,7 @@ function RiskAnalysisDetail() {
                         aria-label={`Selecteer item ${it.position}`}
                       />
                     </td>
-                    <td className="py-3 px-2 text-muted-foreground font-mono text-xs">{it.position}</td>
+                    <td className="py-3 px-2 text-muted-foreground font-mono text-xs">{itemCodes.get(it.id) ?? it.position}</td>
                     <td className="py-3 px-2">
                       {it.activity && <div className="text-xs text-muted-foreground">{it.activity}</div>}
                       <div className="font-medium">{it.hazard}</div>
@@ -904,9 +907,10 @@ function ExecutorsCard({
 
 // ============ Organisatie-analyse — accordion per thema ============
 function OrgAccordion({
-  items, onEdit, onDelete, selectedIds, onToggleSelect,
+  items, onEdit, onDelete, selectedIds, onToggleSelect, codes,
 }: {
   items: Item[];
+  codes: Map<string, string>;
   onEdit: (it: Item) => void;
   onDelete: (id: string) => void;
   selectedIds: Set<string>;
@@ -940,7 +944,7 @@ function OrgAccordion({
               </div>
             </AccordionTrigger>
             <AccordionContent>
-              <OrgItemsTable items={list} onEdit={onEdit} onDelete={onDelete} selectedIds={selectedIds} onToggleSelect={onToggleSelect} />
+              <OrgItemsTable items={list} onEdit={onEdit} onDelete={onDelete} selectedIds={selectedIds} onToggleSelect={onToggleSelect} codes={codes} />
             </AccordionContent>
           </AccordionItem>
         );
@@ -955,7 +959,7 @@ function OrgAccordion({
             </div>
           </AccordionTrigger>
           <AccordionContent>
-            <OrgItemsTable items={untagged} onEdit={onEdit} onDelete={onDelete} selectedIds={selectedIds} onToggleSelect={onToggleSelect} />
+            <OrgItemsTable items={untagged} onEdit={onEdit} onDelete={onDelete} selectedIds={selectedIds} onToggleSelect={onToggleSelect} codes={codes} />
           </AccordionContent>
         </AccordionItem>
       )}
@@ -964,9 +968,10 @@ function OrgAccordion({
 }
 
 function OrgItemsTable({
-  items, onEdit, onDelete, selectedIds, onToggleSelect,
+  items, onEdit, onDelete, selectedIds, onToggleSelect, codes,
 }: {
   items: Item[];
+  codes: Map<string, string>;
   onEdit: (it: Item) => void;
   onDelete: (id: string) => void;
   selectedIds: Set<string>;
@@ -986,6 +991,7 @@ function OrgItemsTable({
                 aria-label="Alles selecteren"
               />
             </th>
+            <th className="text-left py-2 px-2 w-20">Nr.</th>
             <th className="text-left py-2 px-2 w-16">Score</th>
             <th className="text-left py-2 px-2 w-48">Subthema</th>
             <th className="text-left py-2 px-2">Onderwerp</th>
@@ -1009,6 +1015,9 @@ function OrgItemsTable({
                     onCheckedChange={(v) => onToggleSelect(it.id, !!v)}
                     aria-label={`Selecteer ${it.hazard}`}
                   />
+                </td>
+                <td className="py-3 px-2 text-muted-foreground font-mono text-xs whitespace-nowrap">
+                  {codes.get(it.id) ?? it.position}
                 </td>
                 <td className="py-3 px-2">
                   {smiley ? (

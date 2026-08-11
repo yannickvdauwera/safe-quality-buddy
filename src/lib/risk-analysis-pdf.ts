@@ -6,7 +6,7 @@ import {
   classifyRiskFor, levelsFor, highRiskThreshold, parseMeasures,
   W_SCALE, B_SCALE, E_SCALE, K_SCALE, E5_SCALE,
   ORG_THEMES, ORG_THEME_LABELS, ORG_THEME_COLORS, normalizeOrgTheme,
-  SMILEY_META, MEASURE_STATUS_LABELS,
+  SMILEY_META, MEASURE_STATUS_LABELS, buildItemCodes,
   type RiskMethod, type RiskAnalysisType, type RiskAnalysisStatus, type RiskMeasureType,
   type OrgTheme, type Smiley, type MeasureStatus,
 } from "./risk-analysis-types";
@@ -40,6 +40,7 @@ async function loadImage(url: string) {
 }
 
 export interface RiskAnalysisExportItem {
+  id?: string;
   position: number;
   activity: string | null;
   hazard: string;
@@ -95,6 +96,9 @@ function renderOrganisationTables(
 ): number {
   let y = startY;
   const items = a.items.slice().sort((x, y2) => (x.position ?? 0) - (y2.position ?? 0));
+  const codes = buildItemCodes(items.map((it, i) => ({ id: it.id ?? String(i), position: it.position, theme: it.theme })));
+  const codeOf = (it: RiskAnalysisExportItem, i: number) => codes.get(it.id ?? String(i)) ?? String(it.position);
+  const codeByPos = new Map(items.map((it, i) => [it.position, codeOf(it, i)]));
   const byTheme = new Map<string, RiskAnalysisExportItem[]>();
   for (const t of ORG_THEMES) byTheme.set(t, []);
   const OTHER = "Overig";
@@ -137,9 +141,9 @@ function renderOrganisationTables(
 
     autoTable(doc, {
       startY: y,
-      head: [["#", "Onderwerp", "Huidige toestand", "Maatregelen", "Actie / verbeterpunt", "Wetgeving", "Beoord.", "Status"]],
+      head: [["Nr.", "Onderwerp", "Huidige toestand", "Maatregelen", "Actie / verbeterpunt", "Wetgeving", "Beoord.", "Status"]],
       body: list.map((it) => [
-        String(it.position),
+        codeByPos.get(it.position) ?? String(it.position),
         [it.subtheme ? `[${it.subtheme}]` : null, it.hazard, it.risk_description].filter(Boolean).join("\n"),
         it.current_state ?? "—",
         flatMeasures(it.measures) || "—",
@@ -153,8 +157,8 @@ function renderOrganisationTables(
       headStyles: { fillColor: TSA_DARK, textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8.5, halign: "left" },
       alternateRowStyles: { fillColor: TSA_LIGHT },
       columnStyles: {
-        0: { cellWidth: 8, halign: "center", fontStyle: "bold" },
-        1: { cellWidth: 45 },
+        0: { cellWidth: 16, halign: "center", fontStyle: "bold" },
+        1: { cellWidth: 43 },
         2: { cellWidth: 45 },
         3: { cellWidth: 50 },
         4: { cellWidth: 45 },
@@ -307,8 +311,9 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
     return parts.join("\n\n");
   };
 
-  const body = a.items.map((it) => [
-    String(it.position),
+  const nonOrgCodes = buildItemCodes(a.items.map((it, i) => ({ id: it.id ?? String(i), position: it.position, theme: it.theme })));
+  const body = a.items.map((it, i) => [
+    nonOrgCodes.get(it.id ?? String(i)) ?? String(it.position),
     [it.activity, it.hazard, it.risk_description ? `Kans op: ${it.risk_description}` : null].filter(Boolean).join("\n"),
     `${it.score_r ?? "—"}\n${scoreLabel(it.score_w, it.score_b, it.score_e)}`,
     formatMeasures(it.measures),
@@ -317,15 +322,15 @@ export async function exportRiskAnalysisToPdf(a: RiskAnalysisExport) {
 
   autoTable(doc, {
     startY: y,
-    head: [["#", "Activiteit / Gevaar", "Bruto R", "Beheersmaatregelen", "Netto R"]],
+    head: [["Nr.", "Activiteit / Gevaar", "Bruto R", "Beheersmaatregelen", "Netto R"]],
     body,
     theme: "grid",
     styles: { fontSize: 8.5, cellPadding: 2.5, lineColor: [229, 229, 229], lineWidth: 0.1, textColor: TSA_DARK, valign: "top" },
     headStyles: { fillColor: TSA_DARK, textColor: [255, 255, 255], fontStyle: "bold", fontSize: 9, halign: "left" },
     alternateRowStyles: { fillColor: TSA_LIGHT },
     columnStyles: {
-      0: { cellWidth: 10, halign: "center", fontStyle: "bold" },
-      1: { cellWidth: 75 },
+      0: { cellWidth: 14, halign: "center", fontStyle: "bold" },
+      1: { cellWidth: 71 },
       2: { cellWidth: 32, halign: "center", fontStyle: "bold" },
       3: { cellWidth: "auto" },
       4: { cellWidth: 32, halign: "center", fontStyle: "bold" },

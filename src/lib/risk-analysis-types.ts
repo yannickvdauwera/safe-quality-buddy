@@ -344,3 +344,24 @@ export function highRiskThreshold(method: RiskMethod): number {
   return method === "kans_ernst" ? 15 : 200;
 }
 
+
+/**
+ * Nummering per analyse-item: items met een thema krijgen een themacode
+ * (bv. ALG-01, ABV-02), items zonder thema een doorlopend nummer (01, 02).
+ */
+export function buildItemCodes(
+  items: Array<{ id: string; position: number; theme?: string | null }>,
+): Map<string, string> {
+  const sorted = items.slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+  const counters = new Map<string, number>();
+  const codes = new Map<string, string>();
+  for (const it of sorted) {
+    const t = normalizeOrgTheme(it.theme);
+    const key = t ?? "__none";
+    const n = (counters.get(key) ?? 0) + 1;
+    counters.set(key, n);
+    const num = String(n).padStart(2, "0");
+    codes.set(it.id, t ? `${t}-${num}` : num);
+  }
+  return codes;
+}

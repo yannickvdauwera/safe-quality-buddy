@@ -145,6 +145,8 @@ function RiskAnalysisDetail() {
     },
   });
 
+  const itemCodes = useMemo(() => buildItemCodes(items ?? []), [items]);
+
   // Alle app-gebruikers (Gebruikers & Rollen) — bron voor de uitvoerders-picker.
   const { data: appUsers } = useQuery({
     queryKey: ["profiles-picker"],

@@ -213,11 +213,12 @@ function MedewerkersPage() {
               />
             </div>
             <Select value={roleFilter} onValueChange={(v) => setRoleFilter(v as "all" | WorkerRole)}>
-              <SelectTrigger className="w-40"><SelectValue /></SelectTrigger>
+              <SelectTrigger className="w-44"><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Alle rollen</SelectItem>
-                <SelectItem value="gebruiker">Gebruikers</SelectItem>
-                <SelectItem value="manager">Managers</SelectItem>
+                {(isAdmin ? ALL_ROLES : WORKER_ROLE_OPTIONS).map((r) => (
+                  <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

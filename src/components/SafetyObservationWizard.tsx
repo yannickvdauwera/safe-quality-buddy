@@ -196,17 +196,25 @@ export function SafetyObservationWizard({ type, onDone, mode = "internal" }: Pro
     if (!files || !files.length) return;
     setUploading(true);
     try {
+      let userId: string | null = null;
+      if (mode !== "public") {
+        const { data: auth } = await supabase.auth.getUser();
+        userId = auth.user?.id ?? null;
+        if (!userId) throw new Error("Je sessie is verlopen. Meld je opnieuw aan.");
+      }
       for (const file of Array.from(files)) {
         if (!file.type.startsWith("image/")) continue;
         const blob = await compress(file);
-        const prefix = mode === "public" ? "public/" : "";
-        const path = `${prefix}${type}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+        const name = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+        const path =
+          mode === "public" ? `public/${type}/${name}` : `u/${userId}/${type}/${name}`;
         const { error } = await supabase.storage
           .from("safety-observations")
           .upload(path, blob, { contentType: "image/jpeg", upsert: false });
         if (error) throw error;
         setPhotos((p) => [...p, { path, previewUrl: URL.createObjectURL(blob) }]);
       }
+
     } catch (e) {
       toast.error((e as Error).message);
     } finally {

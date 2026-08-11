@@ -27,7 +27,7 @@ import {
   classifyRiskFor, computeRFor, levelsFor, highRiskThreshold,
   parseMeasures, serializeMeasures, measureTypesFrom,
   W_SCALE, B_SCALE, E_SCALE, K_SCALE, E5_SCALE,
-  ORG_THEMES, ORG_THEME_LABELS, ORG_THEME_COLORS,
+  ORG_THEMES, ORG_THEME_LABELS, ORG_THEME_COLORS, ORG_THEME_EMOJIS, ORG_SUBTHEMES, normalizeOrgTheme,
   SMILEY_META, MEASURE_STATUS_META, MEASURE_STATUS_LABELS,
   type RiskAnalysisType, type RiskAnalysisStatus, type RiskMeasureType, type RiskMethod,
   type MeasuresByType, type OrgTheme, type Smiley, type MeasureStatus,
@@ -59,6 +59,7 @@ interface Item {
   residual_r: number | null;
   // Organisatie-specifieke velden
   theme: OrgTheme | null;
+  subtheme: string | null;
   current_state: string | null;
   legislation: string | null;
   measure_status: MeasureStatus | null;
@@ -224,6 +225,7 @@ function RiskAnalysisDetail() {
       residual_e: isOrg ? null : (editItem.residual_e ?? null),
       residual_r: isOrg ? null : computeRFor(method, editItem.residual_w ?? null, editItem.residual_b ?? null, editItem.residual_e ?? null),
       theme: isOrg ? (editItem.theme ?? null) : null,
+      subtheme: isOrg ? (editItem.subtheme || null) : null,
       current_state: isOrg ? (editItem.current_state || null) : null,
       legislation: isOrg ? (editItem.legislation || null) : null,
       measure_status: isOrg ? (editItem.measure_status ?? null) : null,
@@ -321,6 +323,7 @@ function RiskAnalysisDetail() {
             residual_e: it.residual_e,
             residual_r: it.residual_r,
             theme: it.theme,
+            subtheme: it.subtheme,
             current_state: it.current_state,
             legislation: it.legislation,
             measure_status: it.measure_status,
@@ -912,8 +915,8 @@ function OrgAccordion({
   const grouped = new Map<OrgTheme, Item[]>();
   const untagged: Item[] = [];
   for (const it of items) {
-    const t = it.theme;
-    if (t && ORG_THEMES.includes(t)) {
+    const t = normalizeOrgTheme(it.theme);
+    if (t) {
       if (!grouped.has(t)) grouped.set(t, []);
       grouped.get(t)!.push(it);
     } else {
@@ -932,7 +935,7 @@ function OrgAccordion({
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
                 <span className="inline-block w-2.5 h-2.5 rounded-full" style={{ background: color }} />
-                <span className="font-semibold">{t} — {ORG_THEME_LABELS[t]}</span>
+                <span className="font-semibold">{ORG_THEME_EMOJIS[t]} {t} — {ORG_THEME_LABELS[t]}</span>
                 <Badge variant="outline" className="text-[10px]">{list.length}</Badge>
               </div>
             </AccordionTrigger>
@@ -984,6 +987,7 @@ function OrgItemsTable({
               />
             </th>
             <th className="text-left py-2 px-2 w-16">Score</th>
+            <th className="text-left py-2 px-2 w-48">Subthema</th>
             <th className="text-left py-2 px-2">Onderwerp</th>
             <th className="text-left py-2 px-2">Huidige toestand</th>
             <th className="text-left py-2 px-2">Maatregelen</th>
@@ -1015,6 +1019,11 @@ function OrgItemsTable({
                       {smiley.emoji}
                     </span>
                   ) : <span className="text-xs text-muted-foreground">—</span>}
+                </td>
+                <td className="py-3 px-2">
+                  {it.subtheme
+                    ? <Badge variant="outline" className="text-[10px] font-normal">{it.subtheme}</Badge>
+                    : <span className="text-xs text-muted-foreground">—</span>}
                 </td>
                 <td className="py-3 px-2">
                   <div className="font-medium">{it.hazard}</div>
@@ -1073,20 +1082,38 @@ function OrgItemDialog({
           <DialogTitle>{item.id ? "Item bewerken" : "Nieuw item"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-4">
             <div className="space-y-1.5">
               <Label className="text-xs">Thema</Label>
               <Select
                 value={item.theme ?? "ALG"}
-                onValueChange={(v) => onChange({ ...item, theme: v as OrgTheme })}
+                onValueChange={(v) => onChange({ ...item, theme: v as OrgTheme, subtheme: null })}
               >
                 <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {ORG_THEMES.map((t) => (
                     <SelectItem key={t} value={t} className="text-xs">
-                      {t} — {ORG_THEME_LABELS[t]}
+                      {ORG_THEME_EMOJIS[t]} {t} — {ORG_THEME_LABELS[t]}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Subthema</Label>
+              <Select
+                value={item.subtheme ?? "__none"}
+                onValueChange={(v) => onChange({ ...item, subtheme: v === "__none" ? null : v })}
+              >
+                <SelectTrigger className="text-xs"><SelectValue placeholder="Kies subthema" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none" className="text-xs text-muted-foreground">Geen subthema</SelectItem>
+                  {(ORG_SUBTHEMES[normalizeOrgTheme(item.theme) ?? "ALG"] ?? []).map((st) => (
+                    <SelectItem key={st} value={st} className="text-xs">{st}</SelectItem>
+                  ))}
+                  {item.subtheme && !(ORG_SUBTHEMES[normalizeOrgTheme(item.theme) ?? "ALG"] ?? []).includes(item.subtheme) && (
+                    <SelectItem value={item.subtheme} className="text-xs">{item.subtheme}</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>

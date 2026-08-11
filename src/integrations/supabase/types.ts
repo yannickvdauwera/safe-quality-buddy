@@ -583,6 +583,7 @@ export type Database = {
           score_r: number | null
           score_w: number | null
           smiley: string | null
+          subtheme: string | null
           theme: string | null
           updated_at: string
           version_id: string
@@ -610,6 +611,7 @@ export type Database = {
           score_r?: number | null
           score_w?: number | null
           smiley?: string | null
+          subtheme?: string | null
           theme?: string | null
           updated_at?: string
           version_id: string
@@ -637,6 +639,7 @@ export type Database = {
           score_r?: number | null
           score_w?: number | null
           smiley?: string | null
+          subtheme?: string | null
           theme?: string | null
           updated_at?: string
           version_id?: string

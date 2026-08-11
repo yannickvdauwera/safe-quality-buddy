@@ -8,22 +8,101 @@ export type RiskMethod = "fine_kinney" | "kans_ernst";
 // ============ Organisatie-analyse ============
 // Aparte indeling per thema, met smiley i.p.v. numerieke score.
 
-export type OrgTheme = "ALG" | "AVB" | "GEZ" | "PSY" | "ABH";
-export const ORG_THEMES: OrgTheme[] = ["ALG", "AVB", "GEZ", "PSY", "ABH"];
+export type OrgTheme = "ALG" | "ABV" | "GEZ" | "PSY" | "ERG" | "ABH" | "VAP" | "MIL";
+export const ORG_THEMES: OrgTheme[] = ["ALG", "ABV", "GEZ", "PSY", "ERG", "ABH", "VAP", "MIL"];
 export const ORG_THEME_LABELS: Record<OrgTheme, string> = {
   ALG: "Algemeen",
-  AVB: "Arbeidsveiligheid",
+  ABV: "Arbeidsveiligheid",
   GEZ: "Gezondheid",
-  PSY: "Psychosociaal",
+  PSY: "Psychosociale belasting vanwege werk",
+  ERG: "Ergonomie",
   ABH: "Arbeidshygiëne",
+  VAP: "Verfraaiing van de arbeidsplaatsen",
+  MIL: "Milieu",
+};
+export const ORG_THEME_EMOJIS: Record<OrgTheme, string> = {
+  ALG: "🏛",
+  ABV: "🦺",
+  GEZ: "⛑",
+  PSY: "🧠",
+  ERG: "🩻",
+  ABH: "🫧",
+  VAP: "🧽",
+  MIL: "🗑",
 };
 export const ORG_THEME_COLORS: Record<OrgTheme, string> = {
   ALG: "#64748b",
-  AVB: "#dc2626",
+  ABV: "#dc2626",
   GEZ: "#059669",
   PSY: "#7c3aed",
+  ERG: "#db2777",
   ABH: "#0891b2",
+  VAP: "#0d9488",
+  MIL: "#65a30d",
 };
+
+// Vaste lijst subthema's per thema (bron: RA-organisatie sjabloon).
+export const ORG_SUBTHEMES: Record<OrgTheme, string[]> = {
+  ALG: [
+    "Aard van het bedrijf",
+    "Beleid van het bedrijf",
+    "Interne Dienst voor Preventie & Bescherming op het Werk",
+    "Externe Dienst voor Preventie & Bescherming op het Werk",
+    "Comité voor Preventie & Bescherming op het Werk",
+    "Hiërarchische lijn",
+    "Werknemers & derden",
+  ],
+  ABV: [
+    "Intern noodplan",
+    "Brandveiligheid",
+    "AM Arbeidsmiddelen",
+    "Keuringen",
+    "Taken / werkposten",
+    "Elektrische installaties",
+    "Werken op hoogte",
+    "PBM / CBM / werkkledij",
+    "Signalering",
+    "Intern verkeer",
+  ],
+  GEZ: ["Arbeidsongevallen", "Gezondheidstoezicht", "EHBO"],
+  PSY: [
+    "Psychosociale belasting veroorzaakt door het werk",
+    "Alcohol, drugs & roken",
+    "Pesten op het werk",
+  ],
+  ERG: ["Ergonomie op de werkvloer", "Bureauwerk"],
+  ABH: [
+    "Fysische agentia",
+    "Chemische agentia",
+    "Biologische agentia",
+    "Orde en netheid op werkplaatsen",
+    "Epidemieën en pandemieën",
+    "Vaccinaties",
+    "Asbest",
+  ],
+  VAP: [
+    "Hygiëne en sociale voorzieningen",
+    "Arbeidsplaats kantoor",
+    "Arbeidsplaats magazijn / opslag",
+    "Transport intern",
+  ],
+  MIL: ["Bedrijfsafval"],
+};
+
+// Historische themacodes blijven leesbaar (AVB werd hernoemd naar ABV).
+const LEGACY_THEME_ALIASES: Record<string, OrgTheme> = { AVB: "ABV" };
+
+export function normalizeOrgTheme(raw: string | null | undefined): OrgTheme | null {
+  if (!raw) return null;
+  const t = raw.trim().toUpperCase();
+  if ((ORG_THEMES as string[]).includes(t)) return t as OrgTheme;
+  return LEGACY_THEME_ALIASES[t] ?? null;
+}
+
+export function orgThemeTitle(t: OrgTheme): string {
+  return `${ORG_THEME_EMOJIS[t]} ${t} — ${ORG_THEME_LABELS[t]}`;
+}
+
 
 export type Smiley = "green" | "yellow" | "red";
 export const SMILEY_META: Record<Smiley, { label: string; emoji: string; color: string; badgeClass: string }> = {

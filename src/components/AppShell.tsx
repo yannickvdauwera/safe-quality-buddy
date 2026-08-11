@@ -95,16 +95,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   const nav: NavItem[] = [
     ...(canSeeEmployees ? [{ to: "/employees", label: "Medewerkers", icon: Users } as NavLeaf] : []),
     ...baseNav,
-    ...(hasRole("admin")
-      ? [{
-          kind: "group" as const,
-          basePath: "/instellingen-hub",
-          label: "Instellingen",
-          icon: Wrench,
-          children: [{ to: "/users", label: "Gebruikers & rollen", icon: Shield }],
-        }]
-      : []),
   ];
+
 
   const handleSignOut = async () => {
     await queryClient.cancelQueries();

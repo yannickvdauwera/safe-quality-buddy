@@ -353,8 +353,18 @@ function MedewerkersPage() {
 
       {!isAdmin && (
         <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-          <Shield className="w-3 h-3" /> Alleen administrators kunnen de lijst van functies wijzigen.
+          <Shield className="w-3 h-3" /> Alleen administrators kunnen functies beheren en admin-/HSE-rollen toewijzen.
         </p>
+      )}
+
+      {rolesDialog && (
+        <RolesDialog
+          initial={rolesDialog}
+          options={ALL_ROLES}
+          loading={roleMut.isPending}
+          onClose={() => setRolesDialog(null)}
+          onSave={(v) => roleMut.mutate({ user_id: rolesDialog.userId, roles: v })}
+        />
       )}
 
       {functionsDialog && (

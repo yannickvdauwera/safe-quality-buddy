@@ -1082,12 +1082,12 @@ function OrgItemDialog({
           <DialogTitle>{item.id ? "Item bewerken" : "Nieuw item"}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="grid gap-3 md:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-4">
             <div className="space-y-1.5">
               <Label className="text-xs">Thema</Label>
               <Select
                 value={item.theme ?? "ALG"}
-                onValueChange={(v) => onChange({ ...item, theme: v as OrgTheme })}
+                onValueChange={(v) => onChange({ ...item, theme: v as OrgTheme, subtheme: null })}
               >
                 <SelectTrigger className="text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
@@ -1096,6 +1096,24 @@ function OrgItemDialog({
                       {ORG_THEME_EMOJIS[t]} {t} — {ORG_THEME_LABELS[t]}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs">Subthema</Label>
+              <Select
+                value={item.subtheme ?? "__none"}
+                onValueChange={(v) => onChange({ ...item, subtheme: v === "__none" ? null : v })}
+              >
+                <SelectTrigger className="text-xs"><SelectValue placeholder="Kies subthema" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="__none" className="text-xs text-muted-foreground">Geen subthema</SelectItem>
+                  {(ORG_SUBTHEMES[normalizeOrgTheme(item.theme) ?? "ALG"] ?? []).map((st) => (
+                    <SelectItem key={st} value={st} className="text-xs">{st}</SelectItem>
+                  ))}
+                  {item.subtheme && !(ORG_SUBTHEMES[normalizeOrgTheme(item.theme) ?? "ALG"] ?? []).includes(item.subtheme) && (
+                    <SelectItem value={item.subtheme} className="text-xs">{item.subtheme}</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>

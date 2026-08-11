@@ -12,8 +12,7 @@ import {
   listJobFunctions, createJobFunction, updateJobFunction, deleteJobFunction, setUserFunctionTitles,
 } from "@/lib/job-functions.functions";
 import { MultiFunctionSelect } from "@/components/MultiFunctionSelect";
-import { UsersRolesPanel } from "@/components/UsersRolesPanel";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,12 +52,21 @@ export const Route = createFileRoute("/_authenticated/employees/")({
   component: MedewerkersPage,
 });
 
-type WorkerRole = "gebruiker" | "manager";
-const ROLE_LABELS: Record<WorkerRole, string> = { gebruiker: "Gebruiker", manager: "Manager" };
-const ROLE_BADGE: Record<WorkerRole, string> = {
-  gebruiker: "bg-muted text-foreground",
-  manager: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200",
+type WorkerRole = "admin" | "hse_manager" | "manager" | "gebruiker";
+const ROLE_LABELS: Record<WorkerRole, string> = {
+  admin: "Admin",
+  hse_manager: "HSE-manager",
+  manager: "Manager",
+  gebruiker: "Gebruiker",
 };
+const ROLE_BADGE: Record<WorkerRole, string> = {
+  admin: "bg-red-100 text-red-800 dark:bg-red-950 dark:text-red-200",
+  hse_manager: "bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-200",
+  manager: "bg-purple-100 text-purple-800 dark:bg-purple-950 dark:text-purple-200",
+  gebruiker: "bg-muted text-foreground",
+};
+const ALL_ROLES: WorkerRole[] = ["admin", "hse_manager", "manager", "gebruiker"];
+const WORKER_ROLE_OPTIONS: WorkerRole[] = ["gebruiker", "manager"];
 
 interface Worker {
   id: string;
@@ -88,6 +96,7 @@ function MedewerkersPage() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{ userId: string; name: string } | null>(null);
   const [functionsDialog, setFunctionsDialog] = useState<{ userId: string; name: string; current: string[] } | null>(null);
+  const [rolesDialog, setRolesDialog] = useState<{ userId: string; name: string; current: WorkerRole[] } | null>(null);
   const [manageFuncs, setManageFuncs] = useState(false);
 
   const [isAdmin, setIsAdmin] = useState(false);
@@ -117,15 +126,15 @@ function MedewerkersPage() {
   };
 
   const inviteMut = useMutation({
-    mutationFn: (data: { email: string; full_name: string; role: WorkerRole; function_titles: string[] }) =>
+    mutationFn: (data: { email: string; full_name: string; roles: WorkerRole[]; function_titles: string[] }) =>
       inviteFn({ data }),
     onSuccess: () => { toast.success("Uitnodiging verzonden"); setInviteOpen(false); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
   const roleMut = useMutation({
-    mutationFn: (data: { user_id: string; role: WorkerRole }) => roleFn({ data }),
-    onSuccess: () => { toast.success("Rol bijgewerkt"); invalidate(); },
+    mutationFn: (data: { user_id: string; roles: WorkerRole[] }) => roleFn({ data }),
+    onSuccess: () => { toast.success("Rollen bijgewerkt"); setRolesDialog(null); invalidate(); },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -190,12 +199,6 @@ function MedewerkersPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="medewerkers" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="medewerkers">Medewerkers</TabsTrigger>
-          {isAdmin && <TabsTrigger value="rollen">Gebruikers &amp; rollen</TabsTrigger>}
-        </TabsList>
-        <TabsContent value="medewerkers" className="space-y-4">
       <Card>
         <CardContent className="p-0">
           <div className="p-4 border-b flex flex-wrap gap-3">
@@ -261,19 +264,36 @@ function MedewerkersPage() {
                         </button>
                       </TableCell>
                       <TableCell>
-                        <Select
-                          value={primaryRole}
-                          onValueChange={(v) => roleMut.mutate({ user_id: w.id, role: v as WorkerRole })}
-                          disabled={roleMut.isPending}
-                        >
-                          <SelectTrigger className={`h-7 text-xs w-32 border-0 ${ROLE_BADGE[primaryRole]}`}>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="gebruiker">{ROLE_LABELS.gebruiker}</SelectItem>
-                            <SelectItem value="manager">{ROLE_LABELS.manager}</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        {isAdmin ? (
+                          <button
+                            type="button"
+                            className="flex flex-wrap gap-1 text-left hover:opacity-80"
+                            onClick={() => setRolesDialog({ userId: w.id, name: w.full_name ?? w.email ?? "gebruiker", current: userRoles })}
+                          >
+                            {userRoles.length === 0 ? (
+                              <span className="text-xs text-muted-foreground italic">geen rol</span>
+                            ) : userRoles.map((r) => (
+                              <span key={r} className={`text-xs px-2 py-0.5 rounded-full font-medium ${ROLE_BADGE[r]}`}>
+                                {ROLE_LABELS[r]}
+                              </span>
+                            ))}
+                          </button>
+                        ) : (
+                          <Select
+                            value={primaryRole}
+                            onValueChange={(v) => roleMut.mutate({ user_id: w.id, roles: [v as WorkerRole] })}
+                            disabled={roleMut.isPending}
+                          >
+                            <SelectTrigger className={`h-7 text-xs w-32 border-0 ${ROLE_BADGE[primaryRole]}`}>
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {WORKER_ROLE_OPTIONS.map((r) => (
+                                <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
                       </TableCell>
                       <TableCell>
                         {w.employee ? (
@@ -330,13 +350,6 @@ function MedewerkersPage() {
           <Shield className="w-3 h-3" /> Alleen administrators kunnen de lijst van functies wijzigen.
         </p>
       )}
-        </TabsContent>
-        {isAdmin && (
-          <TabsContent value="rollen">
-            <UsersRolesPanel />
-          </TabsContent>
-        )}
-      </Tabs>
 
       {functionsDialog && (
         <FunctionsDialog
@@ -376,14 +389,61 @@ function MedewerkersPage() {
   );
 }
 
-function InviteDialog({
-  onSubmit, loading, jobFunctions,
+function RoleCheckboxes({
+  value, onChange, options,
+}: { value: WorkerRole[]; onChange: (v: WorkerRole[]) => void; options: WorkerRole[] }) {
+  const toggle = (r: WorkerRole) =>
+    onChange(value.includes(r) ? value.filter((x) => x !== r) : [...value, r]);
+  return (
+    <div className="space-y-2">
+      {options.map((r) => (
+        <label key={r} className="flex items-center gap-2 text-sm cursor-pointer">
+          <Checkbox checked={value.includes(r)} onCheckedChange={() => toggle(r)} />
+          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${ROLE_BADGE[r]}`}>
+            {ROLE_LABELS[r]}
+          </span>
+        </label>
+      ))}
+    </div>
+  );
+}
+
+function RolesDialog({
+  initial, options, loading, onClose, onSave,
 }: {
-  onSubmit: (v: { email: string; full_name: string; role: WorkerRole; function_titles: string[] }) => void;
+  initial: { userId: string; name: string; current: WorkerRole[] };
+  options: WorkerRole[];
+  loading: boolean;
+  onClose: () => void;
+  onSave: (v: WorkerRole[]) => void;
+}) {
+  const [value, setValue] = useState<WorkerRole[]>(initial.current);
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><Shield className="w-5 h-5" /> Rollen voor {initial.name}</DialogTitle>
+          <DialogDescription>Kies één of meerdere rollen. Rollen bepalen de toegang binnen het platform.</DialogDescription>
+        </DialogHeader>
+        <RoleCheckboxes value={value} onChange={setValue} options={options} />
+        <DialogFooter>
+          <Button variant="outline" onClick={onClose}>Annuleren</Button>
+          <Button onClick={() => onSave(value)} disabled={loading || value.length === 0}>Opslaan</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function InviteDialog({
+  onSubmit, loading, jobFunctions, roleOptions,
+}: {
+  onSubmit: (v: { email: string; full_name: string; roles: WorkerRole[]; function_titles: string[] }) => void;
   loading: boolean;
   jobFunctions: string[];
+  roleOptions: WorkerRole[];
 }) {
-  const [role, setRole] = useState<WorkerRole>("gebruiker");
+  const [roles, setRoles] = useState<WorkerRole[]>(["gebruiker"]);
   const [titles, setTitles] = useState<string[]>(["Brand- en veiligheidswacht"]);
 
   const handle = (e: React.FormEvent<HTMLFormElement>) => {
@@ -392,14 +452,15 @@ function InviteDialog({
     const email = String(fd.get("email") ?? "").trim();
     const full_name = String(fd.get("full_name") ?? "").trim();
     if (!email || !full_name) return toast.error("Naam en e-mail zijn verplicht");
-    onSubmit({ email, full_name, role, function_titles: titles });
+    if (roles.length === 0) return toast.error("Kies minstens één rol");
+    onSubmit({ email, full_name, roles, function_titles: titles });
   };
 
   return (
     <DialogContent>
       <DialogHeader>
-        <DialogTitle className="flex items-center gap-2"><Mail className="w-5 h-5" /> Medewerker uitnodigen</DialogTitle>
-        <DialogDescription>De medewerker ontvangt een uitnodigingsmail om een wachtwoord in te stellen.</DialogDescription>
+        <DialogTitle className="flex items-center gap-2"><Mail className="w-5 h-5" /> Gebruiker uitnodigen</DialogTitle>
+        <DialogDescription>De gebruiker ontvangt een uitnodigingsmail om een wachtwoord in te stellen.</DialogDescription>
       </DialogHeader>
       <form onSubmit={handle} className="space-y-3">
         <div className="grid grid-cols-2 gap-3">
@@ -422,18 +483,8 @@ function InviteDialog({
           />
         </div>
         <div className="space-y-1.5">
-          <Label>Rol</Label>
-          <Select value={role} onValueChange={(v) => setRole(v as WorkerRole)}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              <SelectItem value="gebruiker">{ROLE_LABELS.gebruiker}</SelectItem>
-              <SelectItem value="manager">{ROLE_LABELS.manager}</SelectItem>
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-muted-foreground flex items-start gap-1.5">
-            <Shield className="w-3 h-3 mt-0.5 shrink-0" />
-            Admin- en HSE-manager-rollen wijs je toe via het tabblad Gebruikers &amp; rollen.
-          </p>
+          <Label>Rollen</Label>
+          <RoleCheckboxes value={roles} onChange={setRoles} options={roleOptions} />
         </div>
         <DialogFooter>
           <Button type="submit" disabled={loading}>Uitnodigen</Button>

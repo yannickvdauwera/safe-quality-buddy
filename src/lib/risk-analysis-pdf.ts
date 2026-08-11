@@ -5,7 +5,7 @@ import {
   METHOD_LABELS, MEASURE_TYPE_META, MEASURE_TYPE_ORDER, TYPE_LABELS, STATUS_LABELS,
   classifyRiskFor, levelsFor, highRiskThreshold, parseMeasures,
   W_SCALE, B_SCALE, E_SCALE, K_SCALE, E5_SCALE,
-  ORG_THEMES, ORG_THEME_LABELS, ORG_THEME_COLORS,
+  ORG_THEMES, ORG_THEME_LABELS, ORG_THEME_COLORS, normalizeOrgTheme,
   SMILEY_META, MEASURE_STATUS_LABELS,
   type RiskMethod, type RiskAnalysisType, type RiskAnalysisStatus, type RiskMeasureType,
   type OrgTheme, type Smiley, type MeasureStatus,
@@ -56,6 +56,7 @@ export interface RiskAnalysisExportItem {
   residual_r: number | null;
   // Organisatie-specifieke velden
   theme?: OrgTheme | null;
+  subtheme?: string | null;
   current_state?: string | null;
   legislation?: string | null;
   measure_status?: MeasureStatus | null;
@@ -99,7 +100,7 @@ function renderOrganisationTables(
   const OTHER = "Overig";
   byTheme.set(OTHER, []);
   for (const it of items) {
-    const key = (it.theme && ORG_THEMES.includes(it.theme)) ? it.theme : OTHER;
+    const key = normalizeOrgTheme(it.theme) ?? OTHER;
     byTheme.get(key)!.push(it);
   }
 
@@ -139,7 +140,7 @@ function renderOrganisationTables(
       head: [["#", "Onderwerp", "Huidige toestand", "Maatregelen", "Actie / verbeterpunt", "Wetgeving", "Beoord.", "Status"]],
       body: list.map((it) => [
         String(it.position),
-        [it.hazard, it.risk_description].filter(Boolean).join("\n"),
+        [it.subtheme ? `[${it.subtheme}]` : null, it.hazard, it.risk_description].filter(Boolean).join("\n"),
         it.current_state ?? "—",
         flatMeasures(it.measures) || "—",
         it.action_item ?? "—",

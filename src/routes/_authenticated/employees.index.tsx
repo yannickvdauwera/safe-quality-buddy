@@ -12,6 +12,8 @@ import {
   listJobFunctions, createJobFunction, updateJobFunction, deleteJobFunction, setUserFunctionTitles,
 } from "@/lib/job-functions.functions";
 import { MultiFunctionSelect } from "@/components/MultiFunctionSelect";
+import { UsersRolesPanel } from "@/components/UsersRolesPanel";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -165,8 +167,8 @@ function MedewerkersPage() {
             <Users className="w-6 h-6" /> Medewerkers
           </h1>
           <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Beheer accounts met rol <em>Gebruiker</em> of <em>Manager</em>. Admins en HSE-managers beheer je onder{" "}
-            <button className="underline" onClick={() => navigate({ to: "/users" })}>Instellingen › Gebruikers &amp; rollen</button>.
+            Beheer hier alle medewerkers, hun functies en hun rollen — inclusief admins en HSE-managers
+            via het tabblad <em>Gebruikers &amp; rollen</em>.
           </p>
         </div>
         <div className="flex gap-2">
@@ -188,6 +190,12 @@ function MedewerkersPage() {
         </div>
       </div>
 
+      <Tabs defaultValue="medewerkers" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="medewerkers">Medewerkers</TabsTrigger>
+          {isAdmin && <TabsTrigger value="rollen">Gebruikers &amp; rollen</TabsTrigger>}
+        </TabsList>
+        <TabsContent value="medewerkers" className="space-y-4">
       <Card>
         <CardContent className="p-0">
           <div className="p-4 border-b flex flex-wrap gap-3">
@@ -322,6 +330,13 @@ function MedewerkersPage() {
           <Shield className="w-3 h-3" /> Alleen administrators kunnen de lijst van functies wijzigen.
         </p>
       )}
+        </TabsContent>
+        {isAdmin && (
+          <TabsContent value="rollen">
+            <UsersRolesPanel />
+          </TabsContent>
+        )}
+      </Tabs>
 
       {functionsDialog && (
         <FunctionsDialog
@@ -417,7 +432,7 @@ function InviteDialog({
           </Select>
           <p className="text-xs text-muted-foreground flex items-start gap-1.5">
             <Shield className="w-3 h-3 mt-0.5 shrink-0" />
-            Admin- en HSE-manager-rollen worden beheerd onder Instellingen › Gebruikers &amp; rollen.
+            Admin- en HSE-manager-rollen wijs je toe via het tabblad Gebruikers &amp; rollen.
           </p>
         </div>
         <DialogFooter>

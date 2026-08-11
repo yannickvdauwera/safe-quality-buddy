@@ -239,7 +239,11 @@ function MedewerkersPage() {
                 ) : filtered.length === 0 ? (
                   <TableRow><TableCell colSpan={7} className="text-center text-muted-foreground py-12">Geen medewerkers gevonden.</TableCell></TableRow>
                 ) : filtered.map((w) => {
-                  const primaryRole = (w.roles.find((r) => r === "manager") ?? w.roles[0] ?? "gebruiker") as WorkerRole;
+                  const userRoles = (w.roles ?? []).filter((r): r is WorkerRole => ALL_ROLES.includes(r as WorkerRole));
+                  const primaryRole = (userRoles.find((r) => r === "admin")
+                    ?? userRoles.find((r) => r === "hse_manager")
+                    ?? userRoles.find((r) => r === "manager")
+                    ?? userRoles[0] ?? "gebruiker") as WorkerRole;
                   const titles = w.function_titles?.length ? w.function_titles : (w.function_title ? [w.function_title] : []);
                   return (
                     <TableRow key={w.id}>

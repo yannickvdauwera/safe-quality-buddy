@@ -176,8 +176,8 @@ function MedewerkersPage() {
             <Users className="w-6 h-6" /> Medewerkers
           </h1>
           <p className="text-sm text-muted-foreground mt-1 max-w-2xl">
-            Beheer hier alle medewerkers, hun functies en hun rollen — inclusief admins en HSE-managers
-            via het tabblad <em>Gebruikers &amp; rollen</em>.
+            Eén overzicht voor alle gebruikers en medewerkers: accounts, functies en rollen
+            {isAdmin ? " — inclusief admins en HSE-managers." : "."}
           </p>
         </div>
         <div className="flex gap-2">
@@ -188,12 +188,13 @@ function MedewerkersPage() {
           )}
           <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
             <DialogTrigger asChild>
-              <Button><UserPlus className="w-4 h-4" /> Medewerker uitnodigen</Button>
+              <Button><UserPlus className="w-4 h-4" /> Gebruiker uitnodigen</Button>
             </DialogTrigger>
             <InviteDialog
               onSubmit={(v) => inviteMut.mutate(v)}
               loading={inviteMut.isPending}
               jobFunctions={jobFunctionNames}
+              roleOptions={isAdmin ? ALL_ROLES : WORKER_ROLE_OPTIONS}
             />
           </Dialog>
         </div>

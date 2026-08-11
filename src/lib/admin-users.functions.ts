@@ -209,7 +209,7 @@ export const deleteUser = createServerFn({ method: "POST" })
 export const listWorkers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    await assertWorkerManager(context.supabase, context.userId);
+    const level = await assertWorkerManager(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: authList, error: authErr } = await supabaseAdmin.auth.admin.listUsers({
@@ -254,10 +254,12 @@ export const listWorkers = createServerFn({ method: "GET" })
             : null,
         };
       })
-      // Only workers: users with gebruiker or manager role and NO elevated role
+      // Admins see every account (incl. admins/HSE-managers);
+      // HSE-managers only see gebruiker/manager accounts.
       .filter((u) =>
-        u.roles.length > 0 &&
-        u.roles.every((r) => WORKER_ROLES.has(r)),
+        level === "admin"
+          ? true
+          : u.roles.length > 0 && u.roles.every((r) => WORKER_ROLES.has(r)),
       )
       .sort((a, b) => (a.full_name ?? a.email ?? "").localeCompare(b.full_name ?? b.email ?? ""));
   });
@@ -284,12 +286,16 @@ export const inviteWorker = createServerFn({ method: "POST" })
     z.object({
       email: z.string().trim().email().max(255),
       full_name: z.string().trim().min(1).max(100),
-      role: z.enum(["gebruiker", "manager"]),
+      roles: z.array(z.enum(APP_ROLES)).min(1).max(4),
       function_titles: z.array(z.string().trim().min(1).max(200)).max(20).default([]),
     }).parse(data),
   )
   .handler(async ({ context, data }) => {
-    await assertWorkerManager(context.supabase, context.userId);
+    const level = await assertWorkerManager(context.supabase, context.userId);
+    const roles = Array.from(new Set(data.roles));
+    if (level !== "admin" && !roles.every((r) => WORKER_ROLES.has(r))) {
+      throw new Response("Forbidden", { status: 403 });
+    }
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: created, error } = await supabaseAdmin.auth.admin.inviteUserByEmail(data.email, {
@@ -299,11 +305,11 @@ export const inviteWorker = createServerFn({ method: "POST" })
     const newUserId = created.user?.id;
     if (!newUserId) throw new Error("Aanmaken gebruiker mislukt.");
 
-    // Replace the default gebruiker role from handle_new_user trigger with the requested one
+    // Replace the default gebruiker role from handle_new_user trigger with the requested set
     await supabaseAdmin.from("user_roles").delete().eq("user_id", newUserId);
     const { error: insErr } = await supabaseAdmin
       .from("user_roles")
-      .insert([{ user_id: newUserId, role: data.role }]);
+      .insert(roles.map((role) => ({ user_id: newUserId, role })));
     if (insErr) throw new Error(insErr.message);
 
     const titles = Array.from(new Set(data.function_titles));
@@ -322,24 +328,32 @@ export const setWorkerRole = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) =>
     z.object({
       user_id: z.string().uuid(),
-      role: z.enum(["gebruiker", "manager"]),
+      roles: z.array(z.enum(APP_ROLES)).min(1).max(4),
     }).parse(data),
   )
   .handler(async ({ context, data }) => {
     const level = await assertWorkerManager(context.supabase, context.userId);
+    const roles = Array.from(new Set(data.roles));
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     await assertTargetIsWorker(supabaseAdmin, level, data.user_id);
 
-    if (data.user_id === context.userId) {
-      throw new Error("Je kan je eigen rol niet aanpassen via deze module.");
+    if (level !== "admin") {
+      if (!roles.every((r) => WORKER_ROLES.has(r))) throw new Response("Forbidden", { status: 403 });
+      if (data.user_id === context.userId) {
+        throw new Error("Je kan je eigen rol niet aanpassen via deze module.");
+      }
+    } else if (data.user_id === context.userId && !roles.includes("admin")) {
+      throw new Error("Je kan je eigen admin-rol niet verwijderen.");
     }
+
     await supabaseAdmin.from("user_roles").delete().eq("user_id", data.user_id);
     const { error } = await supabaseAdmin
       .from("user_roles")
-      .insert([{ user_id: data.user_id, role: data.role }]);
+      .insert(roles.map((role) => ({ user_id: data.user_id, role })));
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
 
 export const deleteWorker = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

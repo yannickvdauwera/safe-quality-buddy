@@ -229,7 +229,7 @@ function MedewerkersPage() {
                   <TableHead>Naam</TableHead>
                   <TableHead>E-mail</TableHead>
                   <TableHead>Functies</TableHead>
-                  <TableHead>Rol</TableHead>
+                  <TableHead>Rollen</TableHead>
                   <TableHead>Fiche</TableHead>
                   <TableHead>Laatste aanmelding</TableHead>
                   <TableHead className="w-10" />
